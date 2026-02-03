@@ -56,3 +56,25 @@ export class VoterResponseDto {
   })
   updatedAt: Date;
 }
+
+export class SingleVoterResponseDto {
+  @ApiProperty({
+    description: 'Voter data',
+    type: VoterResponseDto,
+  })
+  data: VoterResponseDto;
+
+  @ApiProperty({
+    description: 'Response message',
+    example: 'Voter retrieved successfully',
+  })
+  message: string;
+}
+
+export class DeleteVoterResponseDto {
+  @ApiProperty({
+    description: 'Response message',
+    example: 'Voter deleted successfully',
+  })
+  message: string;
+}

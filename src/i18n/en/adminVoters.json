@@ -9,5 +9,8 @@
   "voterCreated": "Voter created successfully",
   "voterUpdated": "Voter updated successfully",
   "voterDeleted": "Voter deleted successfully",
-  "voterRestored": "Voter restored successfully"
+  "voterRestored": "Voter restored successfully",
+  "voterRetrieved": "Voter retrieved successfully",
+  "votersRetrieved": "Voters retrieved successfully",
+  "noResultsFound": "No results found matching your criteria"
 }

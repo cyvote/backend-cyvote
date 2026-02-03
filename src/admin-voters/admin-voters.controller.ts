@@ -23,7 +23,10 @@ import { AdminVotersService } from './admin-voters.service';
 import { CreateVoterDto } from './dto/create-voter.dto';
 import { UpdateVoterDto } from './dto/update-voter.dto';
 import { QueryVotersDto } from './dto/query-voters.dto';
-import { VoterResponseDto } from './dto/voter-response.dto';
+import {
+  SingleVoterResponseDto,
+  DeleteVoterResponseDto,
+} from './dto/voter-response.dto';
 import { PaginatedVotersResponseDto } from './dto/paginated-voters-response.dto';
 import { AdminAuthGuard } from '../auth-admin/guards/admin-auth.guard';
 import { AdminRolesGuard } from '../auth-admin/guards/admin-roles.guard';
@@ -45,7 +48,7 @@ export class AdminVotersController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: 'Voter created successfully',
-    type: VoterResponseDto,
+    type: SingleVoterResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.CONFLICT,
@@ -62,7 +65,7 @@ export class AdminVotersController {
   async create(
     @Body() dto: CreateVoterDto,
     @CurrentAdmin('id') adminId: string,
-  ): Promise<VoterResponseDto> {
+  ): Promise<SingleVoterResponseDto> {
     return this.adminVotersService.create(dto, adminId);
   }
 
@@ -98,7 +101,7 @@ export class AdminVotersController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Voter retrieved successfully',
-    type: VoterResponseDto,
+    type: SingleVoterResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
@@ -110,7 +113,7 @@ export class AdminVotersController {
   })
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<VoterResponseDto> {
+  ): Promise<SingleVoterResponseDto> {
     return this.adminVotersService.findOne(id);
   }
 
@@ -126,7 +129,7 @@ export class AdminVotersController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Voter updated successfully',
-    type: VoterResponseDto,
+    type: SingleVoterResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
@@ -148,12 +151,12 @@ export class AdminVotersController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateVoterDto,
     @CurrentAdmin('id') adminId: string,
-  ): Promise<VoterResponseDto> {
+  ): Promise<SingleVoterResponseDto> {
     return this.adminVotersService.update(id, dto, adminId);
   }
 
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Soft delete voter' })
   @ApiParam({
     name: 'id',
@@ -162,8 +165,9 @@ export class AdminVotersController {
     format: 'uuid',
   })
   @ApiResponse({
-    status: HttpStatus.NO_CONTENT,
+    status: HttpStatus.OK,
     description: 'Voter deleted successfully',
+    type: DeleteVoterResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
@@ -180,7 +184,7 @@ export class AdminVotersController {
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentAdmin('id') adminId: string,
-  ): Promise<void> {
+  ): Promise<DeleteVoterResponseDto> {
     return this.adminVotersService.softDelete(id, adminId);
   }
 
@@ -196,7 +200,7 @@ export class AdminVotersController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Voter restored successfully',
-    type: VoterResponseDto,
+    type: SingleVoterResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -213,7 +217,7 @@ export class AdminVotersController {
   async restore(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentAdmin('id') adminId: string,
-  ): Promise<VoterResponseDto> {
+  ): Promise<SingleVoterResponseDto> {
     return this.adminVotersService.restore(id, adminId);
   }
 }

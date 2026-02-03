@@ -9,5 +9,8 @@
   "voterCreated": "Pemilih berhasil dibuat",
   "voterUpdated": "Pemilih berhasil diperbarui",
   "voterDeleted": "Pemilih berhasil dihapus",
-  "voterRestored": "Pemilih berhasil dipulihkan"
+  "voterRestored": "Pemilih berhasil dipulihkan",
+  "voterRetrieved": "Pemilih berhasil diambil",
+  "votersRetrieved": "Daftar pemilih berhasil diambil",
+  "noResultsFound": "Tidak ada hasil yang sesuai dengan kriteria pencarian Anda"
 }

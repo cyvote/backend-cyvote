@@ -12,6 +12,8 @@ import { UpdateVoterDto } from './dto/update-voter.dto';
 import { QueryVotersDto } from './dto/query-voters.dto';
 import {
   VoterResponseDto,
+  SingleVoterResponseDto,
+  DeleteVoterResponseDto,
   PaginatedVotersResponseDto,
   PaginationMetaDto,
 } from './dto';
@@ -35,7 +37,7 @@ export class AdminVotersService {
   async create(
     dto: CreateVoterDto,
     adminId: string,
-  ): Promise<VoterResponseDto> {
+  ): Promise<SingleVoterResponseDto> {
     // Validate email format matches NIM
     this.validateEmailFormat(dto.nim, dto.email);
 
@@ -79,7 +81,12 @@ export class AdminVotersService {
       },
     });
 
-    return this.mapToResponseDto(createdVoter);
+    return {
+      data: this.mapToResponseDto(createdVoter),
+      message: this.i18n.t('adminVoters.voterCreated', {
+        lang: I18nContext.current()?.lang,
+      }),
+    };
   }
 
   async findMany(query: QueryVotersDto): Promise<PaginatedVotersResponseDto> {
@@ -95,15 +102,32 @@ export class AdminVotersService {
       totalPages,
       hasPreviousPage: page > 1,
       hasNextPage: page < totalPages,
+      filters: {
+        status: query.filter || 'all',
+        search: query.search,
+        angkatan: query.angkatan,
+        sort: query.sort,
+        order: query.order,
+      },
     };
+
+    const hasResults = data.length > 0;
+    const message = hasResults
+      ? this.i18n.t('adminVoters.votersRetrieved', {
+          lang: I18nContext.current()?.lang,
+        })
+      : this.i18n.t('adminVoters.noResultsFound', {
+          lang: I18nContext.current()?.lang,
+        });
 
     return {
       data: data.map((voter) => this.mapToResponseDto(voter)),
       meta,
+      message,
     };
   }
 
-  async findOne(id: string): Promise<VoterResponseDto> {
+  async findOne(id: string): Promise<SingleVoterResponseDto> {
     const voter = await this.voterRepository.findById(id);
 
     if (!voter) {
@@ -114,14 +138,19 @@ export class AdminVotersService {
       );
     }
 
-    return this.mapToResponseDto(voter);
+    return {
+      data: this.mapToResponseDto(voter),
+      message: this.i18n.t('adminVoters.voterRetrieved', {
+        lang: I18nContext.current()?.lang,
+      }),
+    };
   }
 
   async update(
     id: string,
     dto: UpdateVoterDto,
     adminId: string,
-  ): Promise<VoterResponseDto> {
+  ): Promise<SingleVoterResponseDto> {
     // Find existing voter
     const existingVoter = await this.voterRepository.findById(id);
 
@@ -192,10 +221,18 @@ export class AdminVotersService {
       },
     });
 
-    return this.mapToResponseDto(updatedVoter);
+    return {
+      data: this.mapToResponseDto(updatedVoter),
+      message: this.i18n.t('adminVoters.voterUpdated', {
+        lang: I18nContext.current()?.lang,
+      }),
+    };
   }
 
-  async softDelete(id: string, adminId: string): Promise<void> {
+  async softDelete(
+    id: string,
+    adminId: string,
+  ): Promise<DeleteVoterResponseDto> {
     // Find existing voter
     const existingVoter = await this.voterRepository.findById(id);
 
@@ -232,9 +269,15 @@ export class AdminVotersService {
         namaLengkap: existingVoter.namaLengkap,
       },
     });
+
+    return {
+      message: this.i18n.t('adminVoters.voterDeleted', {
+        lang: I18nContext.current()?.lang,
+      }),
+    };
   }
 
-  async restore(id: string, adminId: string): Promise<VoterResponseDto> {
+  async restore(id: string, adminId: string): Promise<SingleVoterResponseDto> {
     // Find deleted voter
     const deletedVoter = await this.voterRepository.findDeletedById(id);
 
@@ -261,22 +304,26 @@ export class AdminVotersService {
     // Restore voter
     const restoredVoter = await this.voterRepository.restore(id);
 
-    // Log audit
+    // Log audit with VOTER_RESTORED action
     this.auditLogService.log({
       actorId: adminId,
       actorType: AuditActorType.ADMIN,
-      action: AuditAction.VOTER_UPDATED,
+      action: AuditAction.VOTER_RESTORED,
       resourceType: AuditResourceType.VOTER,
       resourceId: id,
       status: AuditStatus.SUCCESS,
       details: {
-        action: 'restore',
         nim: restoredVoter.nim,
         namaLengkap: restoredVoter.namaLengkap,
       },
     });
 
-    return this.mapToResponseDto(restoredVoter);
+    return {
+      data: this.mapToResponseDto(restoredVoter),
+      message: this.i18n.t('adminVoters.voterRestored', {
+        lang: I18nContext.current()?.lang,
+      }),
+    };
   }
 
   private validateEmailFormat(nim: string, email: string): void {
