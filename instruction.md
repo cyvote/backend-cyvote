@@ -2,25 +2,18 @@
 We will execute the task below
 
 **Description:**
-Endpoint CRUD untuk manajemen pemilih satu per satu.
+Endpoint untuk bulk insert voter.
 
 **Acceptance Criteria:**
 
-- [ ] `POST /api/v1/admin/voters` — create voter baru
-  - Validasi: NIM unique, nama required, Angkatan (format tahun YYYY), email.
-- [ ] `GET /api/v1/admin/voters` — list voters dengan query params: `page`, `limit`, `search`, `filter` (all/voted/not-voted), `angkatan`, `sort`, `order`
-- [ ] `GET /api/v1/admin/voters/:id` — get voter detail by ID
-- [ ] `PUT /api/v1/admin/voters/:id` — update voter
-  - Tidak bisa edit jika voter sudah voting
-  - NIM uniqueness re-check jika NIM diubah
-- [ ] `DELETE /api/admin/voters/:id` — soft delete
-  - Tidak bisa delete jika voter sudah voting
+- [ ] `POST /api/v1/admin/voters/bulk`
+- [ ] Validasi: NIM unique, nama required, Angkatan (format tahun YYYY), email. Ini wajib minimal dua data untuk di insert.
 - [ ] Semua endpoint protected dengan `AuthGuard` + role `ADMIN`
 - [ ] Semua action di-log ke audit_logs
 
 ---
 
-Put it in src/{you decide the domain}/.In this project we use pnpm not npm. Also, follow the existing architecture (DDD). Analyze the code first. Create unit test, 30 test for positive test, 30 test for negative test, and 30 test for edge case test. Follow the code quality standard that exist.
+Put it in src/admin-voters/. In this project we use pnpm not npm. Also, follow the existing architecture (DDD). Analyze the code first. Create unit test, 30 test for positive test, 30 test for negative test, and 30 test for edge case test. Follow the code quality standard that exist.
 
 </context>
 

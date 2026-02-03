@@ -6,9 +6,11 @@ export interface VoterRepositoryInterface {
   findById(id: string): Promise<Voter | null>;
   findByNim(nim: string): Promise<Voter | null>;
   findByNimIncludingDeleted(nim: string): Promise<Voter | null>;
+  findByNimsIncludingDeleted(nims: string[]): Promise<Voter[]>;
   findMany(query: QueryVotersDto): Promise<{ data: Voter[]; total: number }>;
   update(id: string, voter: Partial<Voter>): Promise<Voter>;
   softDelete(id: string): Promise<void>;
   restore(id: string): Promise<Voter>;
   findDeletedById(id: string): Promise<Voter | null>;
+  bulkCreate(voters: Voter[]): Promise<Voter[]>;
 }

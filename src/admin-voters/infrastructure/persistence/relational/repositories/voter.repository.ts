@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Brackets, IsNull, Not } from 'typeorm';
+import { Repository, Brackets, IsNull, Not, In } from 'typeorm';
 import { VoterRepositoryInterface } from '../../../../interfaces/voter.repository.interface';
 import { Voter } from '../../../../domain/voter';
 import { VoterEntity } from '../entities/voter.entity';
@@ -164,6 +164,38 @@ export class VoterRepository implements VoterRepositoryInterface {
     }
 
     return VoterMapper.toDomain(entity);
+  }
+
+  /**
+   * Find multiple voters by NIMs in a single query (O(1) - avoids N+1)
+   * Includes soft-deleted records
+   */
+  async findByNimsIncludingDeleted(nims: string[]): Promise<Voter[]> {
+    if (nims.length === 0) {
+      return [];
+    }
+
+    const entities = await this.voterRepository.find({
+      where: { nim: In(nims) },
+      withDeleted: true,
+    });
+
+    return entities.map((entity) => VoterMapper.toDomain(entity));
+  }
+
+  /**
+   * Bulk create voters in a single transaction (O(1) - single INSERT)
+   * Uses TypeORM batch save for optimal performance
+   */
+  async bulkCreate(voters: Voter[]): Promise<Voter[]> {
+    if (voters.length === 0) {
+      return [];
+    }
+
+    const entities = voters.map((voter) => VoterMapper.toEntity(voter));
+    const savedEntities = await this.voterRepository.save(entities);
+
+    return savedEntities.map((entity) => VoterMapper.toDomain(entity));
   }
 
   private applyAngkatanFilter(

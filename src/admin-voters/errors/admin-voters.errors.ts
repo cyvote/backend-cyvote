@@ -29,3 +29,9 @@ export class InvalidEmailFormatException extends HttpException {
     super(message, HttpStatus.BAD_REQUEST);
   }
 }
+
+export class BulkInsertValidationException extends HttpException {
+  constructor(message: string) {
+    super(message, HttpStatus.BAD_REQUEST);
+  }
+}

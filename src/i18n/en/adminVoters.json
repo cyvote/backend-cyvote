@@ -12,5 +12,11 @@
   "voterRestored": "Voter restored successfully",
   "voterRetrieved": "Voter retrieved successfully",
   "votersRetrieved": "Voters retrieved successfully",
-  "noResultsFound": "No results found matching your criteria"
+  "noResultsFound": "No results found matching your criteria",
+  "bulkMinimumTwoVoters": "Bulk insert requires at least 2 voters",
+  "bulkMaximumExceeded": "Maximum 500 voters per request",
+  "bulkDuplicateNimInRequest": "Duplicate NIM '{nim}' found at index {index}",
+  "bulkImportSuccess": "Bulk import completed: {successCount} succeeded, {failedCount} failed",
+  "bulkImportPartialSuccess": "Bulk import partially completed: {successCount} succeeded, {failedCount} failed",
+  "bulkImportAllFailed": "Bulk import failed: all {failedCount} voters have validation errors"
 }

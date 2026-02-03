@@ -12,5 +12,11 @@
   "voterRestored": "Pemilih berhasil dipulihkan",
   "voterRetrieved": "Pemilih berhasil diambil",
   "votersRetrieved": "Daftar pemilih berhasil diambil",
-  "noResultsFound": "Tidak ada hasil yang sesuai dengan kriteria pencarian Anda"
+  "noResultsFound": "Tidak ada hasil yang sesuai dengan kriteria pencarian Anda",
+  "bulkMinimumTwoVoters": "Impor massal memerlukan minimal 2 pemilih",
+  "bulkMaximumExceeded": "Maksimal 500 pemilih per permintaan",
+  "bulkDuplicateNimInRequest": "NIM '{nim}' duplikat ditemukan pada indeks {index}",
+  "bulkImportSuccess": "Impor massal selesai: {successCount} berhasil, {failedCount} gagal",
+  "bulkImportPartialSuccess": "Impor massal sebagian selesai: {successCount} berhasil, {failedCount} gagal",
+  "bulkImportAllFailed": "Impor massal gagal: semua {failedCount} pemilih memiliki kesalahan validasi"
 }
