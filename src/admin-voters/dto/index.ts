@@ -6,3 +6,4 @@ export * from './paginated-voters-response.dto';
 export * from './bulk-create-voter-item.dto';
 export * from './bulk-create-voter.dto';
 export * from './bulk-create-voter-response.dto';
+export * from './export-non-voters-response.dto';

@@ -13,4 +13,5 @@ export interface VoterRepositoryInterface {
   restore(id: string): Promise<Voter>;
   findDeletedById(id: string): Promise<Voter | null>;
   bulkCreate(voters: Voter[]): Promise<Voter[]>;
+  findNonVoters(): Promise<Voter[]>;
 }

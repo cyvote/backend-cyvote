@@ -18,5 +18,6 @@
   "bulkDuplicateNimInRequest": "NIM '{nim}' duplikat ditemukan pada indeks {index}",
   "bulkImportSuccess": "Impor massal selesai: {successCount} berhasil, {failedCount} gagal",
   "bulkImportPartialSuccess": "Impor massal sebagian selesai: {successCount} berhasil, {failedCount} gagal",
-  "bulkImportAllFailed": "Impor massal gagal: semua {failedCount} pemilih memiliki kesalahan validasi"
+  "bulkImportAllFailed": "Impor massal gagal: semua {failedCount} pemilih memiliki kesalahan validasi",
+  "noNonVotersFound": "Tidak ada pemilih yang belum voting untuk diekspor"
 }

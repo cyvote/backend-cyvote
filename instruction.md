@@ -2,18 +2,21 @@
 We will execute the task below
 
 **Description:**
-Endpoint untuk bulk insert voter.
+Endpoint untuk export list pemilih yang belum voting sebagai CSV.
 
 **Acceptance Criteria:**
 
-- [ ] `POST /api/v1/admin/voters/bulk`
-- [ ] Validasi: NIM unique, nama required, Angkatan (format tahun YYYY), email. Ini wajib minimal dua data untuk di insert.
-- [ ] Semua endpoint protected dengan `AuthGuard` + role `ADMIN`
-- [ ] Semua action di-log ke audit_logs
+- [ ] `GET /api/admin/voters/export/non-voters` — return CSV file
+- [ ] CSV columns: `NIM,Nama,Angkatan,Email`
+- [ ] Only return voters where `has_voted = false` dan `deleted_at IS NULL`
+- [ ] Response header: `Content-Type: text/csv`, `Content-Disposition: attachment`
+- [ ] Action di-log
+- [ ] Protected: ADMIN only
+- [ ] Nama file CSV haruslah `TIMESTAMP-non-voters.csv`. Untuk timestampnya itu cukup tanggal, bulan, tahun, jam, menit, detik saja waktu WIB.
 
 ---
 
-Put it in src/admin-voters/. In this project we use pnpm not npm. Also, follow the existing architecture (DDD). Analyze the code first. Create unit test, 30 test for positive test, 30 test for negative test, and 30 test for edge case test. Follow the code quality standard that exist.
+Put it in src/admin-voters/. In this project we use pnpm not npm. Also, follow the existing architecture (DDD). Analyze the code first. Create unit test, 30 test for positive test, 30 test for negative test, and 30 test for edge case test in different file. Follow the code quality standard that exist.
 
 </context>
 

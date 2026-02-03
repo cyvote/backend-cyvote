@@ -18,5 +18,6 @@
   "bulkDuplicateNimInRequest": "Duplicate NIM '{nim}' found at index {index}",
   "bulkImportSuccess": "Bulk import completed: {successCount} succeeded, {failedCount} failed",
   "bulkImportPartialSuccess": "Bulk import partially completed: {successCount} succeeded, {failedCount} failed",
-  "bulkImportAllFailed": "Bulk import failed: all {failedCount} voters have validation errors"
+  "bulkImportAllFailed": "Bulk import failed: all {failedCount} voters have validation errors",
+  "noNonVotersFound": "No non-voters found to export"
 }

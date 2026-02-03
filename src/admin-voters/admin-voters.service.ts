@@ -28,7 +28,9 @@ import {
   VoterAlreadyVotedException,
   VoterNotDeletedException,
   InvalidEmailFormatException,
+  NoNonVotersFoundException,
 } from './errors';
+import { generateCsv, generateTimestampFilename } from './utils/csv.util';
 
 @Injectable()
 export class AdminVotersService {
@@ -494,6 +496,70 @@ export class AdminVotersService {
         args: { successCount, failedCount },
       }),
     };
+  }
+
+  /**
+   * Export non-voters as CSV
+   * Returns CSV content and filename with WIB timestamp
+   */
+  async exportNonVoters(
+    adminId: string,
+  ): Promise<{ csv: string; filename: string }> {
+    // Fetch non-voters from repository
+    const nonVoters = await this.voterRepository.findNonVoters();
+
+    // Check if no non-voters found
+    if (nonVoters.length === 0) {
+      // Log failure audit
+      this.auditLogService.log({
+        actorId: adminId,
+        actorType: AuditActorType.ADMIN,
+        action: AuditAction.EXPORT_NON_VOTERS,
+        resourceType: AuditResourceType.VOTER,
+        resourceId: null,
+        status: AuditStatus.FAILED,
+        details: {
+          reason: 'No non-voters found',
+        },
+      });
+
+      throw new NoNonVotersFoundException(
+        this.i18n.t('adminVoters.noNonVotersFound', {
+          lang: I18nContext.current()?.lang,
+        }),
+      );
+    }
+
+    // Map to CSV rows: [NIM, Nama, Angkatan, Email]
+    const headers = ['NIM', 'Nama', 'Angkatan', 'Email'];
+    const rows = nonVoters.map((voter) => [
+      voter.nim,
+      voter.namaLengkap,
+      String(voter.angkatan),
+      voter.email,
+    ]);
+
+    // Generate CSV with BOM for Excel compatibility
+    const csv = generateCsv(headers, rows, { includeBom: true });
+
+    // Generate filename with WIB timestamp
+    const filename = generateTimestampFilename();
+
+    // Log success audit
+    this.auditLogService.log({
+      actorId: adminId,
+      actorType: AuditActorType.ADMIN,
+      action: AuditAction.EXPORT_NON_VOTERS,
+      resourceType: AuditResourceType.VOTER,
+      resourceId: null,
+      status: AuditStatus.SUCCESS,
+      details: {
+        count: nonVoters.length,
+        filename,
+      },
+    });
+
+    return { csv, filename };
   }
 
   private validateEmailFormat(nim: string, email: string): void {
