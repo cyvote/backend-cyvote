@@ -28,6 +28,9 @@ import { MailerModule } from './mailer/mailer.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MongooseConfigService } from './database/mongoose-config.service';
 import { DatabaseConfig } from './database/config/database-config.type';
+import { AuditLogModule } from './audit-log/audit-log.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { AuditLogContextInterceptor } from './audit-log/interceptors/audit-log-context.interceptor';
 
 // <database-block>
 const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
@@ -42,63 +45,6 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
       },
     });
 // </database-block>
-
-@Module({
-  imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      load: [
-        databaseConfig,
-        authConfig,
-        appConfig,
-        mailConfig,
-        fileConfig,
-        facebookConfig,
-        googleConfig,
-        appleConfig,
-        auditLogConfig,
-      ],
-      envFilePath: ['.env'],
-    }),
-    infrastructureDatabaseModule,
-    I18nModule.forRootAsync({
-      useFactory: (configService: ConfigService<AllConfigType>) => ({
-        fallbackLanguage: configService.getOrThrow('app.fallbackLanguage', {
-          infer: true,
-        }),
-        loaderOptions: { path: path.join(__dirname, '/i18n/'), watch: true },
-      }),
-      resolvers: [
-        {
-          use: HeaderResolver,
-          useFactory: (configService: ConfigService<AllConfigType>) => {
-            return [
-              configService.get('app.headerLanguage', {
-                infer: true,
-              }),
-            ];
-          },
-          inject: [ConfigService],
-        },
-      ],
-      imports: [ConfigModule],
-      inject: [ConfigService],
-    }),
-    UsersModule,
-    FilesModule,
-    AuthModule,
-    AuthFacebookModule,
-    AuthGoogleModule,
-    AuthAppleModule,
-    SessionModule,
-    MailModule,
-    MailerModule,
-    HomeModule,
-  ],
-})
-import { AuditLogModule } from './audit-log/audit-log.module';
-import { APP_INTERCEPTOR } from '@nestjs/core';
-import { AuditLogContextInterceptor } from './audit-log/interceptors/audit-log-context.interceptor';
 
 @Module({
   imports: [
@@ -160,5 +106,4 @@ import { AuditLogContextInterceptor } from './audit-log/interceptors/audit-log-c
     },
   ],
 })
-export class AppModule {}
 export class AppModule {}
