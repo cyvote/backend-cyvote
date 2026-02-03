@@ -1,11 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
 import { MailerService } from '../mailer/mailer.service';
 import { AllConfigType } from '../config/config.type';
 import { SendEmailOptions } from './interfaces/email-options.interface';
 import { SendEmailResult } from './interfaces/send-email-result.interface';
+import { AuditLogService } from '../audit-log/audit-log.service';
+import { AuditAction } from '../audit-log/enums/audit-action.enum';
+import { AuditActorType } from '../audit-log/enums/audit-actor-type.enum';
+import { AuditStatus } from '../audit-log/enums/audit-status.enum';
+import { AuditResourceType } from '../audit-log/enums/audit-resource-type.enum';
 
 interface RetryConfig {
   maxRetries: number;
@@ -27,8 +30,7 @@ export class EmailService {
   constructor(
     private readonly mailerService: MailerService,
     private readonly configService: ConfigService<AllConfigType>,
-    @InjectDataSource()
-    private readonly dataSource: DataSource,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   /**
@@ -43,8 +45,8 @@ export class EmailService {
       this.defaultRetryConfig,
     );
 
-    // Log to audit
-    await this.logEmailDelivery(
+    // Log to audit using AuditLogService
+    this.logEmailDelivery(
       Array.isArray(options.to) ? options.to.join(',') : options.to,
       options.subject,
       result.success ? 'SUCCESS' : 'FAILURE',
@@ -182,45 +184,37 @@ export class EmailService {
   }
 
   /**
-   * Log email delivery status to audit_logs table
+   * Log email delivery status using AuditLogService
    */
-  private async logEmailDelivery(
+  private logEmailDelivery(
     to: string,
     subject: string,
     status: 'SUCCESS' | 'FAILURE',
     details: Record<string, any>,
-  ): Promise<void> {
+  ): void {
     try {
-      const result = await this.dataSource.query(
-        `INSERT INTO audit_log (
-          actor_type, 
-          action, 
-          resource_type, 
-          status, 
-          details, 
-          created_at
-        ) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING id`,
-        [
-          'SYSTEM',
-          status === 'SUCCESS' ? 'EMAIL_SENT' : 'EMAIL_FAILED',
-          'EMAIL',
-          status,
-          JSON.stringify({
-            to,
-            subject,
-            ...details,
-            timestamp: new Date().toISOString(),
-          }),
-        ],
-      );
+      this.auditLogService.log({
+        actorId: 'system',
+        actorType: AuditActorType.SYSTEM,
+        action:
+          status === 'SUCCESS'
+            ? AuditAction.EMAIL_SENT
+            : AuditAction.EMAIL_FAILED,
+        resourceType: AuditResourceType.EMAIL,
+        status: status === 'SUCCESS' ? AuditStatus.SUCCESS : AuditStatus.FAILED,
+        details: {
+          to,
+          subject,
+          ...details,
+          timestamp: new Date().toISOString(),
+        },
+      });
 
-      this.logger.debug(
-        `Email delivery logged to audit_log: ${status} (ID: ${result[0]?.id})`,
-      );
+      this.logger.debug(`Email delivery logged to audit: ${status}`);
     } catch (error) {
       // Don't throw if audit logging fails - log locally instead
       this.logger.error(
-        `Failed to log email delivery to audit_log: ${(error as Error).message}`,
+        `Failed to log email delivery to audit: ${(error as Error).message}`,
         (error as Error).stack,
       );
     }

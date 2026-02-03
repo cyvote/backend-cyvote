@@ -57,7 +57,8 @@ export class AuditLogService {
         auditLog.status = dto.status;
         auditLog.message = message;
         auditLog.details = this.sanitizeDetails(dto.details);
-        auditLog.createdAt = new Date();
+        // Use GMT+7 (Jakarta timezone)
+        auditLog.createdAt = this.getJakartaTime();
 
         // Log with Winston (async)
         this.logger.log(message, {
@@ -191,5 +192,16 @@ export class AuditLogService {
         _errorMessage: error instanceof Error ? error.message : String(error),
       };
     }
+  }
+
+  /**
+   * Get current time in Jakarta timezone (GMT+7)
+   */
+  private getJakartaTime(): Date {
+    const now = new Date();
+    // Add 7 hours offset for GMT+7
+    const jakartaOffset = 7 * 60 * 60 * 1000;
+    const utcOffset = now.getTimezoneOffset() * 60 * 1000;
+    return new Date(now.getTime() + utcOffset + jakartaOffset);
   }
 }
