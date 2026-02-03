@@ -26,6 +26,11 @@ async function testEmailSending() {
       nama: 'Nugraha Adhitama',
       nim: '2210512109',
     },
+    {
+      email: 'hbintang225@gmail.com',
+      nama: 'Haikal Bintang',
+      nim: '2210512125',
+    },
   ];
 
   const testToken = 'ABC123XYZ789TEST';
@@ -87,6 +92,9 @@ async function testEmailSending() {
         error: error.message,
       });
     }
+
+    // Small delay to ensure audit log is written to database
+    await new Promise((resolve) => setTimeout(resolve, 500));
     console.log('');
   }
 
@@ -114,6 +122,47 @@ async function testEmailSending() {
   console.log(
     "   Check with: SELECT * FROM audit_logs WHERE action LIKE 'EMAIL_%' ORDER BY created_at DESC LIMIT 10;",
   );
+
+  // Wait a bit to ensure all async operations complete
+  console.log('\n⏳ Waiting for all database operations to complete...');
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  // Verify audit logs in database
+  try {
+    const { DataSource } = await import('typeorm');
+    const dataSource = app.get(DataSource);
+
+    const auditLogs = await dataSource.query(
+      `SELECT id, action, resource_type, status, details->>'to' as recipient, 
+              details->>'messageId' as message_id, created_at
+       FROM audit_logs 
+       WHERE action LIKE 'EMAIL_%' 
+       ORDER BY created_at DESC 
+       LIMIT ${testRecipients.length}`,
+    );
+
+    console.log('\n📋 Recent audit logs from database:');
+    console.log('─'.repeat(80));
+    if (auditLogs.length > 0) {
+      auditLogs.forEach((log: any, index: number) => {
+        console.log(
+          `${index + 1}. ${log.action} - ${log.recipient} (${log.status})`,
+        );
+        console.log(`   Message ID: ${log.message_id || 'N/A'}`);
+        console.log(`   Created: ${log.created_at}`);
+      });
+
+      if (auditLogs.length < testRecipients.length) {
+        console.log(
+          `\n⚠️  Warning: Expected ${testRecipients.length} audit logs but found ${auditLogs.length}`,
+        );
+      }
+    } else {
+      console.log('⚠️  No recent audit logs found!');
+    }
+  } catch (error) {
+    console.log(`\n⚠️  Could not verify audit logs: ${error.message}`);
+  }
 
   // Close application
   await app.close();
