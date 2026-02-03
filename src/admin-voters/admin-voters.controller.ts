@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiOperation,
   ApiParam,
   ApiResponse,
@@ -23,6 +24,8 @@ import { AdminVotersService } from './admin-voters.service';
 import { CreateVoterDto } from './dto/create-voter.dto';
 import { UpdateVoterDto } from './dto/update-voter.dto';
 import { QueryVotersDto } from './dto/query-voters.dto';
+import { BulkCreateVoterDto } from './dto/bulk-create-voter.dto';
+import { BulkCreateVoterResponseDto } from './dto/bulk-create-voter-response.dto';
 import {
   SingleVoterResponseDto,
   DeleteVoterResponseDto,
@@ -67,6 +70,60 @@ export class AdminVotersController {
     @CurrentAdmin('id') adminId: string,
   ): Promise<SingleVoterResponseDto> {
     return this.adminVotersService.create(dto, adminId);
+  }
+
+  @Post('bulk')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Bulk create voters',
+    description:
+      'Create multiple voters in a single request. Minimum 2, maximum 500 voters per request. ' +
+      'Uses partial success behavior: valid voters are created, invalid ones are returned with error details.',
+  })
+  @ApiBody({
+    type: BulkCreateVoterDto,
+    description: 'Array of voters to create (2-500 items)',
+    examples: {
+      valid: {
+        summary: 'Valid bulk request',
+        value: {
+          voters: [
+            {
+              nim: '2110511001',
+              namaLengkap: 'John Doe',
+              angkatan: 2021,
+              email: '2110511001@mahasiswa.upnvj.ac.id',
+            },
+            {
+              nim: '2110511002',
+              namaLengkap: 'Jane Doe',
+              angkatan: 2021,
+              email: '2110511002@mahasiswa.upnvj.ac.id',
+            },
+          ],
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Bulk import completed (may include partial failures)',
+    type: BulkCreateVoterResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description:
+      'Validation error (less than 2 voters, more than 500, or invalid data)',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized',
+  })
+  async bulkCreate(
+    @Body() dto: BulkCreateVoterDto,
+    @CurrentAdmin('id') adminId: string,
+  ): Promise<BulkCreateVoterResponseDto> {
+    return this.adminVotersService.bulkCreate(dto, adminId);
   }
 
   @Get()

@@ -10,6 +10,11 @@ import { Voter } from './domain/voter';
 import { CreateVoterDto } from './dto/create-voter.dto';
 import { UpdateVoterDto } from './dto/update-voter.dto';
 import { QueryVotersDto } from './dto/query-voters.dto';
+import { BulkCreateVoterDto } from './dto/bulk-create-voter.dto';
+import {
+  BulkCreateVoterResponseDto,
+  BulkVoterErrorDto,
+} from './dto/bulk-create-voter-response.dto';
 import {
   VoterResponseDto,
   SingleVoterResponseDto,
@@ -322,6 +327,171 @@ export class AdminVotersService {
       data: this.mapToResponseDto(restoredVoter),
       message: this.i18n.t('adminVoters.voterRestored', {
         lang: I18nContext.current()?.lang,
+      }),
+    };
+  }
+
+  /**
+   * Bulk create voters with partial success behavior
+   * Time Complexity: O(n) for validation + O(1) for batch insert
+   * Space Complexity: O(n) for tracking duplicates and results
+   * Avoids N+1 by using findByNimsIncludingDeleted for batch lookup
+   */
+  async bulkCreate(
+    dto: BulkCreateVoterDto,
+    adminId: string,
+  ): Promise<BulkCreateVoterResponseDto> {
+    const failedItems: BulkVoterErrorDto[] = [];
+    const validVoters: Voter[] = [];
+    const lang = I18nContext.current()?.lang;
+
+    // O(1) lookup set for detecting duplicates within request
+    const nimSeenMap = new Map<string, number>(); // nim -> first occurrence index
+    const duplicateNims = new Set<string>();
+
+    // First pass: detect duplicates within request - O(n)
+    dto.voters.forEach((voter, index) => {
+      if (nimSeenMap.has(voter.nim)) {
+        duplicateNims.add(voter.nim);
+      } else {
+        nimSeenMap.set(voter.nim, index);
+      }
+    });
+
+    // Extract all unique NIMs for batch database lookup - O(n)
+    const allNims = [...nimSeenMap.keys()];
+
+    // Single batch query to check existing NIMs in database - O(1) query
+    const existingVoters =
+      await this.voterRepository.findByNimsIncludingDeleted(allNims);
+    const existingNimSet = new Set(existingVoters.map((v) => v.nim));
+
+    // Second pass: validate each voter - O(n)
+    for (let index = 0; index < dto.voters.length; index++) {
+      const voterDto = dto.voters[index];
+      const errors: string[] = [];
+
+      // Check for duplicate NIM within request
+      const firstOccurrence = nimSeenMap.get(voterDto.nim);
+      if (duplicateNims.has(voterDto.nim)) {
+        if (firstOccurrence !== index) {
+          // This is a duplicate occurrence (not the first one)
+          errors.push(
+            this.i18n.t('adminVoters.bulkDuplicateNimInRequest', {
+              lang,
+              args: { nim: voterDto.nim, index: firstOccurrence },
+            }),
+          );
+        }
+      }
+
+      // Check for existing NIM in database
+      if (existingNimSet.has(voterDto.nim)) {
+        errors.push(
+          this.i18n.t('adminVoters.nimAlreadyExists', {
+            lang,
+          }),
+        );
+      }
+
+      // Validate email format
+      const expectedEmail = `${voterDto.nim}@mahasiswa.upnvj.ac.id`;
+      if (voterDto.email.toLowerCase() !== expectedEmail.toLowerCase()) {
+        errors.push(
+          this.i18n.t('adminVoters.invalidEmailFormat', {
+            lang,
+            args: { expectedFormat: expectedEmail },
+          }),
+        );
+      }
+
+      if (errors.length > 0) {
+        failedItems.push({
+          index,
+          nim: voterDto.nim,
+          errors,
+        });
+      } else if (!duplicateNims.has(voterDto.nim)) {
+        // Only add if not a duplicate (first occurrence passes)
+        const voter = new Voter();
+        voter.nim = voterDto.nim;
+        voter.namaLengkap = voterDto.namaLengkap;
+        voter.angkatan = voterDto.angkatan;
+        voter.email = voterDto.email;
+        voter.hasVoted = false;
+        voter.votedAt = null;
+        validVoters.push(voter);
+      }
+    }
+
+    // Mark first occurrence of duplicates as failed too
+    for (const nim of duplicateNims) {
+      const firstIndex = nimSeenMap.get(nim)!;
+      // Check if first occurrence wasn't already added as failed
+      if (!failedItems.some((f) => f.index === firstIndex)) {
+        failedItems.push({
+          index: firstIndex,
+          nim,
+          errors: [
+            this.i18n.t('adminVoters.bulkDuplicateNimInRequest', {
+              lang,
+              args: { nim, index: 'multiple occurrences' },
+            }),
+          ],
+        });
+      }
+    }
+
+    // Sort failed items by index for consistent output
+    failedItems.sort((a, b) => a.index - b.index);
+
+    // Batch insert valid voters - O(1) single INSERT query
+    let createdVoters: Voter[] = [];
+    if (validVoters.length > 0) {
+      createdVoters = await this.voterRepository.bulkCreate(validVoters);
+    }
+
+    const successCount = createdVoters.length;
+    const failedCount = failedItems.length;
+    const totalSubmitted = dto.voters.length;
+
+    // Log audit
+    this.auditLogService.log({
+      actorId: adminId,
+      actorType: AuditActorType.ADMIN,
+      action: AuditAction.VOTER_BULK_IMPORTED,
+      resourceType: AuditResourceType.VOTER,
+      resourceId: null,
+      status: successCount > 0 ? AuditStatus.SUCCESS : AuditStatus.FAILED,
+      details: {
+        totalSubmitted,
+        successCount,
+        failedCount,
+        createdNims: createdVoters.map((v) => v.nim),
+        failedNims: failedItems.map((f) => f.nim),
+      },
+    });
+
+    // Determine message based on results
+    let messageKey: string;
+    if (failedCount === 0) {
+      messageKey = 'adminVoters.bulkImportSuccess';
+    } else if (successCount > 0) {
+      messageKey = 'adminVoters.bulkImportPartialSuccess';
+    } else {
+      messageKey = 'adminVoters.bulkImportAllFailed';
+    }
+
+    return {
+      summary: {
+        totalSubmitted,
+        successCount,
+        failedCount,
+      },
+      failedItems,
+      message: this.i18n.t(messageKey, {
+        lang,
+        args: { successCount, failedCount },
       }),
     };
   }
