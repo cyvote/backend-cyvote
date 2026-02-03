@@ -1,0 +1,10 @@
+export enum AuditResourceType {
+  USER = 'USER',
+  VOTER = 'VOTER',
+  CANDIDATE = 'CANDIDATE',
+  VOTE = 'VOTE',
+  TOKEN = 'TOKEN',
+  ELECTION = 'ELECTION',
+  RESULTS = 'RESULTS',
+  EXPORT = 'EXPORT',
+}

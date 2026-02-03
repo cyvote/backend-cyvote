@@ -1,52 +1,32 @@
 <context>
 We will execute the task below
 
-Integrasikan email service (Mailtrap) dan buat email sending utility.
+Buat centralized audit logging service yang akan dipakai di semua domain. Ini fondasi — semua action di sistem harus ke sini.
 
 **Acceptance Criteria:**
 
-- [ ] Mailtrap properties dikonfigurasi via env variable
-- [ ] `EmailService` dibuat sebagai injectable NestJS service
-- [ ] Method `sendEmail({ to, subject, htmlBody })` tersedia
-- [ ] Retry logic: jika send gagal, retry sampai 3x dengan delay
-- [ ] Delivery status di-log ke `audit_logs`
-- [ ] Email template dasar untuk token (HTML template, bukan plain text)
-- [ ] Test kirim email ke address real berhasil
+- [ ] `AuditLogService` dibuat sebagai global injectable service
+- [ ] Method `log({ actorId, actorType, action, resourceType?, resourceId?, ipAddress, status, details? })` tersedia
+- [ ] Automatically capture `ip_address` dan `user_agent` dari request context
+- [ ] Log format untuk voter vote hanya: `"User with ID {uuid} has successfully voted!"` (prinsip LUBERJUDIL)
+- [ ] Service bisa dipakai dari mana saja tanpa circular dependency
+- [ ] Async logging — jangan block request
 
-**Email Template Variables:**
+**Action Types yang harus didefinisikan sebagai enum:**
 
-- `{{ nama }}` — Nama pemilih
-- `{{ nim }}` — NIM pemilih
-- `{{ token }}` — Token voting
-- `{{ end_date }}` — Tanggal berakhir voting
-- `{{ end_time }}` — Jam berakhir voting (WIB)
+```
+LOGIN_SUCCESS, LOGIN_FAILED,
+VOTER_CREATED, VOTER_UPDATED, VOTER_DELETED,
+VOTER_BULK_IMPORTED,
+CANDIDATE_CREATED, CANDIDATE_UPDATED, CANDIDATE_DELETED,
+TOKEN_GENERATED, TOKEN_SENT, TOKEN_RESENT, TOKEN_VERIFIED, TOKEN_FAILED,
+VOTE_CAST,
+ELECTION_SCHEDULED, ELECTION_EXTENDED,
+RESULTS_VERIFIED, RESULTS_PUBLISHED,
+EXPORT_NON_VOTERS, ADMIN_LOGOUT
+```
 
-This is the mailtrap properties
-Credentials
-Manage Credentials
-Host
-
-bulk.smtp.mailtrap.io
-Port
-
-587 (recommended), 465, 2525 or 25
-Username
-
-apismtp@mailtrap.io
-Password
-5e37789514a5ace91674defdc98dab40
-
-Auth
-
-PLAIN, LOGIN
-TLS
-
-Required. STARTTLS on ports 587, 2525 and 25. Forced TLS on port 465.
-
-We will try to send to following emails (bulk)
-
-- nugrahaadhitama22@gmail.com
-- 2210512109@mahasiswa.upnvj.ac.id
+We will use winston for the logger service. In this project we use pnpm not npm. Also, follow the existing architecture (DDD). Read the README.md first. Create unit test, 30 test for positive test, 30 test for negative test, and 30 test for edge case test.
 
 </context>
 

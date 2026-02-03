@@ -10,6 +10,7 @@ import fileConfig from './files/config/file.config';
 import facebookConfig from './auth-facebook/config/facebook.config';
 import googleConfig from './auth-google/config/google.config';
 import appleConfig from './auth-apple/config/apple.config';
+import auditLogConfig from './audit-log/config/audit-log.config';
 import path from 'path';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -55,6 +56,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
         facebookConfig,
         googleConfig,
         appleConfig,
+        auditLogConfig,
       ],
       envFilePath: ['.env'],
     }),
@@ -94,4 +96,69 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     HomeModule,
   ],
 })
+import { AuditLogModule } from './audit-log/audit-log.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { AuditLogContextInterceptor } from './audit-log/interceptors/audit-log-context.interceptor';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [
+        databaseConfig,
+        authConfig,
+        appConfig,
+        mailConfig,
+        fileConfig,
+        facebookConfig,
+        googleConfig,
+        appleConfig,
+        auditLogConfig,
+      ],
+      envFilePath: ['.env'],
+    }),
+    infrastructureDatabaseModule,
+    I18nModule.forRootAsync({
+      useFactory: (configService: ConfigService<AllConfigType>) => ({
+        fallbackLanguage: configService.getOrThrow('app.fallbackLanguage', {
+          infer: true,
+        }),
+        loaderOptions: { path: path.join(__dirname, '/i18n/'), watch: true },
+      }),
+      resolvers: [
+        {
+          use: HeaderResolver,
+          useFactory: (configService: ConfigService<AllConfigType>) => {
+            return [
+              configService.get('app.headerLanguage', {
+                infer: true,
+              }),
+            ];
+          },
+          inject: [ConfigService],
+        },
+      ],
+      imports: [ConfigModule],
+      inject: [ConfigService],
+    }),
+    AuditLogModule,
+    UsersModule,
+    FilesModule,
+    AuthModule,
+    AuthFacebookModule,
+    AuthGoogleModule,
+    AuthAppleModule,
+    SessionModule,
+    MailModule,
+    MailerModule,
+    HomeModule,
+  ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditLogContextInterceptor,
+    },
+  ],
+})
+export class AppModule {}
 export class AppModule {}
