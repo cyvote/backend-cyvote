@@ -2,10 +2,13 @@ import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './src/app.module';
 import { MailService } from './src/mail/mail.service';
+import { MockTokenGenerator } from './src/utils/token-generator/mock-token-generator';
 
 /**
  * Test script to verify bulk email sending with Mailtrap
- * Tests sending voting token emails to 2 real addresses
+ * Tests sending voting token emails to real addresses
+ *
+ * Uses MockTokenGenerator to generate test tokens
  */
 async function testEmailSending() {
   console.log('🚀 Starting email sending test...\n');
@@ -13,6 +16,14 @@ async function testEmailSending() {
   // Bootstrap NestJS application
   const app = await NestFactory.createApplicationContext(AppModule);
   const mailService = app.get(MailService);
+
+  // Generate mock token for testing
+  const { token: testToken, tokenHash } = MockTokenGenerator.generateWithHash();
+
+  console.log('🔐 Mock Token Generated:');
+  console.log(`   Plain Token: ${testToken}`);
+  console.log(`   Token Hash:  ${tokenHash}`);
+  console.log('');
 
   // Test data for voting token emails
   const testRecipients = [
@@ -33,7 +44,6 @@ async function testEmailSending() {
     },
   ];
 
-  const testToken = 'ABC123XYZ789TEST';
   const endDate = '31 Desember 2024';
   const endTime = '23:59 WIB';
 
@@ -43,7 +53,7 @@ async function testEmailSending() {
   console.log(`   - End Date: ${endDate} ${endTime}`);
   console.log('');
 
-  // Send emails to both recipients
+  // Send emails to all recipients
   const results: Array<{
     email: string;
     success: boolean;

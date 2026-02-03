@@ -30,6 +30,7 @@ import { MongooseConfigService } from './database/mongoose-config.service';
 import { DatabaseConfig } from './database/config/database-config.type';
 import { AuditLogModule } from './audit-log/audit-log.module';
 import { AuthAdminModule } from './auth-admin/auth-admin.module';
+import { AuthVoterModule } from './auth-voter/auth-voter.module';
 import { APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { AuditLogContextInterceptor } from './audit-log/interceptors/audit-log-context.interceptor';
 import { SecurityModule } from './security/security.module';
@@ -105,6 +106,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     MailerModule,
     HomeModule,
     AuthAdminModule,
+    AuthVoterModule,
   ],
   providers: [
     {
