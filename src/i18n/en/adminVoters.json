@@ -1,0 +1,16 @@
+{
+  "voterNotFound": "Voter not found",
+  "nimAlreadyExists": "A voter with this NIM already exists",
+  "cannotModifyVotedVoter": "Cannot modify a voter who has already voted",
+  "cannotDeleteVotedVoter": "Cannot delete a voter who has already voted",
+  "voterNotDeleted": "Voter is not deleted or does not exist",
+  "nimAlreadyTakenByAnother": "This NIM is already taken by another active voter",
+  "invalidEmailFormat": "Email must be in the format {expectedFormat}",
+  "voterCreated": "Voter created successfully",
+  "voterUpdated": "Voter updated successfully",
+  "voterDeleted": "Voter deleted successfully",
+  "voterRestored": "Voter restored successfully",
+  "voterRetrieved": "Voter retrieved successfully",
+  "votersRetrieved": "Voters retrieved successfully",
+  "noResultsFound": "No results found matching your criteria"
+}
