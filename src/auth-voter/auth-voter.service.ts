@@ -9,7 +9,6 @@ import { VerifyTokenDto } from './dto/verify-token.dto';
 import { VerifyTokenResponseDto } from './dto/verify-token-response.dto';
 import { VoterRepositoryInterface } from './interfaces/voter.repository.interface';
 import { TokenRepositoryInterface } from './interfaces/token.repository.interface';
-import { ElectionConfigRepositoryInterface } from './interfaces/election-config.repository.interface';
 import { AuditLogService } from '../audit-log/audit-log.service';
 import { AuditAction } from '../audit-log/enums/audit-action.enum';
 import { AuditActorType } from '../audit-log/enums/audit-actor-type.enum';
@@ -25,8 +24,6 @@ export class AuthVoterService {
     private readonly voterRepository: VoterRepositoryInterface,
     @Inject('TokenRepositoryInterface')
     private readonly tokenRepository: TokenRepositoryInterface,
-    @Inject('ElectionConfigRepositoryInterface')
-    private readonly electionConfigRepository: ElectionConfigRepositoryInterface,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService<AllConfigType>,
     private readonly auditLogService: AuditLogService,
@@ -35,7 +32,8 @@ export class AuthVoterService {
 
   /**
    * Step 1: Login with NIM
-   * Validates NIM and election status, returns session token
+   * Validates NIM and returns session token
+   * Note: Election status is NOT checked here - voters can login anytime
    */
   async login(dto: VoterLoginDto): Promise<VoterLoginResponseDto> {
     const { nim } = dto;
@@ -59,74 +57,6 @@ export class AuthVoterService {
 
       throw new UnauthorizedException(
         this.i18n.t('voterAuth.nimNotFound', {
-          lang: I18nContext.current()?.lang,
-        }),
-      );
-    }
-
-    // Check election status
-    const electionConfig = await this.electionConfigRepository.findLatest();
-
-    if (!electionConfig) {
-      this.auditLogService.log({
-        actorId: voter.id,
-        actorType: AuditActorType.USER,
-        action: AuditAction.VOTER_LOGIN_FAILED,
-        resourceType: AuditResourceType.VOTER,
-        resourceId: voter.id,
-        status: AuditStatus.FAILED,
-        details: {
-          nim: voter.nim,
-          reason: 'No election configured',
-        },
-      });
-
-      throw new UnauthorizedException(
-        this.i18n.t('voterAuth.noElection', {
-          lang: I18nContext.current()?.lang,
-        }),
-      );
-    }
-
-    if (electionConfig.hasNotStarted()) {
-      this.auditLogService.log({
-        actorId: voter.id,
-        actorType: AuditActorType.USER,
-        action: AuditAction.VOTER_LOGIN_FAILED,
-        resourceType: AuditResourceType.VOTER,
-        resourceId: voter.id,
-        status: AuditStatus.FAILED,
-        details: {
-          nim: voter.nim,
-          reason: 'Voting has not started',
-          electionStatus: electionConfig.status,
-        },
-      });
-
-      throw new UnauthorizedException(
-        this.i18n.t('voterAuth.votingNotStarted', {
-          lang: I18nContext.current()?.lang,
-        }),
-      );
-    }
-
-    if (electionConfig.hasEnded()) {
-      this.auditLogService.log({
-        actorId: voter.id,
-        actorType: AuditActorType.USER,
-        action: AuditAction.VOTER_LOGIN_FAILED,
-        resourceType: AuditResourceType.VOTER,
-        resourceId: voter.id,
-        status: AuditStatus.FAILED,
-        details: {
-          nim: voter.nim,
-          reason: 'Voting has ended',
-          electionStatus: electionConfig.status,
-        },
-      });
-
-      throw new UnauthorizedException(
-        this.i18n.t('voterAuth.votingEnded', {
           lang: I18nContext.current()?.lang,
         }),
       );
@@ -175,6 +105,7 @@ export class AuthVoterService {
   /**
    * Step 2: Verify voting token
    * Validates token hash (case-insensitive), returns authenticated JWT
+   * Note: Election status is NOT checked here - voters can verify token anytime
    */
   async verifyToken(
     dto: VerifyTokenDto,

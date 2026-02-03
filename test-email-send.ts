@@ -3,12 +3,14 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './src/app.module';
 import { MailService } from './src/mail/mail.service';
 import { MockTokenGenerator } from './src/utils/token-generator/mock-token-generator';
+import { DataSource } from 'typeorm';
 
 /**
  * Test script to verify bulk email sending with Mailtrap
  * Tests sending voting token emails to real addresses
  *
  * Uses MockTokenGenerator to generate test tokens
+ * Also saves token hash to database for verification testing
  */
 async function testEmailSending() {
   console.log('🚀 Starting email sending test...\n');
@@ -16,6 +18,7 @@ async function testEmailSending() {
   // Bootstrap NestJS application
   const app = await NestFactory.createApplicationContext(AppModule);
   const mailService = app.get(MailService);
+  const dataSource = app.get(DataSource);
 
   // Generate mock token for testing
   const { token: testToken, tokenHash } = MockTokenGenerator.generateWithHash();
@@ -51,6 +54,44 @@ async function testEmailSending() {
   console.log(`   - Recipients: ${testRecipients.length}`);
   console.log(`   - Token: ${testToken}`);
   console.log(`   - End Date: ${endDate} ${endTime}`);
+  console.log('');
+
+  // Get unique NIMs and save tokens to database for each voter
+  const uniqueNims = [...new Set(testRecipients.map((r) => r.nim))];
+  console.log('💾 Saving tokens to database for verification testing...');
+
+  for (const nim of uniqueNims) {
+    try {
+      // Find voter by NIM
+      const voters = await dataSource.query(
+        `SELECT id FROM voters WHERE nim = $1`,
+        [nim],
+      );
+
+      if (voters.length > 0) {
+        const voterId = voters[0].id;
+
+        // Delete any existing unused tokens for this voter
+        await dataSource.query(
+          `DELETE FROM tokens WHERE voter_id = $1 AND is_used = false`,
+          [voterId],
+        );
+
+        // Insert new token
+        await dataSource.query(
+          `INSERT INTO tokens (voter_id, token_hash, is_used, resend_count)
+           VALUES ($1, $2, false, 0)`,
+          [voterId, tokenHash],
+        );
+
+        console.log(`   ✅ Token saved for NIM: ${nim} (voterId: ${voterId})`);
+      } else {
+        console.log(`   ⚠️  Voter not found for NIM: ${nim}`);
+      }
+    } catch (error) {
+      console.log(`   ❌ Error saving token for NIM ${nim}: ${error.message}`);
+    }
+  }
   console.log('');
 
   // Send emails to all recipients
@@ -128,50 +169,44 @@ async function testEmailSending() {
   }
 
   console.log('');
+  console.log('📝 Token Verification Test:');
+  console.log(`   Use token: ${testToken}`);
+  console.log(
+    `   Token hash saved to database for NIMs: ${uniqueNims.join(', ')}`,
+  );
+  console.log('');
   console.log('📝 Audit logs should be created in the database.');
   console.log(
-    "   Check with: SELECT * FROM audit_logs WHERE action LIKE 'EMAIL_%' ORDER BY created_at DESC LIMIT 10;",
+    "   Check with: SELECT * FROM audit_log WHERE action LIKE 'EMAIL_%' ORDER BY created_at DESC LIMIT 10;",
   );
 
   // Wait a bit to ensure all async operations complete
   console.log('\n⏳ Waiting for all database operations to complete...');
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  // Verify audit logs in database
+  // Verify tokens in database
   try {
-    const { DataSource } = await import('typeorm');
-    const dataSource = app.get(DataSource);
-
-    const auditLogs = await dataSource.query(
-      `SELECT id, action, resource_type, status, details->>'to' as recipient, 
-              details->>'messageId' as message_id, created_at
-       FROM audit_logs 
-       WHERE action LIKE 'EMAIL_%' 
-       ORDER BY created_at DESC 
-       LIMIT ${testRecipients.length}`,
+    const tokens = await dataSource.query(
+      `SELECT t.id, t.token_hash, t.is_used, v.nim 
+       FROM tokens t 
+       JOIN voters v ON t.voter_id = v.id 
+       WHERE t.token_hash = $1`,
+      [tokenHash],
     );
 
-    console.log('\n📋 Recent audit logs from database:');
-    console.log('─'.repeat(80));
-    if (auditLogs.length > 0) {
-      auditLogs.forEach((log: any, index: number) => {
+    console.log('\n� Tokens saved in database:');
+    console.log('─'.repeat(60));
+    if (tokens.length > 0) {
+      tokens.forEach((t: any, index: number) => {
         console.log(
-          `${index + 1}. ${log.action} - ${log.recipient} (${log.status})`,
+          `${index + 1}. NIM: ${t.nim} | Used: ${t.is_used} | Hash: ${t.token_hash.substring(0, 16)}...`,
         );
-        console.log(`   Message ID: ${log.message_id || 'N/A'}`);
-        console.log(`   Created: ${log.created_at}`);
       });
-
-      if (auditLogs.length < testRecipients.length) {
-        console.log(
-          `\n⚠️  Warning: Expected ${testRecipients.length} audit logs but found ${auditLogs.length}`,
-        );
-      }
     } else {
-      console.log('⚠️  No recent audit logs found!');
+      console.log('⚠️  No tokens found in database!');
     }
   } catch (error) {
-    console.log(`\n⚠️  Could not verify audit logs: ${error.message}`);
+    console.log(`\n⚠️  Could not verify tokens: ${error.message}`);
   }
 
   // Close application

@@ -24,9 +24,10 @@ export class ElectionConfigRepository
   }
 
   async findLatest(): Promise<NullableType<ElectionConfig>> {
-    const entity = await this.electionConfigRepository.findOne({
-      order: { createdAt: 'DESC' },
-    });
+    const entity = await this.electionConfigRepository
+      .createQueryBuilder('config')
+      .orderBy('config.createdAt', 'DESC')
+      .getOne();
 
     return entity ? entity.toDomain() : null;
   }

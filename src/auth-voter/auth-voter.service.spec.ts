@@ -7,7 +7,6 @@ import { AuthVoterService } from './auth-voter.service';
 import { AuditLogService } from '../audit-log/audit-log.service';
 import { Voter } from './domain/voter.model';
 import { Token } from './domain/token.model';
-import { ElectionConfig, ElectionStatus } from './domain/election-config.model';
 import { AuditAction } from '../audit-log/enums/audit-action.enum';
 import { VoterLoginDto } from './dto/voter-login.dto';
 import { VerifyTokenDto } from './dto/verify-token.dto';
@@ -24,7 +23,6 @@ describe('AuthVoterService', () => {
   let service: AuthVoterService;
   let voterRepository: any;
   let tokenRepository: any;
-  let electionConfigRepository: any;
   let jwtService: JwtService;
   let configService: ConfigService;
   let auditLogService: AuditLogService;
@@ -59,21 +57,6 @@ describe('AuthVoterService', () => {
       ...overrides,
     });
 
-  const createMockElectionConfig = (
-    overrides: Partial<ElectionConfig> = {},
-  ): ElectionConfig =>
-    new ElectionConfig({
-      id: 'election-uuid-1234',
-      startDate: new Date('2024-01-01T00:00:00Z'),
-      endDate: new Date('2024-12-31T23:59:59Z'),
-      status: ElectionStatus.ACTIVE,
-      resultsPublishedAt: null,
-      createdBy: 'admin-uuid',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      ...overrides,
-    });
-
   beforeEach(async () => {
     // Create mock repositories
     voterRepository = {
@@ -87,11 +70,6 @@ describe('AuthVoterService', () => {
       findActiveByVoterId: jest.fn(),
     };
 
-    electionConfigRepository = {
-      findActiveElection: jest.fn(),
-      findLatest: jest.fn(),
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthVoterService,
@@ -102,10 +80,6 @@ describe('AuthVoterService', () => {
         {
           provide: 'TokenRepositoryInterface',
           useValue: tokenRepository,
-        },
-        {
-          provide: 'ElectionConfigRepositoryInterface',
-          useValue: electionConfigRepository,
         },
         {
           provide: JwtService,
@@ -133,9 +107,6 @@ describe('AuthVoterService', () => {
               const translations: Record<string, string> = {
                 'voterAuth.nimNotFound':
                   'Your account is not registered. Contact the PSDM Team.',
-                'voterAuth.votingNotStarted': 'Voting has not started yet.',
-                'voterAuth.votingEnded': 'Voting has ended.',
-                'voterAuth.noElection': 'No election is currently configured.',
                 'voterAuth.tokenAlreadyUsed': 'Token has been used.',
                 'voterAuth.tokenInvalid': 'Invalid token.',
                 'voterAuth.loginSuccess': 'Login successful.',
@@ -173,10 +144,7 @@ describe('AuthVoterService', () => {
 
     it('should successfully login with valid NIM', async () => {
       const voter = createMockVoter();
-      const electionConfig = createMockElectionConfig();
-
       voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
 
       const result = await service.login(validLoginDto);
 
@@ -188,10 +156,7 @@ describe('AuthVoterService', () => {
 
     it('should return session token with correct expiration', async () => {
       const voter = createMockVoter();
-      const electionConfig = createMockElectionConfig();
-
       voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
 
       const result = await service.login(validLoginDto);
 
@@ -200,10 +165,7 @@ describe('AuthVoterService', () => {
 
     it('should call jwtService.signAsync with correct payload', async () => {
       const voter = createMockVoter();
-      const electionConfig = createMockElectionConfig();
-
       voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
 
       await service.login(validLoginDto);
 
@@ -222,10 +184,7 @@ describe('AuthVoterService', () => {
 
     it('should log successful login to audit log', async () => {
       const voter = createMockVoter();
-      const electionConfig = createMockElectionConfig();
-
       voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
 
       await service.login(validLoginDto);
 
@@ -242,10 +201,7 @@ describe('AuthVoterService', () => {
         nim: '2210512125',
         namaLengkap: 'Jane Doe',
       });
-      const electionConfig = createMockElectionConfig();
-
       voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
 
       const result = await service.login({ nim: '2210512125' });
 
@@ -257,10 +213,7 @@ describe('AuthVoterService', () => {
 
     it('should handle voter with special characters in name', async () => {
       const voter = createMockVoter({ namaLengkap: "O'Connor-Smith Jr." });
-      const electionConfig = createMockElectionConfig();
-
       voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
 
       const result = await service.login(validLoginDto);
 
@@ -269,37 +222,18 @@ describe('AuthVoterService', () => {
 
     it('should work with NIM containing leading zeros', async () => {
       const voter = createMockVoter({ nim: '0012345678' });
-      const electionConfig = createMockElectionConfig();
-
       voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
 
       const result = await service.login({ nim: '0012345678' });
 
       expect(result.voter.nim).toBe('0012345678');
     });
 
-    it('should successfully login when election is ACTIVE', async () => {
-      const voter = createMockVoter();
-      const electionConfig = createMockElectionConfig({
-        status: ElectionStatus.ACTIVE,
-      });
-
-      voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
-
-      const result = await service.login(validLoginDto);
-
-      expect(result.sessionToken).toBeDefined();
-    });
-
     it('should return different tokens for different voters', async () => {
       const voter1 = createMockVoter({ id: 'voter-1', nim: '1111111111' });
       const voter2 = createMockVoter({ id: 'voter-2', nim: '2222222222' });
-      const electionConfig = createMockElectionConfig();
 
       voterRepository.findByNim.mockResolvedValueOnce(voter1);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
       jwtService.signAsync = jest.fn().mockResolvedValueOnce('token-1');
 
       const result1 = await service.login({ nim: '1111111111' });
@@ -314,10 +248,7 @@ describe('AuthVoterService', () => {
 
     it('should use configService to get auth secret', async () => {
       const voter = createMockVoter();
-      const electionConfig = createMockElectionConfig();
-
       voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
 
       await service.login(validLoginDto);
 
@@ -331,10 +262,7 @@ describe('AuthVoterService', () => {
         hasVoted: true,
         votedAt: new Date(),
       });
-      const electionConfig = createMockElectionConfig();
-
       voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
 
       // Login should still work - voting status is checked separately
       const result = await service.login(validLoginDto);
@@ -344,10 +272,7 @@ describe('AuthVoterService', () => {
 
     it('should work with minimum length NIM', async () => {
       const voter = createMockVoter({ nim: '123' });
-      const electionConfig = createMockElectionConfig();
-
       voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
 
       const result = await service.login({ nim: '123' });
 
@@ -357,10 +282,7 @@ describe('AuthVoterService', () => {
     it('should work with maximum length NIM (15 chars)', async () => {
       const longNim = '123456789012345';
       const voter = createMockVoter({ nim: longNim });
-      const electionConfig = createMockElectionConfig();
-
       voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
 
       const result = await service.login({ nim: longNim });
 
@@ -369,10 +291,7 @@ describe('AuthVoterService', () => {
 
     it('should include all required fields in response', async () => {
       const voter = createMockVoter();
-      const electionConfig = createMockElectionConfig();
-
       voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
 
       const result = await service.login(validLoginDto);
 
@@ -383,21 +302,39 @@ describe('AuthVoterService', () => {
       expect(result.voter).toHaveProperty('nama');
     });
 
-    it('should call findLatest for election config', async () => {
+    it('should allow login without checking election status', async () => {
       const voter = createMockVoter();
-      const electionConfig = createMockElectionConfig();
-
       voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
 
-      await service.login(validLoginDto);
+      const result = await service.login(validLoginDto);
 
-      expect(electionConfigRepository.findLatest).toHaveBeenCalled();
+      expect(result.sessionToken).toBeDefined();
+    });
+
+    it('should handle voter with minimal fields', async () => {
+      const minimalVoter = new Voter({
+        id: 'voter-id',
+        nim: '12345',
+        namaLengkap: 'A',
+        angkatan: 2020,
+        email: 'a@b.c',
+        hasVoted: false,
+        votedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: null,
+      });
+      voterRepository.findByNim.mockResolvedValue(minimalVoter);
+
+      const result = await service.login({ nim: '12345' });
+
+      expect(result.voter.nim).toBe('12345');
+      expect(result.voter.nama).toBe('A');
     });
   });
 
   // ============================================
-  // NEGATIVE TESTS - Login (15 tests)
+  // NEGATIVE TESTS - Login (10 tests)
   // ============================================
   describe('login() - Negative Cases', () => {
     const validLoginDto: VoterLoginDto = { nim: '2210512109' };
@@ -437,156 +374,6 @@ describe('AuthVoterService', () => {
       );
     });
 
-    it('should throw UnauthorizedException when voting not started', async () => {
-      const voter = createMockVoter();
-      const electionConfig = createMockElectionConfig({
-        status: ElectionStatus.SCHEDULED,
-      });
-
-      voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
-
-      await expect(service.login(validLoginDto)).rejects.toThrow(
-        UnauthorizedException,
-      );
-    });
-
-    it('should throw with correct message when voting not started', async () => {
-      const voter = createMockVoter();
-      const electionConfig = createMockElectionConfig({
-        status: ElectionStatus.SCHEDULED,
-      });
-
-      voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
-
-      await expect(service.login(validLoginDto)).rejects.toThrow(
-        'Voting has not started yet.',
-      );
-    });
-
-    it('should throw UnauthorizedException when voting has ended (CLOSED)', async () => {
-      const voter = createMockVoter();
-      const electionConfig = createMockElectionConfig({
-        status: ElectionStatus.CLOSED,
-      });
-
-      voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
-
-      await expect(service.login(validLoginDto)).rejects.toThrow(
-        UnauthorizedException,
-      );
-    });
-
-    it('should throw UnauthorizedException when voting has ended (PUBLISHED)', async () => {
-      const voter = createMockVoter();
-      const electionConfig = createMockElectionConfig({
-        status: ElectionStatus.PUBLISHED,
-      });
-
-      voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
-
-      await expect(service.login(validLoginDto)).rejects.toThrow(
-        'Voting has ended.',
-      );
-    });
-
-    it('should throw UnauthorizedException when no election configured', async () => {
-      const voter = createMockVoter();
-
-      voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(null);
-
-      await expect(service.login(validLoginDto)).rejects.toThrow(
-        UnauthorizedException,
-      );
-    });
-
-    it('should throw with correct message when no election configured', async () => {
-      const voter = createMockVoter();
-
-      voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(null);
-
-      await expect(service.login(validLoginDto)).rejects.toThrow(
-        'No election is currently configured.',
-      );
-    });
-
-    it('should log failed login when voting not started', async () => {
-      const voter = createMockVoter();
-      const electionConfig = createMockElectionConfig({
-        status: ElectionStatus.SCHEDULED,
-      });
-
-      voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
-
-      try {
-        await service.login(validLoginDto);
-      } catch {
-        // expected
-      }
-
-      expect(auditLogService.log).toHaveBeenCalledWith(
-        expect.objectContaining({
-          action: AuditAction.VOTER_LOGIN_FAILED,
-          details: expect.objectContaining({
-            reason: 'Voting has not started',
-          }),
-        }),
-      );
-    });
-
-    it('should log failed login when voting has ended', async () => {
-      const voter = createMockVoter();
-      const electionConfig = createMockElectionConfig({
-        status: ElectionStatus.CLOSED,
-      });
-
-      voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
-
-      try {
-        await service.login(validLoginDto);
-      } catch {
-        // expected
-      }
-
-      expect(auditLogService.log).toHaveBeenCalledWith(
-        expect.objectContaining({
-          action: AuditAction.VOTER_LOGIN_FAILED,
-          details: expect.objectContaining({
-            reason: 'Voting has ended',
-          }),
-        }),
-      );
-    });
-
-    it('should log failed login when no election configured', async () => {
-      const voter = createMockVoter();
-
-      voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(null);
-
-      try {
-        await service.login(validLoginDto);
-      } catch {
-        // expected
-      }
-
-      expect(auditLogService.log).toHaveBeenCalledWith(
-        expect.objectContaining({
-          action: AuditAction.VOTER_LOGIN_FAILED,
-          details: expect.objectContaining({
-            reason: 'No election configured',
-          }),
-        }),
-      );
-    });
-
     it('should not generate JWT when voter not found', async () => {
       voterRepository.findByNim.mockResolvedValue(null);
 
@@ -599,35 +386,27 @@ describe('AuthVoterService', () => {
       expect(jwtService.signAsync).not.toHaveBeenCalled();
     });
 
-    it('should not generate JWT when election not active', async () => {
-      const voter = createMockVoter();
-      const electionConfig = createMockElectionConfig({
-        status: ElectionStatus.SCHEDULED,
-      });
+    it('should propagate repository errors for findByNim', async () => {
+      voterRepository.findByNim.mockRejectedValue(new Error('DB Error'));
 
-      voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
-
-      try {
-        await service.login(validLoginDto);
-      } catch {
-        // expected
-      }
-
-      expect(jwtService.signAsync).not.toHaveBeenCalled();
+      await expect(service.login(validLoginDto)).rejects.toThrow('DB Error');
     });
 
-    it('should include election status in audit log when login fails', async () => {
+    it('should propagate JWT signing errors in login', async () => {
       const voter = createMockVoter();
-      const electionConfig = createMockElectionConfig({
-        status: ElectionStatus.CLOSED,
-      });
-
       voterRepository.findByNim.mockResolvedValue(voter);
-      electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
+      (jwtService.signAsync as jest.Mock).mockRejectedValue(
+        new Error('JWT Error'),
+      );
+
+      await expect(service.login(validLoginDto)).rejects.toThrow('JWT Error');
+    });
+
+    it('should include attemptedNim in audit log when NIM not found', async () => {
+      voterRepository.findByNim.mockResolvedValue(null);
 
       try {
-        await service.login(validLoginDto);
+        await service.login({ nim: '9999999999' });
       } catch {
         // expected
       }
@@ -635,9 +414,47 @@ describe('AuthVoterService', () => {
       expect(auditLogService.log).toHaveBeenCalledWith(
         expect.objectContaining({
           details: expect.objectContaining({
-            electionStatus: ElectionStatus.CLOSED,
+            attemptedNim: '9999999999',
           }),
         }),
+      );
+    });
+
+    it('should use i18n service for error messages', async () => {
+      voterRepository.findByNim.mockResolvedValue(null);
+
+      try {
+        await service.login({ nim: 'unknown' });
+      } catch {
+        // expected
+      }
+
+      expect(i18nService.t).toHaveBeenCalledWith(
+        'voterAuth.nimNotFound',
+        expect.any(Object),
+      );
+    });
+
+    it('should handle concurrent login attempts', async () => {
+      const voter = createMockVoter();
+      voterRepository.findByNim.mockResolvedValue(voter);
+
+      const promises = Array.from({ length: 5 }, () =>
+        service.login({ nim: '2210512109' }),
+      );
+
+      const results = await Promise.all(promises);
+
+      results.forEach((result) => {
+        expect(result.sessionToken).toBeDefined();
+      });
+    });
+
+    it('should handle unknown NIM with special characters', async () => {
+      voterRepository.findByNim.mockResolvedValue(null);
+
+      await expect(service.login({ nim: 'INVALID!@#' })).rejects.toThrow(
+        UnauthorizedException,
       );
     });
   });
@@ -651,7 +468,6 @@ describe('AuthVoterService', () => {
 
     it('should successfully verify valid token', async () => {
       const token = createMockToken();
-
       tokenRepository.findByVoterIdAndHash.mockResolvedValue(token);
       tokenRepository.markAsUsed.mockResolvedValue(undefined);
 
@@ -663,7 +479,6 @@ describe('AuthVoterService', () => {
 
     it('should return token with expiration', async () => {
       const token = createMockToken();
-
       tokenRepository.findByVoterIdAndHash.mockResolvedValue(token);
       tokenRepository.markAsUsed.mockResolvedValue(undefined);
 
@@ -674,7 +489,6 @@ describe('AuthVoterService', () => {
 
     it('should mark token as used after verification', async () => {
       const token = createMockToken();
-
       tokenRepository.findByVoterIdAndHash.mockResolvedValue(token);
       tokenRepository.markAsUsed.mockResolvedValue(undefined);
 
@@ -685,7 +499,6 @@ describe('AuthVoterService', () => {
 
     it('should log successful token verification to audit log', async () => {
       const token = createMockToken();
-
       tokenRepository.findByVoterIdAndHash.mockResolvedValue(token);
       tokenRepository.markAsUsed.mockResolvedValue(undefined);
 
@@ -700,7 +513,6 @@ describe('AuthVoterService', () => {
 
     it('should use SHA-256 hashing for token', async () => {
       const token = createMockToken();
-
       tokenRepository.findByVoterIdAndHash.mockResolvedValue(token);
       tokenRepository.markAsUsed.mockResolvedValue(undefined);
 
@@ -714,7 +526,6 @@ describe('AuthVoterService', () => {
 
     it('should generate authenticated JWT with voter_authenticated type', async () => {
       const token = createMockToken();
-
       tokenRepository.findByVoterIdAndHash.mockResolvedValue(token);
       tokenRepository.markAsUsed.mockResolvedValue(undefined);
 
@@ -732,7 +543,6 @@ describe('AuthVoterService', () => {
 
     it('should use configService to get auth expires config', async () => {
       const token = createMockToken();
-
       tokenRepository.findByVoterIdAndHash.mockResolvedValue(token);
       tokenRepository.markAsUsed.mockResolvedValue(undefined);
 
@@ -745,7 +555,6 @@ describe('AuthVoterService', () => {
 
     it('should include tokenId in authenticated JWT', async () => {
       const token = createMockToken({ id: 'specific-token-id' });
-
       tokenRepository.findByVoterIdAndHash.mockResolvedValue(token);
       tokenRepository.markAsUsed.mockResolvedValue(undefined);
 
@@ -762,7 +571,6 @@ describe('AuthVoterService', () => {
     it('should work with lowercase token input', async () => {
       const token = createMockToken();
       const lowercaseDto: VerifyTokenDto = { token: 'abc123xyz789test' };
-
       tokenRepository.findByVoterIdAndHash.mockResolvedValue(token);
       tokenRepository.markAsUsed.mockResolvedValue(undefined);
 
@@ -774,7 +582,6 @@ describe('AuthVoterService', () => {
     it('should work with uppercase token input', async () => {
       const token = createMockToken();
       const uppercaseDto: VerifyTokenDto = { token: 'ABC123XYZ789TEST' };
-
       tokenRepository.findByVoterIdAndHash.mockResolvedValue(token);
       tokenRepository.markAsUsed.mockResolvedValue(undefined);
 
@@ -786,7 +593,6 @@ describe('AuthVoterService', () => {
     it('should work with mixed case token input', async () => {
       const token = createMockToken();
       const mixedDto: VerifyTokenDto = { token: 'AbC123xYz789TeSt' };
-
       tokenRepository.findByVoterIdAndHash.mockResolvedValue(token);
       tokenRepository.markAsUsed.mockResolvedValue(undefined);
 
@@ -797,7 +603,6 @@ describe('AuthVoterService', () => {
 
     it('should include voterId and tokenId in audit log', async () => {
       const token = createMockToken();
-
       tokenRepository.findByVoterIdAndHash.mockResolvedValue(token);
       tokenRepository.markAsUsed.mockResolvedValue(undefined);
 
@@ -813,7 +618,6 @@ describe('AuthVoterService', () => {
 
     it('should return both token and tokenExpires in response', async () => {
       const token = createMockToken();
-
       tokenRepository.findByVoterIdAndHash.mockResolvedValue(token);
       tokenRepository.markAsUsed.mockResolvedValue(undefined);
 
@@ -826,7 +630,6 @@ describe('AuthVoterService', () => {
     it('should work with short tokens (6 chars)', async () => {
       const token = createMockToken();
       const shortDto: VerifyTokenDto = { token: 'ABC123' };
-
       tokenRepository.findByVoterIdAndHash.mockResolvedValue(token);
       tokenRepository.markAsUsed.mockResolvedValue(undefined);
 
@@ -839,7 +642,6 @@ describe('AuthVoterService', () => {
       const token = createMockToken();
       const longToken = 'A'.repeat(64);
       const longDto: VerifyTokenDto = { token: longToken };
-
       tokenRepository.findByVoterIdAndHash.mockResolvedValue(token);
       tokenRepository.markAsUsed.mockResolvedValue(undefined);
 
@@ -877,7 +679,6 @@ describe('AuthVoterService', () => {
         isUsed: true,
         usedAt: new Date(),
       });
-
       tokenRepository.findByVoterIdAndHash.mockResolvedValue(usedToken);
 
       await expect(service.verifyToken(validDto, voterId)).rejects.toThrow(
@@ -890,7 +691,6 @@ describe('AuthVoterService', () => {
         isUsed: true,
         usedAt: new Date(),
       });
-
       tokenRepository.findByVoterIdAndHash.mockResolvedValue(usedToken);
 
       await expect(service.verifyToken(validDto, voterId)).rejects.toThrow(
@@ -922,7 +722,6 @@ describe('AuthVoterService', () => {
         isUsed: true,
         usedAt: new Date(),
       });
-
       tokenRepository.findByVoterIdAndHash.mockResolvedValue(usedToken);
 
       try {
@@ -967,7 +766,6 @@ describe('AuthVoterService', () => {
 
     it('should not generate JWT when token already used', async () => {
       const usedToken = createMockToken({ isUsed: true });
-
       tokenRepository.findByVoterIdAndHash.mockResolvedValue(usedToken);
 
       try {
@@ -985,7 +783,6 @@ describe('AuthVoterService', () => {
         isUsed: true,
         usedAt,
       });
-
       tokenRepository.findByVoterIdAndHash.mockResolvedValue(usedToken);
 
       try {
@@ -1005,7 +802,6 @@ describe('AuthVoterService', () => {
 
     it('should handle token from different voter', async () => {
       const differentVoterId = 'different-voter-uuid';
-
       tokenRepository.findByVoterIdAndHash.mockResolvedValue(null);
 
       await expect(
@@ -1031,7 +827,6 @@ describe('AuthVoterService', () => {
 
     it('should not mark token used when token is already marked as used', async () => {
       const usedToken = createMockToken({ isUsed: true });
-
       tokenRepository.findByVoterIdAndHash.mockResolvedValue(usedToken);
 
       try {
@@ -1043,40 +838,31 @@ describe('AuthVoterService', () => {
       expect(tokenRepository.markAsUsed).not.toHaveBeenCalled();
     });
 
-    it('should include tokenId in audit log when token already used', async () => {
-      const usedToken = createMockToken({
-        id: 'used-token-id',
-        isUsed: true,
-      });
-
-      tokenRepository.findByVoterIdAndHash.mockResolvedValue(usedToken);
-
-      try {
-        await service.verifyToken(validDto, voterId);
-      } catch {
-        // expected
-      }
-
-      expect(auditLogService.log).toHaveBeenCalledWith(
-        expect.objectContaining({
-          resourceId: 'used-token-id',
-        }),
+    it('should propagate repository errors for findByVoterIdAndHash', async () => {
+      tokenRepository.findByVoterIdAndHash.mockRejectedValue(
+        new Error('Token DB Error'),
       );
+
+      await expect(
+        service.verifyToken({ token: 'ABC123' }, 'voter-id'),
+      ).rejects.toThrow('Token DB Error');
     });
 
-    it('should fail when wrong token provided for voter', async () => {
-      const wrongTokenDto: VerifyTokenDto = { token: 'WRONGTOKEN123456' };
-
-      tokenRepository.findByVoterIdAndHash.mockResolvedValue(null);
-
-      await expect(service.verifyToken(wrongTokenDto, voterId)).rejects.toThrow(
-        UnauthorizedException,
+    it('should propagate repository errors for markAsUsed', async () => {
+      const token = createMockToken();
+      tokenRepository.findByVoterIdAndHash.mockResolvedValue(token);
+      tokenRepository.markAsUsed.mockRejectedValue(
+        new Error('Mark Used Error'),
       );
+
+      await expect(
+        service.verifyToken({ token: 'ABC123' }, 'voter-uuid-1234'),
+      ).rejects.toThrow('Mark Used Error');
     });
   });
 
   // ============================================
-  // EDGE CASES (30 tests)
+  // EDGE CASES (20 tests)
   // ============================================
   describe('Edge Cases', () => {
     describe('hashToken()', () => {
@@ -1136,104 +922,9 @@ describe('AuthVoterService', () => {
       });
     });
 
-    describe('Concurrent Access', () => {
-      it('should handle concurrent login attempts', async () => {
-        const voter = createMockVoter();
-        const electionConfig = createMockElectionConfig();
-
-        voterRepository.findByNim.mockResolvedValue(voter);
-        electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
-
-        const promises = Array.from({ length: 5 }, () =>
-          service.login({ nim: '2210512109' }),
-        );
-
-        const results = await Promise.all(promises);
-
-        results.forEach((result) => {
-          expect(result.sessionToken).toBeDefined();
-        });
-      });
-
-      it('should handle concurrent token verifications', async () => {
-        const token = createMockToken();
-
-        tokenRepository.findByVoterIdAndHash.mockResolvedValue(token);
-        tokenRepository.markAsUsed.mockResolvedValue(undefined);
-
-        // Only first verification should succeed
-        const result = await service.verifyToken(
-          { token: 'ABC123' },
-          'voter-uuid-1234',
-        );
-
-        expect(result.token).toBeDefined();
-      });
-    });
-
-    describe('Repository Error Handling', () => {
-      it('should propagate repository errors for findByNim', async () => {
-        voterRepository.findByNim.mockRejectedValue(new Error('DB Error'));
-
-        await expect(service.login({ nim: '2210512109' })).rejects.toThrow(
-          'DB Error',
-        );
-      });
-
-      it('should propagate repository errors for findLatest', async () => {
-        const voter = createMockVoter();
-        voterRepository.findByNim.mockResolvedValue(voter);
-        electionConfigRepository.findLatest.mockRejectedValue(
-          new Error('Config Error'),
-        );
-
-        await expect(service.login({ nim: '2210512109' })).rejects.toThrow(
-          'Config Error',
-        );
-      });
-
-      it('should propagate repository errors for findByVoterIdAndHash', async () => {
-        tokenRepository.findByVoterIdAndHash.mockRejectedValue(
-          new Error('Token DB Error'),
-        );
-
-        await expect(
-          service.verifyToken({ token: 'ABC123' }, 'voter-id'),
-        ).rejects.toThrow('Token DB Error');
-      });
-
-      it('should propagate repository errors for markAsUsed', async () => {
-        const token = createMockToken();
-        tokenRepository.findByVoterIdAndHash.mockResolvedValue(token);
-        tokenRepository.markAsUsed.mockRejectedValue(
-          new Error('Mark Used Error'),
-        );
-
-        await expect(
-          service.verifyToken({ token: 'ABC123' }, 'voter-uuid-1234'),
-        ).rejects.toThrow('Mark Used Error');
-      });
-    });
-
     describe('JWT Service Error Handling', () => {
-      it('should propagate JWT signing errors in login', async () => {
-        const voter = createMockVoter();
-        const electionConfig = createMockElectionConfig();
-
-        voterRepository.findByNim.mockResolvedValue(voter);
-        electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
-        (jwtService.signAsync as jest.Mock).mockRejectedValue(
-          new Error('JWT Error'),
-        );
-
-        await expect(service.login({ nim: '2210512109' })).rejects.toThrow(
-          'JWT Error',
-        );
-      });
-
       it('should propagate JWT signing errors in verifyToken', async () => {
         const token = createMockToken();
-
         tokenRepository.findByVoterIdAndHash.mockResolvedValue(token);
         tokenRepository.markAsUsed.mockResolvedValue(undefined);
         (jwtService.signAsync as jest.Mock).mockRejectedValue(
@@ -1249,87 +940,17 @@ describe('AuthVoterService', () => {
     describe('Voter State Edge Cases', () => {
       it('should allow login with deleted voter (null deletedAt)', async () => {
         const voter = createMockVoter({ deletedAt: null });
-        const electionConfig = createMockElectionConfig();
-
         voterRepository.findByNim.mockResolvedValue(voter);
-        electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
 
         const result = await service.login({ nim: '2210512109' });
 
         expect(result.sessionToken).toBeDefined();
-      });
-
-      it('should handle voter with minimum fields', async () => {
-        const minimalVoter = new Voter({
-          id: 'voter-id',
-          nim: '12345',
-          namaLengkap: 'A',
-          angkatan: 2020,
-          email: 'a@b.c',
-          hasVoted: false,
-          votedAt: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          deletedAt: null,
-        });
-        const electionConfig = createMockElectionConfig();
-
-        voterRepository.findByNim.mockResolvedValue(minimalVoter);
-        electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
-
-        const result = await service.login({ nim: '12345' });
-
-        expect(result.voter.nim).toBe('12345');
-        expect(result.voter.nama).toBe('A');
-      });
-    });
-
-    describe('ElectionConfig State Edge Cases', () => {
-      it('should correctly identify SCHEDULED as not started', () => {
-        const config = createMockElectionConfig({
-          status: ElectionStatus.SCHEDULED,
-        });
-
-        expect(config.hasNotStarted()).toBe(true);
-        expect(config.isActive()).toBe(false);
-        expect(config.hasEnded()).toBe(false);
-      });
-
-      it('should correctly identify ACTIVE as active', () => {
-        const config = createMockElectionConfig({
-          status: ElectionStatus.ACTIVE,
-        });
-
-        expect(config.hasNotStarted()).toBe(false);
-        expect(config.isActive()).toBe(true);
-        expect(config.hasEnded()).toBe(false);
-      });
-
-      it('should correctly identify CLOSED as ended', () => {
-        const config = createMockElectionConfig({
-          status: ElectionStatus.CLOSED,
-        });
-
-        expect(config.hasNotStarted()).toBe(false);
-        expect(config.isActive()).toBe(false);
-        expect(config.hasEnded()).toBe(true);
-      });
-
-      it('should correctly identify PUBLISHED as ended', () => {
-        const config = createMockElectionConfig({
-          status: ElectionStatus.PUBLISHED,
-        });
-
-        expect(config.hasNotStarted()).toBe(false);
-        expect(config.isActive()).toBe(false);
-        expect(config.hasEnded()).toBe(true);
       });
     });
 
     describe('Token State Edge Cases', () => {
       it('should handle token with null voterId', async () => {
         const tokenWithNullVoter = createMockToken({ voterId: null });
-
         tokenRepository.findByVoterIdAndHash.mockResolvedValue(
           tokenWithNullVoter,
         );
@@ -1345,7 +966,6 @@ describe('AuthVoterService', () => {
 
       it('should handle token with high resend count', async () => {
         const highResendToken = createMockToken({ resendCount: 100 });
-
         tokenRepository.findByVoterIdAndHash.mockResolvedValue(highResendToken);
         tokenRepository.markAsUsed.mockResolvedValue(undefined);
 
@@ -1361,7 +981,6 @@ describe('AuthVoterService', () => {
         const oldToken = createMockToken({
           generatedAt: new Date('2020-01-01'),
         });
-
         tokenRepository.findByVoterIdAndHash.mockResolvedValue(oldToken);
         tokenRepository.markAsUsed.mockResolvedValue(undefined);
 
@@ -1374,37 +993,10 @@ describe('AuthVoterService', () => {
       });
     });
 
-    describe('I18n Edge Cases', () => {
-      it('should use i18n service for error messages', async () => {
-        voterRepository.findByNim.mockResolvedValue(null);
-
-        try {
-          await service.login({ nim: 'unknown' });
-        } catch {
-          // expected
-        }
-
-        expect(i18nService.t).toHaveBeenCalledWith(
-          'voterAuth.nimNotFound',
-          expect.any(Object),
-        );
-      });
-
-      it('should handle missing i18n translation gracefully', async () => {
-        (i18nService.t as jest.Mock).mockReturnValue('voterAuth.unknownError');
-        voterRepository.findByNim.mockResolvedValue(null);
-
-        await expect(service.login({ nim: 'unknown' })).rejects.toThrow();
-      });
-    });
-
     describe('NIM Format Edge Cases', () => {
       it('should handle NIM with only numbers', async () => {
         const voter = createMockVoter({ nim: '1234567890' });
-        const electionConfig = createMockElectionConfig();
-
         voterRepository.findByNim.mockResolvedValue(voter);
-        electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
 
         const result = await service.login({ nim: '1234567890' });
 
@@ -1413,14 +1005,35 @@ describe('AuthVoterService', () => {
 
       it('should handle NIM with alphanumeric mix', async () => {
         const voter = createMockVoter({ nim: 'ABC123XYZ' });
-        const electionConfig = createMockElectionConfig();
-
         voterRepository.findByNim.mockResolvedValue(voter);
-        electionConfigRepository.findLatest.mockResolvedValue(electionConfig);
 
         const result = await service.login({ nim: 'ABC123XYZ' });
 
         expect(result.voter.nim).toBe('ABC123XYZ');
+      });
+    });
+
+    describe('Concurrent Operations', () => {
+      it('should handle concurrent token verifications', async () => {
+        const token = createMockToken();
+        tokenRepository.findByVoterIdAndHash.mockResolvedValue(token);
+        tokenRepository.markAsUsed.mockResolvedValue(undefined);
+
+        const result = await service.verifyToken(
+          { token: 'ABC123' },
+          'voter-uuid-1234',
+        );
+
+        expect(result.token).toBeDefined();
+      });
+    });
+
+    describe('i18n Edge Cases', () => {
+      it('should handle missing i18n translation gracefully', async () => {
+        (i18nService.t as jest.Mock).mockReturnValue('voterAuth.unknownError');
+        voterRepository.findByNim.mockResolvedValue(null);
+
+        await expect(service.login({ nim: 'unknown' })).rejects.toThrow();
       });
     });
   });

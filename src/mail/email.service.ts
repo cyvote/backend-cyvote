@@ -192,7 +192,7 @@ export class EmailService {
   ): Promise<void> {
     try {
       const result = await this.dataSource.query(
-        `INSERT INTO audit_logs (
+        `INSERT INTO audit_log (
           actor_type, 
           action, 
           resource_type, 
@@ -215,12 +215,12 @@ export class EmailService {
       );
 
       this.logger.debug(
-        `Email delivery logged to audit_logs: ${status} (ID: ${result[0]?.id})`,
+        `Email delivery logged to audit_log: ${status} (ID: ${result[0]?.id})`,
       );
     } catch (error) {
       // Don't throw if audit logging fails - log locally instead
       this.logger.error(
-        `Failed to log email delivery to audit: ${(error as Error).message}`,
+        `Failed to log email delivery to audit_log: ${(error as Error).message}`,
         (error as Error).stack,
       );
     }
