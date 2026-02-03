@@ -16,9 +16,26 @@ import helmet from 'helmet';
 import { HelmetOptionsFactory } from './security/helmet/config/helmet-options.factory';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  const app = await NestFactory.create(AppModule);
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   const configService = app.get(ConfigService<AllConfigType>);
+
+  // Configure CORS
+  const allowedOrigins = process.env.FRONTEND_DOMAIN
+    ? process.env.FRONTEND_DOMAIN.split(',').map((origin) => origin.trim())
+    : ['http://localhost:3000'];
+
+  app.enableCors({
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    credentials: true,
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'x-custom-lang',
+      'Accept',
+    ],
+  });
 
   // Apply Helmet security middleware
   const helmetOptionsFactory = app.get(HelmetOptionsFactory);
