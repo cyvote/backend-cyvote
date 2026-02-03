@@ -2,23 +2,25 @@
 We will execute the task below
 
 **Description:**
-Implementasi dua-step auth untuk voter: login dengan NIM, lalu verify token.
+Endpoint CRUD untuk manajemen pemilih satu per satu.
 
 **Acceptance Criteria:**
 
-- [ ] `POST /api/v1/auth/voter/login` — terima `{ nim }`, check NIM ada di database dan voting period aktif
-- [ ] Jika NIM tidak ditemukan, return `{ error: "Akun Anda tidak terdaftar. Hubungi Tim PSDM." }`
-- [ ] Jika voting belum/sudah berakhir, return pesan yang sesuai
-- [ ] Jika NIM valid, return session token (short-lived) yang berisi voter_id — jangan reveal token voting di sini
-- [ ] `POST /api/v1/auth/voter/verify-token` — terima `{ token }`, compare case-insensitive dengan token_hash di DB
-- [ ] Jika token valid dan belum digunakan, return JWT authenticated session
-- [ ] Jika token sudah digunakan, return error "Token sudah digunakan"
-- [ ] Semua attempt di-log
-- [ ] Rate limiting terintegrasi
+- [ ] `POST /api/v1/admin/voters` — create voter baru
+  - Validasi: NIM unique, nama required, Angkatan (format tahun YYYY), email.
+- [ ] `GET /api/v1/admin/voters` — list voters dengan query params: `page`, `limit`, `search`, `filter` (all/voted/not-voted), `angkatan`, `sort`, `order`
+- [ ] `GET /api/v1/admin/voters/:id` — get voter detail by ID
+- [ ] `PUT /api/v1/admin/voters/:id` — update voter
+  - Tidak bisa edit jika voter sudah voting
+  - NIM uniqueness re-check jika NIM diubah
+- [ ] `DELETE /api/admin/voters/:id` — soft delete
+  - Tidak bisa delete jika voter sudah voting
+- [ ] Semua endpoint protected dengan `AuthGuard` + role `ADMIN`
+- [ ] Semua action di-log ke audit_logs
 
-**Catatan:** Token di database disimpan sebagai hash. Saat verify, hash input dan compare.
+---
 
-Put it in src/auth-voter/.In this project we use pnpm not npm. Also, follow the existing architecture (DDD). Analyze the code first. Create unit test, 30 test for positive test, 30 test for negative test, and 30 test for edge case test. Follow the code quality standard that exist.
+Put it in src/{you decide the domain}/.In this project we use pnpm not npm. Also, follow the existing architecture (DDD). Analyze the code first. Create unit test, 30 test for positive test, 30 test for negative test, and 30 test for edge case test. Follow the code quality standard that exist.
 
 </context>
 

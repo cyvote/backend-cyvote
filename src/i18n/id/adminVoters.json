@@ -1,0 +1,13 @@
+{
+  "voterNotFound": "Pemilih tidak ditemukan",
+  "nimAlreadyExists": "Pemilih dengan NIM ini sudah ada",
+  "cannotModifyVotedVoter": "Tidak dapat mengubah pemilih yang sudah memberikan suara",
+  "cannotDeleteVotedVoter": "Tidak dapat menghapus pemilih yang sudah memberikan suara",
+  "voterNotDeleted": "Pemilih tidak dihapus atau tidak ada",
+  "nimAlreadyTakenByAnother": "NIM ini sudah digunakan oleh pemilih aktif lainnya",
+  "invalidEmailFormat": "Email harus dalam format {expectedFormat}",
+  "voterCreated": "Pemilih berhasil dibuat",
+  "voterUpdated": "Pemilih berhasil diperbarui",
+  "voterDeleted": "Pemilih berhasil dihapus",
+  "voterRestored": "Pemilih berhasil dipulihkan"
+}
