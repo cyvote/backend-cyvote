@@ -2,9 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { I18nContext } from 'nestjs-i18n';
 import { MailData } from './interfaces/mail-data.interface';
+import { VotingTokenMailData } from './interfaces/voting-token-mail-data.interface';
+import { SendEmailResult } from './interfaces/send-email-result.interface';
 
 import { MaybeType } from '../utils/types/maybe.type';
 import { MailerService } from '../mailer/mailer.service';
+import { EmailService } from './email.service';
 import path from 'path';
 import { AllConfigType } from '../config/config.type';
 
@@ -12,6 +15,7 @@ import { AllConfigType } from '../config/config.type';
 export class MailService {
   constructor(
     private readonly mailerService: MailerService,
+    private readonly emailService: EmailService,
     private readonly configService: ConfigService<AllConfigType>,
   ) {}
 
@@ -164,6 +168,54 @@ export class MailService {
         text2,
         text3,
       },
+    });
+  }
+
+  /**
+   * Sends voting token email to voter
+   * @param mailData - Voting token mail data containing voter info and token
+   * @returns Promise<SendEmailResult> - Result of email send operation
+   */
+  async sendVotingToken(
+    mailData: VotingTokenMailData,
+  ): Promise<SendEmailResult> {
+    // Get voting URL from config
+    const votingUrl =
+      this.configService.getOrThrow('app.frontendDomain', {
+        infer: true,
+      }) + '/vote';
+
+    // Prepare template context
+    const templateContext = {
+      app_name: this.configService.get('app.name', { infer: true }),
+      voting_url: votingUrl,
+      ...mailData.data,
+    };
+
+    // Get template path
+    const templatePath = path.join(
+      this.configService.getOrThrow('app.workingDirectory', {
+        infer: true,
+      }),
+      'src',
+      'mail',
+      'mail-templates',
+      'voting-token.hbs',
+    );
+
+    // Render template manually
+    const fs = await import('node:fs/promises');
+    const Handlebars = await import('handlebars');
+    const template = await fs.readFile(templatePath, 'utf-8');
+    const htmlBody = Handlebars.compile(template, {
+      strict: true,
+    })(templateContext);
+
+    // Send email with retry logic
+    return await this.emailService.sendEmail({
+      to: mailData.to,
+      subject: 'Token Voting - Pemilihan Umum CyVote',
+      htmlBody,
     });
   }
 }
