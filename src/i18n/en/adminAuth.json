@@ -1,0 +1,7 @@
+{
+  "invalidCredentials": "Invalid credentials",
+  "accountDisabled": "Account is disabled",
+  "loginSuccess": "Login successful",
+  "accessDenied": "Access denied",
+  "insufficientPermissions": "Insufficient permissions"
+}

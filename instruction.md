@@ -2,22 +2,22 @@
 We will execute the task below
 
 **Description:**
-Implementasikan rate limiting dan security middleware yang akan digunakan di seluruh API.
+Implementasi login untuk admin dan superadmin dengan JWT Token.
 
 **Acceptance Criteria:**
 
-- [ ] Rate limiter menggunakan in-memory store (cukup untuk skala ini)
-- [ ] Login endpoint: max 5 attempts per 10 menit per IP
-- [ ] Token verification endpoint: max 3 attempts per 5 menit per session/IP
-- [ ] Global API rate limit: 100 requests per menit per IP
-- [ ] Jika rate limit terlampaui, return `429 Too Many Requests` dengan `Retry-After` header
-- [ ] Helmet.js dikonfigurasi untuk security headers (CSP, XSS protection, etc.)
-- [ ] CSRF protection di-setup
-- [ ] IP address di-extract dari request (handle behind proxy)
+- [ ] `POST /api/v1/auth/admin/login` — terima `{ username, password }`, return JWT token
+- [ ] Password di-hash dengan bcrypt (cost factor 12) saat seed
+- [ ] JWT token berisi: `{ id, username, role }` — signed dengan secret dari env
+- [ ] Token expiry: 2 jam
+- [ ] Jika login gagal, return `401` dengan message generic (jangan reveal username/password mana yang salah)
+- [ ] Login success/fail di-log ke audit_logs
+- [ ] `AuthGuard` (NestJS guard) dibuat untuk protect admin routes
+- [ ] `RolesGuard` dibuat untuk differentiate ADMIN vs SUPERADMIN access
 
 ---
 
-We will use winston for the logger service. In this project we use pnpm not npm. Also, follow the existing architecture (DDD). Analyze the code first. Create unit test, 30 test for positive test, 30 test for negative test, and 30 test for edge case test. Follow the code quality standard that exist.
+Put it in src/auth-admin/.In this project we use pnpm not npm. Also, follow the existing architecture (DDD). Analyze the code first. Create unit test, 30 test for positive test, 30 test for negative test, and 30 test for edge case test. Follow the code quality standard that exist. Also, create the seed file for admin and superadmin. Default password for admin is `admin123` and for superadmin is `superadmin123`. For admin we create 5 users and for superadmin we create 3 users.
 
 </context>
 
