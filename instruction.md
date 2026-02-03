@@ -1,26 +1,110 @@
 <context>
-We will connect this project to supabase database with the following detail.
+We will create the migrations file for the following tables. We will create each table with its own file. After create the migration file, we will run it. We use pnpm and not npm.
 
-Direct connection
-Ideal for applications with persistent and long-lived connections, such as those running on virtual machines or long-standing containers.
+```sql
+-- Voters Table
+CREATE TABLE voters (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nim VARCHAR(15) UNIQUE NOT NULL,
+  nama_lengkap VARCHAR(100) NOT NULL,
+  angkatan INTEGER NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  has_voted BOOLEAN DEFAULT FALSE,
+  voted_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  deleted_at TIMESTAMP
+);
 
-postgresql://postgres:[YOUR-PASSWORD]@db.ytdkbqslvnivtdycfwom.supabase.co:5432/postgres
+-- Candidates Table
+CREATE TABLE candidates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nama VARCHAR(100) NOT NULL,
+  photo_url VARCHAR(500),
+  visi_misi TEXT,
+  program_kerja TEXT,
+  grand_design_url VARCHAR(500),
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
 
-View parameters
-host:
-db.ytdkbqslvnivtdycfwom.supabase.co
+-- Tokens Table
+CREATE TABLE tokens (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  voter_id UUID REFERENCES voters(id),
+  token_hash VARCHAR(64) NOT NULL, -- Hashed token
+  generated_at TIMESTAMP DEFAULT NOW(),
+  used_at TIMESTAMP,
+  is_used BOOLEAN DEFAULT FALSE,
+  resend_count INTEGER DEFAULT 0
+);
 
-port:
-5432
+-- Votes Table
+CREATE TABLE votes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  voter_id UUID REFERENCES voters(id),
+  candidate_id UUID REFERENCES candidates(id),
+  vote_hash VARCHAR(64) NOT NULL, -- SHA-256 hash
+  voted_at TIMESTAMP DEFAULT NOW(),
+  receipt_code VARCHAR(20) UNIQUE NOT NULL
+);
 
-database:
-postgres
+-- Vote Hashes (for integrity verification)
+CREATE TABLE vote_hashes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  vote_id UUID REFERENCES votes(id),
+  hash VARCHAR(64) NOT NULL,
+  verification_hash VARCHAR(64), -- For double-verification
+  created_at TIMESTAMP DEFAULT NOW()
+);
 
-user:
-postgres
+-- Admins Table
+CREATE TABLE admins (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  username VARCHAR(50) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  role VARCHAR(20) NOT NULL, -- 'ADMIN' or 'SUPERADMIN'
+  created_at TIMESTAMP DEFAULT NOW(),
+  last_login TIMESTAMP
+);
 
-password:
-HiddupJokowi!!!
+-- Election Config Table
+CREATE TABLE election_config (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  start_date TIMESTAMP NOT NULL,
+  end_date TIMESTAMP NOT NULL,
+  status VARCHAR(20) DEFAULT 'SCHEDULED', -- SCHEDULED, ACTIVE, CLOSED, PUBLISHED
+  results_published_at TIMESTAMP,
+  created_by UUID REFERENCES admins(id),
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Audit Logs Table
+CREATE TABLE audit_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  actor_id UUID, -- Can be voter_id or admin_id
+  actor_type VARCHAR(20), -- 'VOTER', 'ADMIN', 'SUPERADMIN', 'SYSTEM'
+  action VARCHAR(100) NOT NULL,
+  resource_type VARCHAR(50),
+  resource_id UUID,
+  ip_address VARCHAR(45),
+  user_agent TEXT,
+  status VARCHAR(20), -- 'SUCCESS', 'FAILURE'
+  details JSONB,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Indexes for performance
+CREATE INDEX idx_voters_nim ON voters(nim);
+CREATE INDEX idx_voters_has_voted ON voters(has_voted);
+CREATE INDEX idx_tokens_voter ON tokens(voter_id);
+CREATE INDEX idx_votes_voter ON votes(voter_id);
+CREATE INDEX idx_votes_candidate ON votes(candidate_id);
+CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at);
+CREATE INDEX idx_audit_logs_actor ON audit_logs(actor_id, actor_type);
+```
+
 </context>
 
 <role>
