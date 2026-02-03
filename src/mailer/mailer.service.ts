@@ -29,7 +29,7 @@ export class MailerService {
   }: nodemailer.SendMailOptions & {
     templatePath: string;
     context: Record<string, unknown>;
-  }): Promise<void> {
+  }): Promise<nodemailer.SentMessageInfo> {
     let html: string | undefined;
     if (templatePath) {
       const template = await fs.readFile(templatePath, 'utf-8');
@@ -38,7 +38,7 @@ export class MailerService {
       })(context);
     }
 
-    await this.transporter.sendMail({
+    return await this.transporter.sendMail({
       ...mailOptions,
       from: mailOptions.from
         ? mailOptions.from

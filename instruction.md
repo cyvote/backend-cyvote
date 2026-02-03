@@ -1,109 +1,52 @@
 <context>
-We will create the migrations file for the following tables. We will create each table with its own file. After create the migration file, we will run it. We use pnpm and not npm.
+We will execute the task below
 
-```sql
--- Voters Table
-CREATE TABLE voters (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  nim VARCHAR(15) UNIQUE NOT NULL,
-  nama_lengkap VARCHAR(100) NOT NULL,
-  angkatan INTEGER NOT NULL,
-  email VARCHAR(255) NOT NULL,
-  has_voted BOOLEAN DEFAULT FALSE,
-  voted_at TIMESTAMP,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW(),
-  deleted_at TIMESTAMP
-);
+Integrasikan email service (Mailtrap) dan buat email sending utility.
 
--- Candidates Table
-CREATE TABLE candidates (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  nama VARCHAR(100) NOT NULL,
-  photo_url VARCHAR(500),
-  visi_misi TEXT,
-  program_kerja TEXT,
-  grand_design_url VARCHAR(500),
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-);
+**Acceptance Criteria:**
 
--- Tokens Table
-CREATE TABLE tokens (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  voter_id UUID REFERENCES voters(id),
-  token_hash VARCHAR(64) NOT NULL, -- Hashed token
-  generated_at TIMESTAMP DEFAULT NOW(),
-  used_at TIMESTAMP,
-  is_used BOOLEAN DEFAULT FALSE,
-  resend_count INTEGER DEFAULT 0
-);
+- [ ] Mailtrap properties dikonfigurasi via env variable
+- [ ] `EmailService` dibuat sebagai injectable NestJS service
+- [ ] Method `sendEmail({ to, subject, htmlBody })` tersedia
+- [ ] Retry logic: jika send gagal, retry sampai 3x dengan delay
+- [ ] Delivery status di-log ke `audit_logs`
+- [ ] Email template dasar untuk token (HTML template, bukan plain text)
+- [ ] Test kirim email ke address real berhasil
 
--- Votes Table
-CREATE TABLE votes (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  voter_id UUID REFERENCES voters(id),
-  candidate_id UUID REFERENCES candidates(id),
-  vote_hash VARCHAR(64) NOT NULL, -- SHA-256 hash
-  voted_at TIMESTAMP DEFAULT NOW(),
-  receipt_code VARCHAR(20) UNIQUE NOT NULL
-);
+**Email Template Variables:**
 
--- Vote Hashes (for integrity verification)
-CREATE TABLE vote_hashes (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  vote_id UUID REFERENCES votes(id),
-  hash VARCHAR(64) NOT NULL,
-  verification_hash VARCHAR(64), -- For double-verification
-  created_at TIMESTAMP DEFAULT NOW()
-);
+- `{{ nama }}` — Nama pemilih
+- `{{ nim }}` — NIM pemilih
+- `{{ token }}` — Token voting
+- `{{ end_date }}` — Tanggal berakhir voting
+- `{{ end_time }}` — Jam berakhir voting (WIB)
 
--- Admins Table
-CREATE TABLE admins (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  username VARCHAR(50) UNIQUE NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
-  role VARCHAR(20) NOT NULL, -- 'ADMIN' or 'SUPERADMIN'
-  created_at TIMESTAMP DEFAULT NOW(),
-  last_login TIMESTAMP
-);
+This is the mailtrap properties
+Credentials
+Manage Credentials
+Host
 
--- Election Config Table
-CREATE TABLE election_config (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  start_date TIMESTAMP NOT NULL,
-  end_date TIMESTAMP NOT NULL,
-  status VARCHAR(20) DEFAULT 'SCHEDULED', -- SCHEDULED, ACTIVE, CLOSED, PUBLISHED
-  results_published_at TIMESTAMP,
-  created_by UUID REFERENCES admins(id),
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-);
+bulk.smtp.mailtrap.io
+Port
 
--- Audit Logs Table
-CREATE TABLE audit_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  actor_id UUID, -- Can be voter_id or admin_id
-  actor_type VARCHAR(20), -- 'VOTER', 'ADMIN', 'SUPERADMIN', 'SYSTEM'
-  action VARCHAR(100) NOT NULL,
-  resource_type VARCHAR(50),
-  resource_id UUID,
-  ip_address VARCHAR(45),
-  user_agent TEXT,
-  status VARCHAR(20), -- 'SUCCESS', 'FAILURE'
-  details JSONB,
-  created_at TIMESTAMP DEFAULT NOW()
-);
+587 (recommended), 465, 2525 or 25
+Username
 
--- Indexes for performance
-CREATE INDEX idx_voters_nim ON voters(nim);
-CREATE INDEX idx_voters_has_voted ON voters(has_voted);
-CREATE INDEX idx_tokens_voter ON tokens(voter_id);
-CREATE INDEX idx_votes_voter ON votes(voter_id);
-CREATE INDEX idx_votes_candidate ON votes(candidate_id);
-CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at);
-CREATE INDEX idx_audit_logs_actor ON audit_logs(actor_id, actor_type);
-```
+apismtp@mailtrap.io
+Password
+5e37789514a5ace91674defdc98dab40
+
+Auth
+
+PLAIN, LOGIN
+TLS
+
+Required. STARTTLS on ports 587, 2525 and 25. Forced TLS on port 465.
+
+We will try to send to following emails (bulk)
+
+- nugrahaadhitama22@gmail.com
+- 2210512109@mahasiswa.upnvj.ac.id
 
 </context>
 
