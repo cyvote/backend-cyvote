@@ -14,8 +14,17 @@ import { AllConfigType } from './config/config.type';
 import { ResolvePromisesInterceptor } from './utils/serializer.interceptor';
 import helmet from 'helmet';
 import { HelmetOptionsFactory } from './security/helmet/config/helmet-options.factory';
+import { mkdirSync, existsSync } from 'fs';
 
 async function bootstrap() {
+  // Ensure /tmp/files directory exists in production (for Vercel serverless)
+  if (process.env.NODE_ENV === 'production') {
+    const tmpFilesDir = '/tmp/files';
+    if (!existsSync(tmpFilesDir)) {
+      mkdirSync(tmpFilesDir, { recursive: true });
+    }
+  }
+
   const app = await NestFactory.create(AppModule);
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   const configService = app.get(ConfigService<AllConfigType>);
