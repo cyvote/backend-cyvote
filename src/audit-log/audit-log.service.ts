@@ -24,7 +24,7 @@ export class AuditLogService {
    * Main logging method - Async and non-blocking
    * Fire and forget pattern - never throws errors
    */
-  async log(dto: CreateAuditLogDto): Promise<void> {
+  log(dto: CreateAuditLogDto): void {
     const auditLogConfig = this.configService.get('auditLog', { infer: true });
 
     // Check if audit logging is enabled

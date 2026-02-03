@@ -35,7 +35,9 @@ export default registerAs<AuditLogConfig>('auditLog', () => {
 
   return {
     enabled: process.env.AUDIT_LOG_ENABLED === 'true',
-    logLevel: (process.env.AUDIT_LOG_LEVEL as 'error' | 'warn' | 'info' | 'debug') || 'info',
+    logLevel:
+      (process.env.AUDIT_LOG_LEVEL as 'error' | 'warn' | 'info' | 'debug') ||
+      'info',
     consoleEnabled: process.env.AUDIT_LOG_CONSOLE_ENABLED === 'true',
     fileEnabled: process.env.AUDIT_LOG_FILE_ENABLED === 'true',
     filePath: process.env.AUDIT_LOG_FILE_PATH || './logs',

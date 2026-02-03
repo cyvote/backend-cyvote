@@ -4,7 +4,7 @@ import { AuditLogSchemaClass } from '../entities/audit-log.schema';
 export class AuditLogMapper {
   static toDomain(raw: AuditLogSchemaClass): AuditLog {
     const domainEntity = new AuditLog();
-    domainEntity.id = raw._id.toString();
+    domainEntity.id = (raw as any)._id?.toString();
     domainEntity.actorId = raw.actorId;
     domainEntity.actorType = raw.actorType;
     domainEntity.action = raw.action;
@@ -22,7 +22,7 @@ export class AuditLogMapper {
   static toPersistence(domainEntity: AuditLog): AuditLogSchemaClass {
     const persistenceSchema = new AuditLogSchemaClass();
     if (domainEntity.id && typeof domainEntity.id === 'string') {
-      persistenceSchema._id = domainEntity.id;
+      (persistenceSchema as any)._id = domainEntity.id;
     }
     persistenceSchema.actorId = domainEntity.actorId;
     persistenceSchema.actorType = domainEntity.actorType;

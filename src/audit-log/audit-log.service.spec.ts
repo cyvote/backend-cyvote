@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { AuditLogService } from './audit-log.service';
 import { AuditLogLoggerService } from './audit-log-logger.service';
 import { AuditLogRequestContextService } from './audit-log-request-context.service';
-import { AuditLogRepositoryInterface } from './interfaces/audit-log.repository.interface';
 import { AuditAction } from './enums/audit-action.enum';
 import { AuditActorType } from './enums/audit-actor-type.enum';
 import { AuditResourceType } from './enums/audit-resource-type.enum';
@@ -34,10 +33,6 @@ jest.mock('../database/config/database.config', () => ({
 
 describe('AuditLogService', () => {
   let service: AuditLogService;
-  let repository: AuditLogRepositoryInterface;
-  let logger: AuditLogLoggerService;
-  let requestContextService: AuditLogRequestContextService;
-  let configService: ConfigService;
 
   const mockRepository = {
     create: jest.fn(),
@@ -90,12 +85,6 @@ describe('AuditLogService', () => {
     }).compile();
 
     service = module.get<AuditLogService>(AuditLogService);
-    repository = module.get('AuditLogRepositoryInterface');
-    logger = module.get<AuditLogLoggerService>(AuditLogLoggerService);
-    requestContextService = module.get<AuditLogRequestContextService>(
-      AuditLogRequestContextService,
-    );
-    configService = module.get<ConfigService>(ConfigService);
   });
 
   afterEach(() => {
@@ -133,7 +122,7 @@ describe('AuditLogService', () => {
         timestamp: new Date(),
       });
 
-      await service.log(dto);
+      service.log(dto);
 
       // Wait for setImmediate
       await new Promise((resolve) => setImmediate(resolve));
@@ -149,7 +138,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.FAILED,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -171,7 +160,7 @@ describe('AuditLogService', () => {
           'User with ID 123e4567-e89b-12d3-a456-426614174000 has successfully voted!',
       });
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalledWith(
@@ -188,7 +177,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -203,7 +192,7 @@ describe('AuditLogService', () => {
         details: { reason: 'Invalid password' },
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -219,7 +208,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -233,7 +222,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -247,7 +236,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -262,7 +251,7 @@ describe('AuditLogService', () => {
         details: { count: 100 },
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -276,7 +265,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -290,7 +279,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -304,7 +293,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -318,7 +307,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -341,7 +330,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockRequestContextService.getContext).toHaveBeenCalled();
@@ -409,7 +398,7 @@ describe('AuditLogService', () => {
 
       mockRepository.create.mockResolvedValue({ id: 1 });
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockRepository.create).toHaveBeenCalled();
@@ -423,7 +412,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -437,7 +426,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -451,7 +440,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.FAILED,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -471,7 +460,7 @@ describe('AuditLogService', () => {
         },
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -485,7 +474,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -499,7 +488,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.FAILED,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -513,7 +502,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.PENDING,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -527,7 +516,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -541,7 +530,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -565,14 +554,14 @@ describe('AuditLogService', () => {
           status: AuditStatus.SUCCESS,
         };
 
-        await service.log(dto);
+        service.log(dto);
         await new Promise((resolve) => setImmediate(resolve));
       }
 
       expect(mockLogger.log).toHaveBeenCalledTimes(resourceTypes.length);
     });
 
-    it('should be non-blocking (fire and forget)', async () => {
+    it('should be non-blocking (fire and forget)', () => {
       const dto: CreateAuditLogDto = {
         actorId: 'user-123',
         actorType: AuditActorType.USER,
@@ -581,7 +570,7 @@ describe('AuditLogService', () => {
       };
 
       const startTime = Date.now();
-      await service.log(dto);
+      service.log(dto);
       const endTime = Date.now();
 
       // Should return immediately (less than 10ms)
@@ -598,7 +587,7 @@ describe('AuditLogService', () => {
       });
     });
 
-    it('should return immediately when audit logging is disabled', async () => {
+    it('should return immediately when audit logging is disabled', () => {
       mockConfigService.get.mockReturnValueOnce({
         enabled: false,
       });
@@ -611,7 +600,7 @@ describe('AuditLogService', () => {
       };
 
       const startTime = Date.now();
-      await service.log(dto);
+      service.log(dto);
       const endTime = Date.now();
 
       // Should return immediately without waiting for async operations
@@ -634,7 +623,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.FAILED,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -657,7 +646,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.error).toHaveBeenCalled();
@@ -680,7 +669,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.error).toHaveBeenCalled();
@@ -701,7 +690,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.error).toHaveBeenCalled();
@@ -722,7 +711,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -744,7 +733,7 @@ describe('AuditLogService', () => {
       // Create circular reference
       (dto.details as any).circular = dto.details;
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -764,7 +753,7 @@ describe('AuditLogService', () => {
         details: undefined,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -794,7 +783,7 @@ describe('AuditLogService', () => {
         return Promise.resolve(data);
       });
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
     });
 
@@ -821,7 +810,7 @@ describe('AuditLogService', () => {
         return Promise.resolve(data);
       });
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
     });
 
@@ -856,9 +845,9 @@ describe('AuditLogService', () => {
     it('should handle repository findMany error', async () => {
       mockRepository.findMany.mockRejectedValue(new Error('Database error'));
 
-      await expect(
-        service.findMany({ actorId: 'user-123' }),
-      ).rejects.toThrow('Database error');
+      await expect(service.findMany({ actorId: 'user-123' })).rejects.toThrow(
+        'Database error',
+      );
     });
 
     it('should handle repository findOne error', async () => {
@@ -888,7 +877,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockRepository.create).not.toHaveBeenCalled();
@@ -908,7 +897,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -928,7 +917,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -944,7 +933,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).not.toHaveBeenCalled();
@@ -953,7 +942,7 @@ describe('AuditLogService', () => {
     it('should handle malformed date in filters', async () => {
       mockRepository.findMany.mockResolvedValue([]);
 
-      const result = await service.findMany({
+      await service.findMany({
         createdFrom: new Date('invalid'),
       });
 
@@ -963,7 +952,7 @@ describe('AuditLogService', () => {
     it('should handle negative page number in filters', async () => {
       mockRepository.findMany.mockResolvedValue([]);
 
-      const result = await service.findMany({
+      await service.findMany({
         page: -1,
       });
 
@@ -973,7 +962,7 @@ describe('AuditLogService', () => {
     it('should handle zero limit in filters', async () => {
       mockRepository.findMany.mockResolvedValue([]);
 
-      const result = await service.findMany({
+      await service.findMany({
         limit: 0,
       });
 
@@ -1015,7 +1004,7 @@ describe('AuditLogService', () => {
         return Promise.resolve(data);
       });
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
     });
 
@@ -1032,7 +1021,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -1054,7 +1043,7 @@ describe('AuditLogService', () => {
         },
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -1078,7 +1067,7 @@ describe('AuditLogService', () => {
         },
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -1103,7 +1092,7 @@ describe('AuditLogService', () => {
         details: {},
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -1118,7 +1107,7 @@ describe('AuditLogService', () => {
         details: null,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -1133,7 +1122,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -1147,7 +1136,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -1168,14 +1157,13 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
     });
 
     it('should handle concurrent logging (race condition)', async () => {
-      const promises: Promise<void>[] = [];
       for (let i = 0; i < 10; i++) {
         const dto: CreateAuditLogDto = {
           actorId: `user-${i}`,
@@ -1183,10 +1171,9 @@ describe('AuditLogService', () => {
           action: AuditAction.LOGIN_SUCCESS,
           status: AuditStatus.SUCCESS,
         };
-        promises.push(service.log(dto));
+        service.log(dto);
       }
 
-      await Promise.all(promises);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalledTimes(10);
@@ -1201,7 +1188,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -1224,7 +1211,7 @@ describe('AuditLogService', () => {
         },
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -1242,7 +1229,7 @@ describe('AuditLogService', () => {
         },
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -1261,7 +1248,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -1271,7 +1258,7 @@ describe('AuditLogService', () => {
     it('should handle query with empty filters', async () => {
       mockRepository.findMany.mockResolvedValue([]);
 
-      const result = await service.findMany({});
+      await service.findMany({});
 
       expect(mockRepository.findMany).toHaveBeenCalledWith({});
     });
@@ -1279,7 +1266,7 @@ describe('AuditLogService', () => {
     it('should handle query with invalid pagination', async () => {
       mockRepository.findMany.mockResolvedValue([]);
 
-      const result = await service.findMany({
+      await service.findMany({
         page: -999,
         limit: -999,
       });
@@ -1290,7 +1277,7 @@ describe('AuditLogService', () => {
     it('should handle query with extreme pagination', async () => {
       mockRepository.findMany.mockResolvedValue([]);
 
-      const result = await service.findMany({
+      await service.findMany({
         page: 999999,
         limit: 1000,
       });
@@ -1306,7 +1293,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalledWith(
@@ -1333,7 +1320,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -1354,7 +1341,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -1364,7 +1351,7 @@ describe('AuditLogService', () => {
       const date = new Date();
       mockRepository.findMany.mockResolvedValue([]);
 
-      const result = await service.findMany({
+      await service.findMany({
         createdFrom: date,
         createdTo: date,
       });
@@ -1377,7 +1364,7 @@ describe('AuditLogService', () => {
       const date2 = new Date('2023-01-01');
       mockRepository.findMany.mockResolvedValue([]);
 
-      const result = await service.findMany({
+      await service.findMany({
         createdFrom: date1,
         createdTo: date2,
       });
@@ -1396,7 +1383,7 @@ describe('AuditLogService', () => {
           status: AuditStatus.SUCCESS,
         };
 
-        await service.log(dto);
+        service.log(dto);
         await new Promise((resolve) => setImmediate(resolve));
       }
 
@@ -1418,7 +1405,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -1439,7 +1426,7 @@ describe('AuditLogService', () => {
         status: AuditStatus.SUCCESS,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -1448,7 +1435,7 @@ describe('AuditLogService', () => {
     it('should handle query with all filters applied', async () => {
       mockRepository.findMany.mockResolvedValue([]);
 
-      const result = await service.findMany({
+      await service.findMany({
         actorId: 'user-123',
         actorType: AuditActorType.USER,
         action: AuditAction.LOGIN_SUCCESS,
@@ -1478,7 +1465,7 @@ describe('AuditLogService', () => {
         },
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -1498,7 +1485,7 @@ describe('AuditLogService', () => {
         },
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -1516,7 +1503,7 @@ describe('AuditLogService', () => {
         },
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -1533,7 +1520,7 @@ describe('AuditLogService', () => {
         },
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -1551,7 +1538,7 @@ describe('AuditLogService', () => {
         } as any,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -1569,7 +1556,7 @@ describe('AuditLogService', () => {
         } as any,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -1587,7 +1574,7 @@ describe('AuditLogService', () => {
         } as any,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();
@@ -1608,7 +1595,7 @@ describe('AuditLogService', () => {
         } as any,
       };
 
-      await service.log(dto);
+      service.log(dto);
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(mockLogger.log).toHaveBeenCalled();

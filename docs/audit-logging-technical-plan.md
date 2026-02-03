@@ -7,6 +7,7 @@ Centralized Audit Logging Service untuk tracking semua aktivitas penting di sist
 ## 2. Architecture Analysis
 
 ### Current Project Structure (DDD)
+
 ```
 src/
   ├── [domain]/
@@ -19,6 +20,7 @@ src/
 ```
 
 ### New Module Structure
+
 ```
 src/
   └── audit-log/
@@ -168,58 +170,61 @@ RequestContextInterceptor (Global)
 ### 4.1. Enums
 
 #### AuditAction Enum
+
 ```typescript
 enum AuditAction {
   // Authentication
   LOGIN_SUCCESS = 'LOGIN_SUCCESS',
   LOGIN_FAILED = 'LOGIN_FAILED',
   ADMIN_LOGOUT = 'ADMIN_LOGOUT',
-  
+
   // Voter Management
   VOTER_CREATED = 'VOTER_CREATED',
   VOTER_UPDATED = 'VOTER_UPDATED',
   VOTER_DELETED = 'VOTER_DELETED',
   VOTER_BULK_IMPORTED = 'VOTER_BULK_IMPORTED',
-  
+
   // Candidate Management
   CANDIDATE_CREATED = 'CANDIDATE_CREATED',
   CANDIDATE_UPDATED = 'CANDIDATE_UPDATED',
   CANDIDATE_DELETED = 'CANDIDATE_DELETED',
-  
+
   // Token/OTP Management
   TOKEN_GENERATED = 'TOKEN_GENERATED',
   TOKEN_SENT = 'TOKEN_SENT',
   TOKEN_RESENT = 'TOKEN_RESENT',
   TOKEN_VERIFIED = 'TOKEN_VERIFIED',
   TOKEN_FAILED = 'TOKEN_FAILED',
-  
+
   // Voting
   VOTE_CAST = 'VOTE_CAST',
-  
+
   // Election Management
   ELECTION_SCHEDULED = 'ELECTION_SCHEDULED',
   ELECTION_EXTENDED = 'ELECTION_EXTENDED',
-  
+
   // Results
   RESULTS_VERIFIED = 'RESULTS_VERIFIED',
   RESULTS_PUBLISHED = 'RESULTS_PUBLISHED',
-  
+
   // Export
   EXPORT_NON_VOTERS = 'EXPORT_NON_VOTERS',
 }
 ```
 
 #### AuditActorType Enum
+
 ```typescript
 enum AuditActorType {
-  USER = 'USER',           // Regular voter
-  ADMIN = 'ADMIN',         // System administrator
-  SYSTEM = 'SYSTEM',       // Automated system action
+  USER = 'USER', // Regular voter
+  ADMIN = 'ADMIN', // System administrator
+  SYSTEM = 'SYSTEM', // Automated system action
   ANONYMOUS = 'ANONYMOUS', // Unauthenticated action
 }
 ```
 
 #### AuditResourceType Enum
+
 ```typescript
 enum AuditResourceType {
   USER = 'USER',
@@ -234,6 +239,7 @@ enum AuditResourceType {
 ```
 
 #### AuditStatus Enum
+
 ```typescript
 enum AuditStatus {
   SUCCESS = 'SUCCESS',
@@ -247,23 +253,23 @@ enum AuditStatus {
 ```typescript
 class AuditLog {
   id: number | string;
-  
+
   actorId: string | null;
   actorType: AuditActorType;
-  
+
   action: AuditAction;
-  
+
   resourceType: AuditResourceType | null;
   resourceId: string | null;
-  
+
   ipAddress: string | null;
   userAgent: string | null;
-  
+
   status: AuditStatus;
-  
+
   message: string;
   details: Record<string, any> | null;
-  
+
   createdAt: Date;
 }
 ```
@@ -271,6 +277,7 @@ class AuditLog {
 ### 4.3. DTOs
 
 #### CreateAuditLogDto
+
 ```typescript
 interface CreateAuditLogDto {
   actorId: string | null;
@@ -284,6 +291,7 @@ interface CreateAuditLogDto {
 ```
 
 #### AuditLogRequestContext Interface
+
 ```typescript
 interface AuditLogRequestContext {
   ipAddress: string | null;
@@ -310,7 +318,7 @@ class AuditLogService {
    * @param dto - Audit log data
    * @returns Promise<void> - Fire and forget
    */
-  async log(dto: CreateAuditLogDto): Promise<void>
+  async log(dto: CreateAuditLogDto): Promise<void>;
 
   /**
    * Build human-readable log message based on action
@@ -323,27 +331,27 @@ class AuditLogService {
     action: AuditAction,
     actorId: string | null,
     details: Record<string, any> | null,
-  ): string
+  ): string;
 
   /**
    * Get current request context from AsyncLocalStorage
    * @returns AuditLogRequestContext | null
    */
-  private getRequestContext(): AuditLogRequestContext | null
+  private getRequestContext(): AuditLogRequestContext | null;
 
   /**
    * Query audit logs (for admin/reporting)
    * @param filters - Query filters
    * @returns Promise<AuditLog[]>
    */
-  async findMany(filters: AuditLogQueryDto): Promise<AuditLog[]>
+  async findMany(filters: AuditLogQueryDto): Promise<AuditLog[]>;
 
   /**
    * Get audit log by ID
    * @param id - Audit log identifier
    * @returns Promise<AuditLog | null>
    */
-  async findOne(id: string | number): Promise<AuditLog | null>
+  async findOne(id: string | number): Promise<AuditLog | null>;
 }
 ```
 
@@ -354,22 +362,22 @@ interface AuditLogRepositoryInterface {
   /**
    * Create new audit log entry
    */
-  create(data: AuditLog): Promise<AuditLog>
+  create(data: AuditLog): Promise<AuditLog>;
 
   /**
    * Find multiple audit logs with filters
    */
-  findMany(filters: AuditLogQueryDto): Promise<AuditLog[]>
+  findMany(filters: AuditLogQueryDto): Promise<AuditLog[]>;
 
   /**
    * Find single audit log by ID
    */
-  findOne(id: string | number): Promise<AuditLog | null>
+  findOne(id: string | number): Promise<AuditLog | null>;
 
   /**
    * Count total audit logs matching filters
    */
-  count(filters: AuditLogQueryDto): Promise<number>
+  count(filters: AuditLogQueryDto): Promise<number>;
 }
 ```
 
@@ -379,16 +387,16 @@ interface AuditLogRepositoryInterface {
 interface AuditLogConfig {
   enabled: boolean;
   logLevel: 'error' | 'warn' | 'info' | 'debug';
-  
+
   // Console output
   consoleEnabled: boolean;
-  
+
   // File output
   fileEnabled: boolean;
   filePath: string;
   maxFiles: number;
   maxSize: string;
-  
+
   // Database output
   databaseEnabled: boolean;
 }
@@ -397,30 +405,36 @@ interface AuditLogConfig {
 ## 5. Implementation Steps
 
 ### Step 1: Install Dependencies
+
 ```bash
 pnpm add winston winston-daily-rotate-file
 pnpm add -D @types/winston
 ```
 
 ### Step 2: Create Enums
+
 1. Create `src/audit-log/enums/audit-action.enum.ts`
 2. Create `src/audit-log/enums/audit-actor-type.enum.ts`
 3. Create `src/audit-log/enums/audit-resource-type.enum.ts`
 4. Create `src/audit-log/enums/audit-status.enum.ts`
 
 ### Step 3: Create Domain Entity
+
 1. Create `src/audit-log/domain/audit-log.ts`
 
 ### Step 4: Create DTOs
+
 1. Create `src/audit-log/dto/create-audit-log.dto.ts`
 2. Create `src/audit-log/dto/audit-log-response.dto.ts`
 3. Create `src/audit-log/dto/audit-log-query.dto.ts`
 
 ### Step 5: Create Interfaces
+
 1. Create `src/audit-log/interfaces/audit-log.repository.interface.ts`
 2. Create `src/audit-log/interfaces/audit-log-request-context.interface.ts`
 
 ### Step 6: Create Config
+
 1. Create `src/audit-log/config/audit-log-config.type.ts`
 2. Create `src/audit-log/config/audit-log.config.ts`
 3. Add config to `app.module.ts` ConfigModule
@@ -428,6 +442,7 @@ pnpm add -D @types/winston
 ### Step 7: Create Database Entities & Repositories
 
 #### For Relational DB:
+
 1. Create `src/audit-log/infrastructure/persistence/relational/entities/audit-log.entity.ts`
 2. Create `src/audit-log/infrastructure/persistence/relational/repositories/audit-log.repository.ts`
 3. Create `src/audit-log/infrastructure/persistence/relational/mappers/audit-log.mapper.ts`
@@ -435,12 +450,14 @@ pnpm add -D @types/winston
 5. Generate migration: `pnpm migration:generate src/database/migrations/CreateAuditLog`
 
 #### For Document DB:
+
 1. Create `src/audit-log/infrastructure/persistence/document/entities/audit-log.schema.ts`
 2. Create `src/audit-log/infrastructure/persistence/document/repositories/audit-log.repository.ts`
 3. Create `src/audit-log/infrastructure/persistence/document/mappers/audit-log.mapper.ts`
 4. Create `src/audit-log/infrastructure/persistence/document/document-persistence.module.ts`
 
 ### Step 8: Create Winston Logger Service
+
 1. Create `src/audit-log/audit-log-logger.service.ts`
    - Configure Winston with transports
    - Daily rotate file
@@ -448,6 +465,7 @@ pnpm add -D @types/winston
    - Custom format
 
 ### Step 9: Create Request Context
+
 1. Create `src/audit-log/audit-log-request-context.service.ts`
    - Use AsyncLocalStorage
    - Store request metadata
@@ -457,6 +475,7 @@ pnpm add -D @types/winston
    - Store in AsyncLocalStorage
 
 ### Step 10: Create Main Service
+
 1. Create `src/audit-log/audit-log.service.ts`
    - Implement `log()` method
    - Implement message builder
@@ -464,6 +483,7 @@ pnpm add -D @types/winston
    - Integrate repository
 
 ### Step 11: Create Module
+
 1. Create `src/audit-log/audit-log.module.ts`
    - Register as global module
    - Export AuditLogService
@@ -472,9 +492,11 @@ pnpm add -D @types/winston
 2. Import in `app.module.ts`
 
 ### Step 12: Create Global Interceptor
+
 1. Register `AuditLogContextInterceptor` globally in `app.module.ts`
 
 ### Step 13: Create Unit Tests
+
 1. Create `src/audit-log/audit-log.service.spec.ts`
    - 30 positive tests
    - 30 negative tests
@@ -483,34 +505,38 @@ pnpm add -D @types/winston
 ## 6. Message Formatting Rules
 
 ### Special Format for VOTE_CAST
+
 ```typescript
 // For VOTE_CAST action ONLY:
-message = `User with ID ${actorId} has successfully voted!`
+message = `User with ID ${actorId} has successfully voted!`;
 ```
 
 ### Generic Format for Other Actions
+
 ```typescript
-message = `${actorType} ${actorId || 'anonymous'} performed ${action} on ${resourceType} ${resourceId || ''} - ${status}`
+message = `${actorType} ${actorId || 'anonymous'} performed ${action} on ${resourceType} ${resourceId || ''} - ${status}`;
 ```
 
 ### Examples
+
 ```typescript
 // VOTE_CAST
-"User with ID 123e4567-e89b-12d3-a456-426614174000 has successfully voted!"
+'User with ID 123e4567-e89b-12d3-a456-426614174000 has successfully voted!';
 
 // LOGIN_SUCCESS
-"USER 123e4567-e89b-12d3-a456-426614174000 performed LOGIN_SUCCESS - SUCCESS"
+'USER 123e4567-e89b-12d3-a456-426614174000 performed LOGIN_SUCCESS - SUCCESS';
 
 // VOTER_CREATED
-"ADMIN admin-uuid performed VOTER_CREATED on VOTER voter-uuid - SUCCESS"
+'ADMIN admin-uuid performed VOTER_CREATED on VOTER voter-uuid - SUCCESS';
 
 // TOKEN_FAILED
-"ANONYMOUS performed TOKEN_FAILED on TOKEN token-uuid - FAILED"
+'ANONYMOUS performed TOKEN_FAILED on TOKEN token-uuid - FAILED';
 ```
 
 ## 7. Async Logging Strategy
 
 ### Non-Blocking Implementation
+
 ```typescript
 async log(dto: CreateAuditLogDto): Promise<void> {
   // Fire and forget - don't await in caller
@@ -518,10 +544,10 @@ async log(dto: CreateAuditLogDto): Promise<void> {
     try {
       // Get request context
       const context = this.getRequestContext();
-      
+
       // Build message
       const message = this.buildLogMessage(dto.action, dto.actorId, dto.details);
-      
+
       // Create domain entity
       const auditLog = new AuditLog({
         ...dto,
@@ -530,13 +556,13 @@ async log(dto: CreateAuditLogDto): Promise<void> {
         userAgent: context?.userAgent,
         createdAt: new Date(),
       });
-      
+
       // Log with Winston (async)
       this.logger.info(message, {
         ...auditLog,
         service: 'AuditLogService',
       });
-      
+
       // Save to database (async, if enabled)
       if (this.config.databaseEnabled) {
         await this.auditLogRepository.create(auditLog);
@@ -552,14 +578,15 @@ async log(dto: CreateAuditLogDto): Promise<void> {
 ## 8. Usage Examples
 
 ### Example 1: Login Success
+
 ```typescript
 // In AuthService
 async login(email: string, password: string) {
   const user = await this.validateUser(email, password);
-  
+
   if (user) {
     const token = this.generateToken(user);
-    
+
     // Log success (async, non-blocking)
     this.auditLogService.log({
       actorId: user.id.toString(),
@@ -567,10 +594,10 @@ async login(email: string, password: string) {
       action: AuditAction.LOGIN_SUCCESS,
       status: AuditStatus.SUCCESS,
     });
-    
+
     return { token, user };
   }
-  
+
   // Log failure
   this.auditLogService.log({
     actorId: email,
@@ -579,12 +606,13 @@ async login(email: string, password: string) {
     status: AuditStatus.FAILED,
     details: { reason: 'Invalid credentials' },
   });
-  
+
   throw new UnauthorizedException();
 }
 ```
 
 ### Example 2: Cast Vote (LUBERJUDIL format)
+
 ```typescript
 // In VotingService
 async castVote(userId: string, candidateId: string) {
@@ -594,7 +622,7 @@ async castVote(userId: string, candidateId: string) {
     candidateId,
     timestamp: new Date(),
   });
-  
+
   // Log with special format
   this.auditLogService.log({
     actorId: userId,
@@ -605,18 +633,19 @@ async castVote(userId: string, candidateId: string) {
     status: AuditStatus.SUCCESS,
     details: { candidateId },
   });
-  
+
   return vote;
 }
 // Output: "User with ID 123e4567-e89b-12d3-a456-426614174000 has successfully voted!"
 ```
 
 ### Example 3: Bulk Import Voters
+
 ```typescript
 // In VoterService
 async bulkImport(voters: CreateVoterDto[], adminId: string) {
   const results = await this.voterRepository.bulkCreate(voters);
-  
+
   this.auditLogService.log({
     actorId: adminId,
     actorType: AuditActorType.ADMIN,
@@ -629,7 +658,7 @@ async bulkImport(voters: CreateVoterDto[], adminId: string) {
       failedCount: results.filter(r => !r.success).length,
     },
   });
-  
+
   return results;
 }
 ```
@@ -639,6 +668,7 @@ async bulkImport(voters: CreateVoterDto[], adminId: string) {
 ### Unit Tests Structure (90 tests total)
 
 #### Positive Tests (30)
+
 1. Successfully log with all fields
 2. Successfully log with minimum required fields
 3. Successfully log VOTE_CAST with special format
@@ -649,6 +679,7 @@ async bulkImport(voters: CreateVoterDto[], adminId: string) {
 8. Successfully count logs
 
 #### Negative Tests (30)
+
 1. Handle null actorId
 2. Handle missing required fields
 3. Handle invalid enum values
@@ -659,9 +690,10 @@ async bulkImport(voters: CreateVoterDto[], adminId: string) {
 8. Handle malformed details object
 9. Handle circular reference in details
 10. Handle oversized details object
-11-30. Error scenarios for each action type
+    11-30. Error scenarios for each action type
 
 #### Edge Case Tests (30)
+
 1. Log with empty details object
 2. Log with null details
 3. Log with undefined fields
@@ -682,7 +714,7 @@ async bulkImport(voters: CreateVoterDto[], adminId: string) {
 18. Query with empty filters
 19. Query with invalid pagination
 20. Query with extreme pagination (page 999999)
-21-30. Edge cases for each major action type
+    21-30. Edge cases for each major action type
 
 ## 10. Security Considerations
 
@@ -719,6 +751,7 @@ async bulkImport(voters: CreateVoterDto[], adminId: string) {
 ## 14. Database Schema
 
 ### Relational (PostgreSQL)
+
 ```sql
 CREATE TABLE audit_logs (
   id SERIAL PRIMARY KEY,
@@ -733,7 +766,7 @@ CREATE TABLE audit_logs (
   message TEXT NOT NULL,
   details JSONB,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  
+
   INDEX idx_actor_id (actor_id),
   INDEX idx_action (action),
   INDEX idx_created_at (created_at DESC),
@@ -743,6 +776,7 @@ CREATE TABLE audit_logs (
 ```
 
 ### Document (MongoDB)
+
 ```javascript
 {
   _id: ObjectId,

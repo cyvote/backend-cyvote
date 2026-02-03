@@ -44,10 +44,7 @@ export class AuditLogLoggerService implements NestLoggerService {
             winston.format.json(),
           ),
         }),
-      );
-
-      // Separate file for errors
-      transports.push(
+        // Separate file for errors
         new DailyRotateFile({
           filename: `${auditLogConfig.filePath}/audit-log-error-%DATE%.log`,
           datePattern: 'YYYY-MM-DD',

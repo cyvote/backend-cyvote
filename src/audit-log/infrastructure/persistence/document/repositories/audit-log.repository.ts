@@ -6,7 +6,7 @@ import { AuditLogRepositoryInterface } from '../../../../interfaces/audit-log.re
 import { AuditLogSchemaClass } from '../entities/audit-log.schema';
 import { AuditLogMapper } from '../mappers/audit-log.mapper';
 import { AuditLogQueryDto } from '../../../../dto/audit-log-query.dto';
-import { NullableType } from '../../../../../../utils/types/nullable.type';
+import { NullableType } from '../../../../../utils/types/nullable.type';
 
 @Injectable()
 export class AuditLogDocumentRepository implements AuditLogRepositoryInterface {

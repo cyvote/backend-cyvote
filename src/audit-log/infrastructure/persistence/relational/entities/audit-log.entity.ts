@@ -5,7 +5,7 @@ import {
   Index,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { EntityRelationalHelper } from '../../../../../../utils/relational-entity-helper';
+import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { AuditAction } from '../../../../enums/audit-action.enum';
 import { AuditActorType } from '../../../../enums/audit-actor-type.enum';
 import { AuditResourceType } from '../../../../enums/audit-resource-type.enum';

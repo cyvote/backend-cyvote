@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AsyncLocalStorage } from 'async_hooks';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { AuditLogRequestContext } from './interfaces/audit-log-request-context.interface';
 
 @Injectable()

@@ -81,7 +81,8 @@ export class AuditLog {
 
   @ApiProperty({
     type: String,
-    example: 'User with ID 123e4567-e89b-12d3-a456-426614174000 has successfully voted!',
+    example:
+      'User with ID 123e4567-e89b-12d3-a456-426614174000 has successfully voted!',
     description: 'Human-readable log message',
   })
   message: string;

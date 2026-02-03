@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsObject,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { AuditAction } from '../enums/audit-action.enum';
 import { AuditActorType } from '../enums/audit-actor-type.enum';
 import { AuditResourceType } from '../enums/audit-resource-type.enum';

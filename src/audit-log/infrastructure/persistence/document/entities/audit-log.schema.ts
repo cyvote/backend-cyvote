@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { now, HydratedDocument } from 'mongoose';
-import { EntityDocumentHelper } from '../../../../../../utils/document-entity-helper';
+import { HydratedDocument, now } from 'mongoose';
+import { EntityDocumentHelper } from '../../../../../utils/document-entity-helper';
 import { AuditAction } from '../../../../enums/audit-action.enum';
 import { AuditActorType } from '../../../../enums/audit-actor-type.enum';
 import { AuditResourceType } from '../../../../enums/audit-resource-type.enum';
