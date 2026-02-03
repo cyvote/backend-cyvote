@@ -91,4 +91,84 @@ async function bootstrap() {
 
   await app.listen(configService.getOrThrow('app.port', { infer: true }));
 }
-void bootstrap();
+
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  void bootstrap();
+}
+
+// Export handler for Vercel serverless
+export default async function handler(req: any, res: any) {
+  // Ensure /tmp/files directory exists
+  const tmpFilesDir = '/tmp/files';
+  if (!existsSync(tmpFilesDir)) {
+    mkdirSync(tmpFilesDir, { recursive: true });
+  }
+
+  const app = await NestFactory.create(AppModule);
+  useContainer(app.select(AppModule), { fallbackOnErrors: true });
+  const configService = app.get(ConfigService<AllConfigType>);
+
+  // Configure CORS
+  const allowedOrigins = process.env.FRONTEND_DOMAIN
+    ? process.env.FRONTEND_DOMAIN.split(',').map((origin) => origin.trim())
+    : ['http://localhost:3000'];
+
+  app.enableCors({
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    credentials: true,
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'x-custom-lang',
+      'Accept',
+    ],
+  });
+
+  // Apply Helmet security middleware
+  const helmetOptionsFactory = app.get(HelmetOptionsFactory);
+  const helmetOptions = helmetOptionsFactory.createHelmetOptions();
+  if (helmetOptions) {
+    app.use(helmet(helmetOptions));
+  }
+
+  app.enableShutdownHooks();
+  app.setGlobalPrefix(
+    configService.getOrThrow('app.apiPrefix', { infer: true }),
+    {
+      exclude: ['/'],
+    },
+  );
+  app.enableVersioning({
+    type: VersioningType.URI,
+  });
+  app.useGlobalPipes(new ValidationPipe(validationOptions));
+  app.useGlobalInterceptors(
+    new ResolvePromisesInterceptor(),
+    new ClassSerializerInterceptor(app.get(Reflector)),
+  );
+
+  const options = new DocumentBuilder()
+    .setTitle('API')
+    .setDescription('API docs')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .addGlobalParameters({
+      in: 'header',
+      required: false,
+      name: process.env.APP_HEADER_LANGUAGE || 'x-custom-lang',
+      schema: {
+        example: 'en',
+      },
+    })
+    .build();
+
+  const document = SwaggerModule.createDocument(app, options);
+  SwaggerModule.setup('docs', app, document);
+
+  await app.init();
+
+  const server = app.getHttpAdapter().getInstance();
+  return server(req, res);
+}
