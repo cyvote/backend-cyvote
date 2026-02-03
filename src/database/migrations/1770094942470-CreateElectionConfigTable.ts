@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreateElectionConfigTable1770094942470 implements MigrationInterface {
+export class CreateElectionConfigTable1770094942470
+  implements MigrationInterface
+{
   name = 'CreateElectionConfigTable1770094942470';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
