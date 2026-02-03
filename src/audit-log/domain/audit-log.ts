@@ -7,16 +7,14 @@ import databaseConfig from '../../database/config/database.config';
 import { DatabaseConfig } from '../../database/config/database-config.type';
 
 // <database-block>
-const idType = (databaseConfig() as DatabaseConfig).isDocumentDatabase
-  ? String
-  : Number;
+const idType = String;
 // </database-block>
 
 export class AuditLog {
   @ApiProperty({
     type: idType,
   })
-  id: number | string;
+  id: string;
 
   @ApiProperty({
     type: String,

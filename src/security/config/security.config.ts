@@ -1,14 +1,7 @@
 import { registerAs } from '@nestjs/config';
 import { SecurityConfig } from './security-config.type';
 import validateConfig from '../../utils/validate-config';
-import {
-  IsBoolean,
-  IsInt,
-  IsOptional,
-  IsString,
-  Min,
-  IsArray,
-} from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, IsString, Min } from 'class-validator';
 
 class EnvironmentVariablesValidator {
   @IsInt()
@@ -75,9 +68,9 @@ class EnvironmentVariablesValidator {
   @IsOptional()
   SECURITY_IP_TRUST_PROXY: boolean;
 
-  @IsArray()
+  @IsString()
   @IsOptional()
-  SECURITY_IP_PROXY_HEADERS: string[];
+  SECURITY_IP_PROXY_HEADERS: string;
 }
 
 export default registerAs<SecurityConfig>('security', () => {

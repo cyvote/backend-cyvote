@@ -21,7 +21,7 @@ export class AuditLogMapper {
 
   static toPersistence(domainEntity: AuditLog): AuditLogEntity {
     const persistenceEntity = new AuditLogEntity();
-    if (domainEntity.id && typeof domainEntity.id === 'number') {
+    if (domainEntity.id && typeof domainEntity.id === 'string') {
       persistenceEntity.id = domainEntity.id;
     }
     persistenceEntity.actorId = domainEntity.actorId;

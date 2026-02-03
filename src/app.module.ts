@@ -108,10 +108,10 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditLogContextInterceptor,
+    },
     {
       provide: APP_GUARD,
       useClass: GlobalRateLimitGuard,
-    },
     },
   ],
 })
