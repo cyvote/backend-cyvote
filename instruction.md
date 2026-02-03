@@ -2,22 +2,23 @@
 We will execute the task below
 
 **Description:**
-Implementasi login untuk admin dan superadmin dengan JWT Token.
+Implementasi dua-step auth untuk voter: login dengan NIM, lalu verify token.
 
 **Acceptance Criteria:**
 
-- [ ] `POST /api/v1/auth/admin/login` — terima `{ username, password }`, return JWT token
-- [ ] Password di-hash dengan bcrypt (cost factor 12) saat seed
-- [ ] JWT token berisi: `{ id, username, role }` — signed dengan secret dari env
-- [ ] Token expiry: 2 jam
-- [ ] Jika login gagal, return `401` dengan message generic (jangan reveal username/password mana yang salah)
-- [ ] Login success/fail di-log ke audit_logs
-- [ ] `AuthGuard` (NestJS guard) dibuat untuk protect admin routes
-- [ ] `RolesGuard` dibuat untuk differentiate ADMIN vs SUPERADMIN access
+- [ ] `POST /api/v1/auth/voter/login` — terima `{ nim }`, check NIM ada di database dan voting period aktif
+- [ ] Jika NIM tidak ditemukan, return `{ error: "Akun Anda tidak terdaftar. Hubungi Tim PSDM." }`
+- [ ] Jika voting belum/sudah berakhir, return pesan yang sesuai
+- [ ] Jika NIM valid, return session token (short-lived) yang berisi voter_id — jangan reveal token voting di sini
+- [ ] `POST /api/v1/auth/voter/verify-token` — terima `{ token }`, compare case-insensitive dengan token_hash di DB
+- [ ] Jika token valid dan belum digunakan, return JWT authenticated session
+- [ ] Jika token sudah digunakan, return error "Token sudah digunakan"
+- [ ] Semua attempt di-log
+- [ ] Rate limiting terintegrasi
 
----
+**Catatan:** Token di database disimpan sebagai hash. Saat verify, hash input dan compare.
 
-Put it in src/auth-admin/.In this project we use pnpm not npm. Also, follow the existing architecture (DDD). Analyze the code first. Create unit test, 30 test for positive test, 30 test for negative test, and 30 test for edge case test. Follow the code quality standard that exist. Also, create the seed file for admin and superadmin. Default password for admin is `admin123` and for superadmin is `superadmin123`. For admin we create 5 users and for superadmin we create 3 users.
+Put it in src/auth-voter/.In this project we use pnpm not npm. Also, follow the existing architecture (DDD). Analyze the code first. Create unit test, 30 test for positive test, 30 test for negative test, and 30 test for edge case test. Follow the code quality standard that exist.
 
 </context>
 

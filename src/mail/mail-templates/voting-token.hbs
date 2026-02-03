@@ -1,158 +1,189 @@
 <html lang='id'>
-
   <head>
     <meta charset='UTF-8' />
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <title>Token Voting - {{app_name}}</title>
   </head>
 
-  <body style='margin:0;font-family:Arial, sans-serif;background-color:#f4f4f4'>
+  <body
+    style='margin:0;padding:0;background-color:#f5f5f5;font-family:Arial,Helvetica,sans-serif'
+  >
     <table
-      style='border:0;width:100%;max-width:600px;margin:0 auto;background:#ffffff'
+      width='100%'
+      cellpadding='0'
+      cellspacing='0'
+      style='background-color:#f5f5f5;padding:20px 0'
     >
-      <!-- Header -->
-      <tr style='background:#00838f'>
-        <td style='padding:30px;text-align:center'>
-          <h1 style='color:#ffffff;margin:0;font-size:28px'>
-            {{app_name}}
-          </h1>
-          <p style='color:#ffffff;margin:10px 0 0 0;font-size:14px'>
-            Sistem E-Voting
-          </p>
-        </td>
-      </tr>
-
-      <!-- Greeting -->
       <tr>
-        <td style='padding:30px 30px 20px 30px'>
-          <h2 style='color:#333333;margin:0;font-size:22px'>
-            Halo,
-            {{nama}}!
-          </h2>
-          <p style='color:#666666;margin:10px 0 0 0;font-size:14px'>
-            NIM:
-            <strong>{{nim}}</strong>
-          </p>
-        </td>
-      </tr>
-
-      <!-- Token Section -->
-      <tr>
-        <td style='padding:0 30px 20px 30px'>
-          <p style='color:#666666;margin:0;font-size:16px;line-height:1.6'>
-            Berikut adalah token voting Anda untuk pemilihan. Gunakan token ini
-            untuk melakukan voting di sistem kami.
-          </p>
-        </td>
-      </tr>
-
-      <!-- Token Display -->
-      <tr>
-        <td style='padding:0 30px 30px 30px;text-align:center'>
-          <div
-            style='background:#f8f9fa;border:2px dashed #00838f;border-radius:8px;padding:20px'
+        <td align='center'>
+          <table
+            width='600'
+            cellpadding='0'
+            cellspacing='0'
+            style='background:#ffffff;border-radius:6px;overflow:hidden;border:1px solid #e5e5e5'
           >
-            <p
-              style='margin:0;color:#999999;font-size:12px;text-transform:uppercase;letter-spacing:1px'
-            >
-              Token Anda
-            </p>
-            <p
-              style='margin:10px 0 0 0;color:#00838f;font-size:32px;font-weight:bold;letter-spacing:4px;font-family:monospace'
-            >
-              {{token}}
-            </p>
-          </div>
-        </td>
-      </tr>
 
-      <!-- Instructions -->
-      <tr>
-        <td style='padding:0 30px 20px 30px'>
-          <div
-            style='background:#fff3cd;border-left:4px solid #ffc107;padding:15px;border-radius:4px'
-          >
-            <p style='margin:0;color:#856404;font-size:14px;line-height:1.8'>
-              <strong>⚠️ Penting:</strong><br />
-              • Token ini bersifat rahasia dan hanya dapat digunakan sekali<br
-              />
-              • Jangan bagikan token Anda kepada siapapun<br />
-              • Token akan kadaluarsa pada waktu yang ditentukan<br />
-              • Simpan token ini dengan aman hingga Anda selesai voting
-            </p>
-          </div>
-        </td>
-      </tr>
+            <!-- Header -->
+            <tr>
+              <td style='background:#000000;padding:20px 30px'>
+                <h2
+                  style='margin:0;color:#ffffff;font-size:20px;font-weight:bold'
+                >
+                  {{app_name}}
+                </h2>
+              </td>
+            </tr>
 
-      <!-- Election Info -->
-      <tr>
-        <td style='padding:0 30px 30px 30px'>
-          <table style='width:100%;border-collapse:collapse'>
+            <!-- Content -->
+            <tr>
+              <td style='padding:30px'>
+
+                <p style='margin:0 0 16px 0;color:#000000;font-size:14px'>
+                  Hai
+                  <strong>{{nama}}</strong>,
+                </p>
+
+                <p style='margin:0 0 16px 0;color:#000000;font-size:14px'>
+                  NIM:
+                  <strong>{{nim}}</strong>
+                </p>
+
+                <p
+                  style='margin:0 0 20px 0;color:#333333;font-size:14px;line-height:1.6'
+                >
+                  Kami menerima permintaan token voting untuk akun Anda. Gunakan
+                  token berikut untuk melakukan voting.
+                </p>
+
+                <!-- Token Box -->
+                <table
+                  width='100%'
+                  cellpadding='0'
+                  cellspacing='0'
+                  style='margin:20px 0'
+                >
+                  <tr>
+                    <td align='center'>
+                      <div
+                        style='
+                          display:inline-block;
+                          padding:18px 30px;
+                          border:2px dashed #000000;
+                          border-radius:8px;
+                          background:#fafafa;
+                        '
+                      >
+                        <p
+                          style='
+                            margin:0;
+                            font-size:12px;
+                            color:#666666;
+                            letter-spacing:1px;
+                            text-transform:uppercase
+                          '
+                        >
+                          Token Voting Anda
+                        </p>
+                        <p
+                          style='
+                            margin:10px 0 0 0;
+                            font-size:28px;
+                            font-weight:bold;
+                            color:#000000;
+                            letter-spacing:6px;
+                            font-family:monospace
+                          '
+                        >
+                          {{token}}
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Info -->
+                <p style='margin:0 0 10px 0;color:#333333;font-size:14px'>
+                  Token ini hanya berlaku sampai:
+                </p>
+
+                <p style='margin:0 0 20px 0;color:#000000;font-size:14px'>
+                  <strong>{{end_date}}</strong>
+                  pukul
+                  <strong>{{end_time}}</strong>
+                </p>
+
+                <!-- Warning -->
+                <div
+                  style='
+                    background:#f0f0f0;
+                    border-left:4px solid #000000;
+                    padding:14px;
+                    border-radius:4px;
+                    margin-bottom:24px
+                  '
+                >
+                  <p
+                    style='margin:0;font-size:13px;color:#000000;line-height:1.7'
+                  >
+                    <strong>Penting:</strong><br />
+                    • Token bersifat rahasia dan hanya dapat digunakan sekali<br
+                    />
+                    • Jangan bagikan token kepada siapapun<br />
+                    • Token akan kadaluarsa otomatis
+                  </p>
+                </div>
+
+                <!-- CTA -->
+                <div style='text-align:center;margin-bottom:30px'>
+                  <a
+                    href='{{voting_url}}'
+                    style='
+                      display:inline-block;
+                      background:#000000;
+                      color:#ffffff;
+                      text-decoration:none;
+                      padding:14px 36px;
+                      border-radius:6px;
+                      font-size:15px;
+                      font-weight:bold
+                    '
+                  >
+                    Mulai Voting
+                  </a>
+                </div>
+
+                <!-- Help -->
+                <p
+                  style='margin:0;color:#555555;font-size:12px;line-height:1.6'
+                >
+                  Jika Anda tidak merasa melakukan permintaan ini, silakan
+                  hubungi panitia atau administrator sistem.
+                </p>
+
+              </td>
+            </tr>
+
+            <!-- Footer -->
             <tr>
               <td
-                style='padding:15px;background:#f8f9fa;border-radius:4px;border-left:4px solid #00838f'
+                style='background:#fafafa;padding:20px;text-align:center;border-top:1px solid #e5e5e5'
               >
                 <p
-                  style='margin:0;color:#666666;font-size:14px;line-height:1.8'
+                  style='margin:0;font-size:11px;color:#777777;line-height:1.6'
                 >
-                  <strong style='color:#00838f'>📅 Batas Akhir Voting:</strong><br
-                  />
-                  <span style='font-size:16px;color:#333333'>{{end_date}}</span>
-                  pukul
-                  <span style='font-size:16px;color:#333333'>{{end_time}}</span>
+                  Email ini dikirim secara otomatis.<br />
+                  Mohon tidak membalas email ini.
+                </p>
+                <p style='margin:10px 0 0 0;font-size:11px;color:#777777'>
+                  © 2026
+                  {{app_name}}. All rights reserved.
                 </p>
               </td>
             </tr>
+
           </table>
         </td>
       </tr>
-
-      <!-- CTA Button -->
-      <tr>
-        <td style='text-align:center;padding:0 30px 40px 30px'>
-          <p style='color:#666666;margin:0 0 20px 0;font-size:14px'>
-            Klik tombol di bawah untuk mulai voting:
-          </p>
-          <a
-            href='{{voting_url}}'
-            style='display:inline-block;padding:15px 40px;background:#00838f;color:#ffffff;text-decoration:none;border-radius:5px;font-size:16px;font-weight:bold'
-          >
-            Mulai Voting Sekarang
-          </a>
-        </td>
-      </tr>
-
-      <!-- Help Section -->
-      <tr>
-        <td style='padding:0 30px 30px 30px'>
-          <div style='background:#e3f2fd;border-radius:4px;padding:15px'>
-            <p style='margin:0;color:#01579b;font-size:13px;line-height:1.6'>
-              <strong>💡 Butuh Bantuan?</strong><br />
-              Jika Anda mengalami kendala atau tidak menerima token, silakan
-              hubungi panitia pemilihan atau administrator sistem.
-            </p>
-          </div>
-        </td>
-      </tr>
-
-      <!-- Footer -->
-      <tr style='background:#f8f9fa'>
-        <td style='padding:20px;text-align:center;border-top:1px solid #e0e0e0'>
-          <p style='margin:0;color:#999999;font-size:12px;line-height:1.6'>
-            Email ini dikirim secara otomatis oleh sistem
-            {{app_name}}.<br />
-            Mohon tidak membalas email ini.
-          </p>
-          <p style='margin:15px 0 0 0;color:#999999;font-size:11px'>
-            © 2026
-            {{app_name}}. All rights reserved.
-          </p>
-        </td>
-      </tr>
     </table>
-
-    <!-- Spacer for mobile -->
-    <div style='height:40px'></div>
   </body>
-
 </html>

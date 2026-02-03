@@ -1,0 +1,13 @@
+{
+  "nimNotFound": "Your account is not registered. Contact the PSDM Team.",
+  "votingNotStarted": "Voting has not started yet.",
+  "votingEnded": "Voting has ended.",
+  "noElection": "No election is currently configured.",
+  "tokenAlreadyUsed": "Token has been used.",
+  "tokenInvalid": "Invalid token.",
+  "loginSuccess": "Login successful.",
+  "verifySuccess": "Token verified successfully.",
+  "sessionRequired": "Session token is required.",
+  "sessionExpired": "Session has expired. Please login again.",
+  "invalidSession": "Invalid session token."
+}

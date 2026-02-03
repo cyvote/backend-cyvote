@@ -1,0 +1,13 @@
+{
+  "nimNotFound": "Akun Anda tidak terdaftar. Hubungi Tim PSDM.",
+  "votingNotStarted": "Voting belum dimulai.",
+  "votingEnded": "Voting sudah berakhir.",
+  "noElection": "Tidak ada pemilihan yang dikonfigurasi.",
+  "tokenAlreadyUsed": "Token sudah digunakan.",
+  "tokenInvalid": "Token tidak valid.",
+  "loginSuccess": "Login berhasil.",
+  "verifySuccess": "Token berhasil diverifikasi.",
+  "sessionRequired": "Token sesi diperlukan.",
+  "sessionExpired": "Sesi telah kadaluarsa. Silakan login kembali.",
+  "invalidSession": "Token sesi tidak valid."
+}
