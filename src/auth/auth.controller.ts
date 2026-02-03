@@ -24,6 +24,8 @@ import { LoginResponseDto } from './dto/login-response.dto';
 import { NullableType } from '../utils/types/nullable.type';
 import { User } from '../users/domain/user';
 import { RefreshResponseDto } from './dto/refresh-response.dto';
+import { LoginRateLimitGuard } from '../security/rate-limit/guards/login-rate-limit.guard';
+import { TokenVerificationRateLimitGuard } from '../security/rate-limit/guards/token-verification-rate-limit.guard';
 
 @ApiTags('Auth')
 @Controller({
@@ -37,6 +39,7 @@ export class AuthController {
     groups: ['me'],
   })
   @Post('email/login')
+  @UseGuards(LoginRateLimitGuard)
   @ApiOkResponse({
     type: LoginResponseDto,
   })
@@ -106,7 +109,7 @@ export class AuthController {
     groups: ['me'],
   })
   @Post('refresh')
-  @UseGuards(AuthGuard('jwt-refresh'))
+  @UseGuards(AuthGuard('jwt-refresh'), TokenVerificationRateLimitGuard)
   @HttpCode(HttpStatus.OK)
   public refresh(@Request() request): Promise<RefreshResponseDto> {
     return this.service.refreshToken({

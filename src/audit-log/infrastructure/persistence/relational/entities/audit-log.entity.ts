@@ -15,8 +15,8 @@ import { AuditStatus } from '../../../../enums/audit-status.enum';
   name: 'audit_log',
 })
 export class AuditLogEntity extends EntityRelationalHelper {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Index()
   @Column({ type: String, nullable: true })

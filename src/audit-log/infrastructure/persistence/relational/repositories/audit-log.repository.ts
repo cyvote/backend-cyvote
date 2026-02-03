@@ -77,7 +77,7 @@ export class AuditLogRelationalRepository
 
   async findOne(id: string | number): Promise<NullableType<AuditLog>> {
     const entity = await this.auditLogRepository.findOne({
-      where: { id: Number(id) },
+      where: { id: String(id) },
     });
 
     return entity ? AuditLogMapper.toDomain(entity) : null;

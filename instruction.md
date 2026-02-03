@@ -1,32 +1,23 @@
 <context>
 We will execute the task below
 
-Buat centralized audit logging service yang akan dipakai di semua domain. Ini fondasi — semua action di sistem harus ke sini.
+**Description:**
+Implementasi login untuk admin dan superadmin dengan JWT Token.
 
 **Acceptance Criteria:**
 
-- [ ] `AuditLogService` dibuat sebagai global injectable service
-- [ ] Method `log({ actorId, actorType, action, resourceType?, resourceId?, ipAddress, status, details? })` tersedia
-- [ ] Automatically capture `ip_address` dan `user_agent` dari request context
-- [ ] Log format untuk voter vote hanya: `"User with ID {uuid} has successfully voted!"` (prinsip LUBERJUDIL)
-- [ ] Service bisa dipakai dari mana saja tanpa circular dependency
-- [ ] Async logging — jangan block request
+- [ ] `POST /api/v1/auth/admin/login` — terima `{ username, password }`, return JWT token
+- [ ] Password di-hash dengan bcrypt (cost factor 12) saat seed
+- [ ] JWT token berisi: `{ id, username, role }` — signed dengan secret dari env
+- [ ] Token expiry: 2 jam
+- [ ] Jika login gagal, return `401` dengan message generic (jangan reveal username/password mana yang salah)
+- [ ] Login success/fail di-log ke audit_logs
+- [ ] `AuthGuard` (NestJS guard) dibuat untuk protect admin routes
+- [ ] `RolesGuard` dibuat untuk differentiate ADMIN vs SUPERADMIN access
 
-**Action Types yang harus didefinisikan sebagai enum:**
+---
 
-```
-LOGIN_SUCCESS, LOGIN_FAILED,
-VOTER_CREATED, VOTER_UPDATED, VOTER_DELETED,
-VOTER_BULK_IMPORTED,
-CANDIDATE_CREATED, CANDIDATE_UPDATED, CANDIDATE_DELETED,
-TOKEN_GENERATED, TOKEN_SENT, TOKEN_RESENT, TOKEN_VERIFIED, TOKEN_FAILED,
-VOTE_CAST,
-ELECTION_SCHEDULED, ELECTION_EXTENDED,
-RESULTS_VERIFIED, RESULTS_PUBLISHED,
-EXPORT_NON_VOTERS, ADMIN_LOGOUT
-```
-
-We will use winston for the logger service. In this project we use pnpm not npm. Also, follow the existing architecture (DDD). Read the README.md first. Create unit test, 30 test for positive test, 30 test for negative test, and 30 test for edge case test.
+Put it in src/auth-admin/.In this project we use pnpm not npm. Also, follow the existing architecture (DDD). Analyze the code first. Create unit test, 30 test for positive test, 30 test for negative test, and 30 test for edge case test. Follow the code quality standard that exist. Also, create the seed file for admin and superadmin. Default password for admin is `admin123` and for superadmin is `superadmin123`. For admin we create 5 users and for superadmin we create 3 users.
 
 </context>
 
