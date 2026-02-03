@@ -1,32 +1,23 @@
 <context>
 We will execute the task below
 
-Buat centralized audit logging service yang akan dipakai di semua domain. Ini fondasi — semua action di sistem harus ke sini.
+**Description:**
+Implementasikan rate limiting dan security middleware yang akan digunakan di seluruh API.
 
 **Acceptance Criteria:**
 
-- [ ] `AuditLogService` dibuat sebagai global injectable service
-- [ ] Method `log({ actorId, actorType, action, resourceType?, resourceId?, ipAddress, status, details? })` tersedia
-- [ ] Automatically capture `ip_address` dan `user_agent` dari request context
-- [ ] Log format untuk voter vote hanya: `"User with ID {uuid} has successfully voted!"` (prinsip LUBERJUDIL)
-- [ ] Service bisa dipakai dari mana saja tanpa circular dependency
-- [ ] Async logging — jangan block request
+- [ ] Rate limiter menggunakan in-memory store (cukup untuk skala ini)
+- [ ] Login endpoint: max 5 attempts per 10 menit per IP
+- [ ] Token verification endpoint: max 3 attempts per 5 menit per session/IP
+- [ ] Global API rate limit: 100 requests per menit per IP
+- [ ] Jika rate limit terlampaui, return `429 Too Many Requests` dengan `Retry-After` header
+- [ ] Helmet.js dikonfigurasi untuk security headers (CSP, XSS protection, etc.)
+- [ ] CSRF protection di-setup
+- [ ] IP address di-extract dari request (handle behind proxy)
 
-**Action Types yang harus didefinisikan sebagai enum:**
+---
 
-```
-LOGIN_SUCCESS, LOGIN_FAILED,
-VOTER_CREATED, VOTER_UPDATED, VOTER_DELETED,
-VOTER_BULK_IMPORTED,
-CANDIDATE_CREATED, CANDIDATE_UPDATED, CANDIDATE_DELETED,
-TOKEN_GENERATED, TOKEN_SENT, TOKEN_RESENT, TOKEN_VERIFIED, TOKEN_FAILED,
-VOTE_CAST,
-ELECTION_SCHEDULED, ELECTION_EXTENDED,
-RESULTS_VERIFIED, RESULTS_PUBLISHED,
-EXPORT_NON_VOTERS, ADMIN_LOGOUT
-```
-
-We will use winston for the logger service. In this project we use pnpm not npm. Also, follow the existing architecture (DDD). Read the README.md first. Create unit test, 30 test for positive test, 30 test for negative test, and 30 test for edge case test.
+We will use winston for the logger service. In this project we use pnpm not npm. Also, follow the existing architecture (DDD). Analyze the code first. Create unit test, 30 test for positive test, 30 test for negative test, and 30 test for edge case test. Follow the code quality standard that exist.
 
 </context>
 

@@ -29,8 +29,11 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { MongooseConfigService } from './database/mongoose-config.service';
 import { DatabaseConfig } from './database/config/database-config.type';
 import { AuditLogModule } from './audit-log/audit-log.module';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { AuditLogContextInterceptor } from './audit-log/interceptors/audit-log-context.interceptor';
+import { SecurityModule } from './security/security.module';
+import { GlobalRateLimitGuard } from './security/rate-limit/guards/global-rate-limit.guard';
+import securityConfig from './security/config/security.config';
 
 // <database-block>
 const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
@@ -60,6 +63,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
         googleConfig,
         appleConfig,
         auditLogConfig,
+        securityConfig,
       ],
       envFilePath: ['.env'],
     }),
@@ -87,6 +91,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
       imports: [ConfigModule],
       inject: [ConfigService],
     }),
+    SecurityModule,
     AuditLogModule,
     UsersModule,
     FilesModule,
@@ -103,6 +108,10 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditLogContextInterceptor,
+    {
+      provide: APP_GUARD,
+      useClass: GlobalRateLimitGuard,
+    },
     },
   ],
 })

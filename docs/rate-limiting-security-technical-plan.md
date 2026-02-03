@@ -121,8 +121,8 @@ This document outlines the comprehensive technical implementation plan for rate 
 ```typescript
 // Rate limit entry structure
 interface RateLimitEntry {
-  count: number;           // Number of requests
-  resetTime: number;       // Unix timestamp when counter resets
+  count: number; // Number of requests
+  resetTime: number; // Unix timestamp when counter resets
   firstRequestTime: number; // Unix timestamp of first request in window
 }
 
@@ -281,19 +281,19 @@ src/
 export type SecurityConfig = {
   rateLimit: {
     global: {
-      ttl: number;          // Time window in seconds (60)
-      limit: number;        // Max requests per window (100)
+      ttl: number; // Time window in seconds (60)
+      limit: number; // Max requests per window (100)
     };
     login: {
-      ttl: number;          // Time window in seconds (600)
-      limit: number;        // Max attempts per window (5)
+      ttl: number; // Time window in seconds (600)
+      limit: number; // Max attempts per window (5)
     };
     tokenVerify: {
-      ttl: number;          // Time window in seconds (300)
-      limit: number;        // Max attempts per window (3)
+      ttl: number; // Time window in seconds (300)
+      limit: number; // Max attempts per window (3)
     };
     storage: {
-      cleanupInterval: number;  // Cleanup interval in ms (60000)
+      cleanupInterval: number; // Cleanup interval in ms (60000)
     };
   };
   helmet: {
@@ -318,11 +318,11 @@ export type SecurityConfig = {
     cookieName: string;
     headerName: string;
     secret: string;
-    ttl: number;              // Token TTL in seconds
+    ttl: number; // Token TTL in seconds
   };
   ipExtraction: {
     trustProxy: boolean;
-    proxyHeaders: string[];   // ['x-forwarded-for', 'x-real-ip']
+    proxyHeaders: string[]; // ['x-forwarded-for', 'x-real-ip']
   };
 };
 ```
@@ -374,7 +374,7 @@ Output: string (IP address)
 Logic:
   1. IF trustProxy is false:
      - Return request.ip or request.connection.remoteAddress
-  
+
   2. IF trustProxy is true:
      - FOR EACH header in proxyHeaders:
        - Check if request.headers[header] exists
@@ -383,7 +383,7 @@ Logic:
          - Extract first valid IP address
          - Validate IP format (IPv4 or IPv6)
          - IF valid: Return IP
-     
+
   3. Fallback: Return request.ip or '0.0.0.0'
 
 Edge Cases:
@@ -447,7 +447,7 @@ Methods:
 Logic for isExpired():
   Input: none (uses current time)
   Output: boolean
-  
+
   1. Get current timestamp: now = Date.now()
   2. Compare: now > this.resetTime
   3. Return boolean result
@@ -455,7 +455,7 @@ Logic for isExpired():
 Logic for getRemainingTime():
   Input: none
   Output: number (seconds until reset)
-  
+
   1. Get current timestamp: now = Date.now()
   2. Calculate: remainingMs = this.resetTime - now
   3. IF remainingMs <= 0: Return 0
@@ -524,7 +524,7 @@ Methods:
 3. async get(key: string): Promise<RateLimitEntry | null>
    Input: key (string)
    Output: RateLimitEntry or null
-   
+
    Logic:
      1. Check if key exists in store
      2. IF exists:
@@ -540,7 +540,7 @@ Methods:
 4. async set(key: string, entry: RateLimitEntry): Promise<void>
    Input: key (string), entry (RateLimitEntry)
    Output: void
-   
+
    Logic:
      1. Store entry: this.store.set(key, entry)
      2. Log storage event (debug level)
@@ -548,7 +548,7 @@ Methods:
 5. async delete(key: string): Promise<void>
    Input: key (string)
    Output: void
-   
+
    Logic:
      1. Delete from store: this.store.delete(key)
 
@@ -559,7 +559,7 @@ Methods:
 
 7. async cleanup(): Promise<number>
    Output: number (count of deleted entries)
-   
+
    Logic:
      1. Initialize counter: deletedCount = 0
      2. Get current time: now = Date.now()
@@ -596,7 +596,7 @@ Methods:
      - endpoint: string (route path)
      - config: RateLimitConfig
 
-   Output: 
+   Output:
      {
        allowed: boolean,
        retryAfter?: number (seconds)
@@ -604,65 +604,65 @@ Methods:
 
    Logic:
      1. Build key: `${identifier}:${endpoint}`
-     
+
      2. Get entry from storage: entry = await storage.get(key)
-     
+
      3. IF entry is null:
         - Create new entry: entry = new RateLimitEntry(config.ttl)
         - entry.count = 1
         - await storage.set(key, entry)
         - Log event (debug): "New rate limit entry created"
         - Return { allowed: true }
-     
+
      4. IF entry exists:
         - Check if expired: isExpired = entry.isExpired()
-        
+
         a. IF expired:
            - Reset entry: entry.reset(config.ttl)
            - entry.count = 1
            - await storage.set(key, entry)
            - Log event (debug): "Rate limit window reset"
            - Return { allowed: true }
-        
+
         b. IF not expired:
            - Increment count: entry.increment()
            - await storage.set(key, entry)
-           
+
            - Check limit: IF entry.count > config.limit:
              - Calculate retry after: retryAfter = entry.getRemainingTime()
              - Log event (warn): "Rate limit exceeded"
              - Return { allowed: false, retryAfter }
-           
+
            - ELSE:
              - Log event (debug): "Request counted"
              - Return { allowed: true }
 
 2. async resetLimit(identifier: string, endpoint: string): Promise<void>
-   
+
    Input:
      - identifier: string
      - endpoint: string
-   
+
    Output: void
-   
+
    Logic:
      1. Build key: `${identifier}:${endpoint}`
      2. await storage.delete(key)
      3. Log event (info): "Rate limit reset for key"
 
 3. async getStats(identifier: string, endpoint: string): Promise<RateLimitStats>
-   
+
    Input:
      - identifier: string
      - endpoint: string
-   
+
    Output: RateLimitStats {
      count: number,
      limit: number,
      resetTime: number,
      remaining: number
    }
-   
+
    Logic:
      1. Build key: `${identifier}:${endpoint}`
      2. Get entry from storage
@@ -700,37 +700,37 @@ Concrete Methods:
 
    Logic:
      1. Extract request: request = context.switchToHttp().getRequest()
-     
+
      2. Get identifier: identifier = this.getIdentifier(request)
         - This calls abstract method (IP or session)
-     
+
      3. Get endpoint: endpoint = this.getEndpoint(request)
         - OR use this.endpointIdentifier
-     
+
      4. Check rate limit:
         result = await rateLimitService.checkLimit(
           identifier,
           endpoint,
           this.rateLimitConfig
         )
-     
+
      5. IF result.allowed:
         - Return true
-     
+
      6. ELSE (rate limit exceeded):
         - Log warning with details
         - Throw HttpException:
           - Status: 429 (TOO_MANY_REQUESTS)
           - Message: "Rate limit exceeded. Please try again later."
           - Headers: { 'Retry-After': result.retryAfter }
-   
+
    Error Handling:
      - Catch any storage errors
      - Log error
      - Allow request (fail open) to prevent service disruption
 
 2. protected getEndpoint(request: Request): string
-   
+
    Logic:
      1. Get route: request.route?.path
      2. Get method: request.method
@@ -749,16 +749,16 @@ Properties:
     - Initialized from ConfigService (global config)
     - ttl: 60 seconds
     - limit: 100 requests
-  
+
   - protected endpointIdentifier: string = 'global'
 
 Methods:
 
 1. protected getIdentifier(request: Request): string
-   
+
    Input: Request
    Output: string (IP address)
-   
+
    Logic:
      1. Return request.realIp || request.ip || '0.0.0.0'
 ```
@@ -772,19 +772,19 @@ Properties:
   - protected rateLimitConfig: RateLimitConfig
     - ttl: 600 seconds (10 minutes)
     - limit: 5 attempts
-  
+
   - protected endpointIdentifier: string = '/api/v1/auth/email/login'
 
 Methods:
 
 1. protected getIdentifier(request: Request): string
-   
+
    Input: Request
    Output: string (IP address)
-   
+
    Logic:
      1. Return request.realIp || request.ip || '0.0.0.0'
-     
+
 Note: Uses IP only, not session, for login attempts
 ```
 
@@ -797,28 +797,28 @@ Properties:
   - protected rateLimitConfig: RateLimitConfig
     - ttl: 300 seconds (5 minutes)
     - limit: 3 attempts
-  
+
   - protected endpointIdentifier: string = '/api/v1/auth/refresh'
 
 Methods:
 
 1. protected getIdentifier(request: Request): string
-   
+
    Input: Request
    Output: string (session ID or IP)
-   
+
    Logic:
      1. Try to get session ID from request:
         - Check request.user?.sessionId
         - Check request.session?.id
         - Check request.headers['x-session-id']
-     
+
      2. IF session ID found:
         - Return `session:${sessionId}`
-     
+
      3. ELSE (fallback to IP):
         - Return `ip:${request.realIp || request.ip || '0.0.0.0'}`
-     
+
    Reason: Prefer session ID to track authenticated users,
            fallback to IP for unauthenticated requests
 ```
@@ -839,10 +839,10 @@ Output: HelmetOptions object
 
 Logic:
   1. Load config: securityConfig = configService.get('security.helmet')
-  
+
   2. IF !securityConfig.enabled:
      - Return null
-  
+
   3. Build options object:
      {
        contentSecurityPolicy: {
@@ -871,7 +871,7 @@ Logic:
        referrerPolicy: { policy: "strict-origin-when-cross-origin" },
        xssFilter: true,
      }
-  
+
   4. Merge with user overrides from config
   5. Return options
 
@@ -898,10 +898,10 @@ Private Properties:
 Methods:
 
 1. generateToken(sessionId: string): string
-   
+
    Input: sessionId (string)
    Output: token (string)
-   
+
    Logic:
      1. Create payload:
         {
@@ -909,70 +909,70 @@ Methods:
           timestamp: Date.now(),
           random: crypto.randomBytes(16).toString('hex')
         }
-     
+
      2. Create signature:
         - Stringify payload
         - Sign using HMAC-SHA256 with secret
         - signature = crypto.createHmac('sha256', secret)
                            .update(payloadString)
                            .digest('hex')
-     
+
      3. Combine:
         - Encode payload: base64(JSON.stringify(payload))
         - token = `${encodedPayload}.${signature}`
-     
+
      4. Return token
 
 2. validateToken(token: string, sessionId: string): boolean
-   
+
    Input:
      - token: string
      - sessionId: string
-   
+
    Output: boolean (valid or not)
-   
+
    Logic:
      1. Try to parse token:
         - Split by '.': [encodedPayload, signature]
         - IF split fails: Return false
-     
+
      2. Decode payload:
         - Decode base64
         - Parse JSON
         - IF parsing fails: Return false
-     
+
      3. Validate session ID:
         - IF payload.sessionId !== sessionId:
           - Log warning
           - Return false
-     
+
      4. Validate timestamp (TTL):
         - currentTime = Date.now()
         - tokenAge = currentTime - payload.timestamp
         - IF tokenAge > (this.ttl * 1000):
           - Log warning: "Token expired"
           - Return false
-     
+
      5. Validate signature:
         - Recreate signature from payload
         - Compare with provided signature
         - IF signatures don't match:
           - Log warning: "Invalid signature"
           - Return false
-     
+
      6. All checks passed:
         - Return true
-   
+
    Error Handling:
      - Catch any errors
      - Log error
      - Return false (fail secure)
 
 3. clearToken(response: Response): void
-   
+
    Input: Response object
    Output: void
-   
+
    Logic:
      1. Clear cookie:
         response.clearCookie(cookieName, {
@@ -1002,46 +1002,46 @@ Private Properties:
 Methods:
 
 1. async canActivate(context: ExecutionContext): Promise<boolean>
-   
+
    Input: ExecutionContext
    Output: boolean
-   
+
    Logic:
      1. IF !this.enabled:
         - Return true (CSRF protection disabled)
-     
+
      2. Extract request & response:
         - request = context.switchToHttp().getRequest()
         - response = context.switchToHttp().getResponse()
-     
+
      3. Check method:
         - IF method is GET, HEAD, OPTIONS:
           - Generate and set token (safe methods)
           - Return true
-     
+
      4. For POST, PUT, PATCH, DELETE:
-        
+
         a. Get session ID:
            - sessionId = request.session?.id || request.user?.sessionId
            - IF no session ID:
              - Log error
              - Throw UnauthorizedException
-        
+
         b. Get token from request:
            - token = request.headers[headerName] || request.body._csrf
            - IF no token:
              - Log warning
              - Throw ForbiddenException: "CSRF token missing"
-        
+
         c. Validate token:
            - isValid = csrfService.validateToken(token, sessionId)
            - IF !isValid:
              - Log warning with IP and endpoint
              - Throw ForbiddenException: "Invalid CSRF token"
-        
+
         d. Token valid:
            - Return true
-   
+
    Error Handling:
      - Catch unexpected errors
      - Log error
@@ -1076,7 +1076,7 @@ Constructor Logic:
 Methods:
 
 1. logRateLimitExceeded(details: RateLimitLogDetails): void
-   
+
    Input: {
      identifier: string,
      endpoint: string,
@@ -1084,28 +1084,28 @@ Methods:
      retryAfter: number,
      timestamp: Date
    }
-   
+
    Logic:
      1. logger.warn('Rate limit exceeded', details)
 
 2. logSecurityEvent(event: string, details: object): void
-   
+
    Input:
      - event: string (event name)
      - details: object (additional context)
-   
+
    Logic:
      1. logger.info(event, details)
 
 3. logCsrfViolation(details: CsrfLogDetails): void
-   
+
    Input: {
      sessionId: string,
      ip: string,
      endpoint: string,
      reason: string
    }
-   
+
    Logic:
      1. logger.warn('CSRF validation failed', details)
 
@@ -1292,20 +1292,9 @@ SECURITY_IP_PROXY_HEADERS=x-forwarded-for,x-real-ip
 // src/security/security.module.ts
 
 @Module({
-  imports: [
-    ConfigModule,
-    RateLimitModule,
-    CsrfModule,
-    HelmetModule,
-  ],
-  providers: [
-    SecurityLoggerService,
-  ],
-  exports: [
-    SecurityLoggerService,
-    RateLimitModule,
-    CsrfModule,
-  ],
+  imports: [ConfigModule, RateLimitModule, CsrfModule, HelmetModule],
+  providers: [SecurityLoggerService],
+  exports: [SecurityLoggerService, RateLimitModule, CsrfModule],
 })
 export class SecurityModule {}
 ```
@@ -1331,9 +1320,7 @@ export class SecurityModule {}
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     // Apply IP extractor to all routes
-    consumer
-      .apply(IpExtractorMiddleware)
-      .forRoutes('*');
+    consumer.apply(IpExtractorMiddleware).forRoutes('*');
   }
 }
 ```
@@ -1345,16 +1332,16 @@ export class AppModule implements NestModule {
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
-  
+
   // ... existing configuration
-  
+
   // Add Helmet middleware
   const helmetOptionsFactory = app.get(HelmetOptionsFactory);
   const helmetOptions = helmetOptionsFactory.createHelmetOptions();
   if (helmetOptions) {
     app.use(helmet(helmetOptions));
   }
-  
+
   // ... rest of configuration
 }
 ```
@@ -1366,6 +1353,7 @@ async function bootstrap() {
 #### Rate Limit Service Tests (30 positive, 30 negative, 30 edge cases)
 
 **Positive Tests:**
+
 1. Should allow request when limit not reached
 2. Should increment counter on each request
 3. Should return correct remaining count
@@ -1376,27 +1364,12 @@ async function bootstrap() {
 8. Should calculate retry-after correctly
 9. Should allow request after reset time
 10. Should handle concurrent requests for different IPs
-11-30. (Similar positive scenarios)
+    11-30. (Similar positive scenarios)
 
-**Negative Tests:**
-31. Should block request when limit exceeded
-32. Should throw exception on rate limit exceeded
-33. Should not increment counter when limit exceeded
-34. Should maintain block until reset time
-35. Should reject requests with invalid identifier
+**Negative Tests:** 31. Should block request when limit exceeded 32. Should throw exception on rate limit exceeded 33. Should not increment counter when limit exceeded 34. Should maintain block until reset time 35. Should reject requests with invalid identifier
 36-60. (Similar negative scenarios)
 
-**Edge Cases:**
-61. Should handle clock skew gracefully
-62. Should handle storage failures (fail open)
-63. Should handle very large TTL values
-64. Should handle zero limit configuration
-65. Should handle negative TTL values (validation)
-66. Should handle empty identifier
-67. Should handle very long endpoint names
-68. Should handle Unicode in identifiers
-69. Should handle simultaneous requests (race conditions)
-70. Should handle storage corruption
+**Edge Cases:** 61. Should handle clock skew gracefully 62. Should handle storage failures (fail open) 63. Should handle very large TTL values 64. Should handle zero limit configuration 65. Should handle negative TTL values (validation) 66. Should handle empty identifier 67. Should handle very long endpoint names 68. Should handle Unicode in identifiers 69. Should handle simultaneous requests (race conditions) 70. Should handle storage corruption
 71-90. (Similar edge case scenarios)
 
 ### 8.2 Integration Tests
@@ -1439,7 +1412,7 @@ Methods:
         error: 'Too Many Requests',
         retryAfter: number
       }
-  
+
   - getHeaders(): Record<string, string>
     Returns:
       {
@@ -1541,12 +1514,14 @@ Usage in Guards:
 ### 13.1 Environment-Specific Configuration
 
 **Development:**
+
 - Higher rate limits
 - Verbose logging
 - CSRF optional
 - Trust proxy disabled
 
 **Production:**
+
 - Strict rate limits
 - Error-level logging only
 - CSRF required
@@ -1555,11 +1530,13 @@ Usage in Guards:
 ### 13.2 Scaling Considerations
 
 **Current Implementation (In-Memory):**
+
 - Works for single-instance deployments
 - Sufficient for small to medium scale
 - No external dependencies
 
 **Future Scaling (Out of Scope):**
+
 - For multi-instance: Use Redis
 - Implement distributed rate limiting
 - Shared storage across instances
@@ -1595,6 +1572,7 @@ Usage in Guards:
 ### 15.1 Potential Breaking Changes
 
 **None Expected.** All changes are additive:
+
 - New middleware (transparent to existing code)
 - New guards (opt-in via decorators)
 - No changes to existing services

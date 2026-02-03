@@ -7,6 +7,7 @@ import { FileConfig } from '../files/config/file-config.type';
 import { GoogleConfig } from '../auth-google/config/google-config.type';
 import { MailConfig } from '../mail/config/mail-config.type';
 import { AuditLogConfig } from '../audit-log/config/audit-log-config.type';
+import { SecurityConfig } from '../security/config/security-config.type';
 
 export type AllConfigType = {
   app: AppConfig;
@@ -18,4 +19,5 @@ export type AllConfigType = {
   google: GoogleConfig;
   mail: MailConfig;
   auditLog: AuditLogConfig;
+  security: SecurityConfig;
 };
