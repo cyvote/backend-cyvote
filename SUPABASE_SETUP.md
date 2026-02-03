@@ -1,9 +1,11 @@
 # Supabase Database Setup
 
 ## Overview
+
 This project is now configured to connect to Supabase PostgreSQL database. The configuration has been updated to support SSL connections required by Supabase.
 
 ## Database Credentials
+
 - **Host**: db.ytdkbqslvnivtdycfwom.supabase.co
 - **Port**: 5432
 - **Database**: postgres
@@ -13,6 +15,7 @@ This project is now configured to connect to Supabase PostgreSQL database. The c
 ## Configuration Changes
 
 ### Environment Variables (.env)
+
 The following environment variables have been updated to connect to Supabase:
 
 ```env
@@ -50,17 +53,20 @@ DATABASE_URL=
 ## Architecture
 
 ### Data Flow
+
 ```
 Application → TypeORM → SSL/TLS → Supabase PostgreSQL
 ```
 
 ### Configuration Layer
+
 1. `.env` - Environment variables
 2. `database.config.ts` - Configuration loader with validation
 3. `typeorm-config.service.ts` - TypeORM options builder
 4. `data-source.ts` - DataSource for CLI operations
 
 ### Connection Flow
+
 ```mermaid
 graph LR
     A[.env] --> B[ConfigService]
@@ -79,6 +85,7 @@ npm run typeorm -- --dataSource=src/database/data-source.ts query "SELECT versio
 ```
 
 Expected output:
+
 ```
 PostgreSQL 17.6 on aarch64-unknown-linux-gnu, compiled by gcc (GCC) 13.2.0, 64-bit
 ```
@@ -100,12 +107,14 @@ npm run migration:revert
 ## Code Changes
 
 **No code changes were required!** The existing codebase already supports:
+
 - SSL connections
 - Environment-based configuration
 - Both individual connection parameters and connection URL
 - Certificate configuration (CA, key, cert)
 
 All configuration is handled through environment variables, following the principles of:
+
 - **12-Factor App**: Configuration in environment
 - **DRY**: Single source of truth for database config
 - **SOLID**: Dependency on abstractions (ConfigService)
@@ -120,16 +129,21 @@ All configuration is handled through environment variables, following the princi
 ## Troubleshooting
 
 ### Error: "self-signed certificate in certificate chain"
+
 **Solution**: Ensure `DATABASE_REJECT_UNAUTHORIZED=false` in `.env`
 
 ### Error: Connection timeout
-**Solution**: 
+
+**Solution**:
+
 - Check if Supabase database is running
 - Verify host address is correct
 - Check network/firewall settings
 
 ### Error: Authentication failed
+
 **Solution**:
+
 - Verify username and password in `.env`
 - Check Supabase dashboard for correct credentials
 
