@@ -4,7 +4,7 @@ import { Request } from 'express';
 import { BaseRateLimitGuard } from './base-rate-limit.guard';
 import { RateLimitService } from '../services/rate-limit.service';
 import { RateLimitConfig } from '../domain/rate-limit-config';
-import { SecurityLoggerService } from '../../utils/security-logger.service';
+import { SecurityAuditLoggerService } from '../../utils/security-audit-logger.service';
 import { AllConfigType } from '../../../config/config.type';
 
 @Injectable()
@@ -14,7 +14,7 @@ export class GlobalRateLimitGuard extends BaseRateLimitGuard {
 
   constructor(
     rateLimitService: RateLimitService,
-    logger: SecurityLoggerService,
+    logger: SecurityAuditLoggerService,
     private readonly configService: ConfigService<AllConfigType>,
   ) {
     super(rateLimitService, logger);

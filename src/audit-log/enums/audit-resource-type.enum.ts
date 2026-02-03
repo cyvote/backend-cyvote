@@ -7,4 +7,5 @@ export enum AuditResourceType {
   ELECTION = 'ELECTION',
   RESULTS = 'RESULTS',
   EXPORT = 'EXPORT',
+  SECURITY = 'SECURITY',
 }

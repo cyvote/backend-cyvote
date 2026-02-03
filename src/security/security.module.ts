@@ -3,14 +3,26 @@ import { ConfigModule } from '@nestjs/config';
 import { RateLimitModule } from './rate-limit/rate-limit.module';
 import { CsrfModule } from './csrf/csrf.module';
 import { HelmetModule } from './helmet/helmet.module';
-import { SecurityLoggerService } from './utils/security-logger.service';
+import { SecurityAuditLoggerService } from './utils/security-audit-logger.service';
 import { IpExtractorMiddleware } from './middleware/ip-extractor.middleware';
+import { AuditLogModule } from '../audit-log/audit-log.module';
 
 @Global()
 @Module({
-  imports: [ConfigModule, RateLimitModule, CsrfModule, HelmetModule],
-  providers: [SecurityLoggerService],
-  exports: [SecurityLoggerService, RateLimitModule, CsrfModule, HelmetModule],
+  imports: [
+    ConfigModule,
+    AuditLogModule,
+    RateLimitModule,
+    CsrfModule,
+    HelmetModule,
+  ],
+  providers: [SecurityAuditLoggerService],
+  exports: [
+    SecurityAuditLoggerService,
+    RateLimitModule,
+    CsrfModule,
+    HelmetModule,
+  ],
 })
 export class SecurityModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

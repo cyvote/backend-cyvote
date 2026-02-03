@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IRateLimitStorage } from './rate-limit-storage.interface';
 import { RateLimitEntry } from '../../domain/rate-limit-entry';
-import { SecurityLoggerService } from '../../../utils/security-logger.service';
+import { SecurityAuditLoggerService } from '../../../utils/security-audit-logger.service';
 import { AllConfigType } from '../../../../config/config.type';
 
 @Injectable()
@@ -13,7 +13,7 @@ export class InMemoryRateLimitStorageService
   private cleanupIntervalId: NodeJS.Timeout | null = null;
 
   constructor(
-    private readonly logger: SecurityLoggerService,
+    private readonly logger: SecurityAuditLoggerService,
     private readonly configService: ConfigService<AllConfigType>,
   ) {}
 

@@ -8,7 +8,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 import { CsrfService } from '../services/csrf.service';
-import { SecurityLoggerService } from '../../utils/security-logger.service';
+import { SecurityAuditLoggerService } from '../../utils/security-audit-logger.service';
 import { AllConfigType } from '../../../config/config.type';
 
 @Injectable()
@@ -19,7 +19,7 @@ export class CsrfGuard implements CanActivate {
 
   constructor(
     private readonly csrfService: CsrfService,
-    private readonly logger: SecurityLoggerService,
+    private readonly logger: SecurityAuditLoggerService,
     private readonly configService: ConfigService<AllConfigType>,
   ) {
     const csrfConfig = this.configService.get('security.csrf', {

@@ -6,12 +6,12 @@ import { RATE_LIMIT_STORAGE } from './infrastructure/storage/rate-limit-storage.
 import { GlobalRateLimitGuard } from './guards/global-rate-limit.guard';
 import { LoginRateLimitGuard } from './guards/login-rate-limit.guard';
 import { TokenVerificationRateLimitGuard } from './guards/token-verification-rate-limit.guard';
-import { SecurityLoggerService } from '../utils/security-logger.service';
+import { SecurityAuditLoggerService } from '../utils/security-audit-logger.service';
 
 @Module({
   imports: [ConfigModule],
   providers: [
-    SecurityLoggerService,
+    SecurityAuditLoggerService,
     {
       provide: RATE_LIMIT_STORAGE,
       useClass: InMemoryRateLimitStorageService,
@@ -26,7 +26,7 @@ import { SecurityLoggerService } from '../utils/security-logger.service';
     GlobalRateLimitGuard,
     LoginRateLimitGuard,
     TokenVerificationRateLimitGuard,
-    SecurityLoggerService,
+    SecurityAuditLoggerService,
   ],
 })
 export class RateLimitModule {}

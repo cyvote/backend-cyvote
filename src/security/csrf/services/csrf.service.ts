@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { AllConfigType } from '../../../config/config.type';
-import { SecurityLoggerService } from '../../utils/security-logger.service';
+import { SecurityAuditLoggerService } from '../../utils/security-audit-logger.service';
 
 interface CsrfTokenPayload {
   sessionId: string;
@@ -17,7 +17,7 @@ export class CsrfService {
 
   constructor(
     private readonly configService: ConfigService<AllConfigType>,
-    private readonly logger: SecurityLoggerService,
+    private readonly logger: SecurityAuditLoggerService,
   ) {
     const csrfConfig = this.configService.get('security.csrf', {
       infer: true,

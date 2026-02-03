@@ -5,7 +5,7 @@ import {
 } from '../infrastructure/storage/rate-limit-storage.interface';
 import { RateLimitEntry } from '../domain/rate-limit-entry';
 import { RateLimitConfig } from '../domain/rate-limit-config';
-import { SecurityLoggerService } from '../../utils/security-logger.service';
+import { SecurityAuditLoggerService } from '../../utils/security-audit-logger.service';
 import {
   RateLimitCheckResult,
   RateLimitStats,
@@ -16,7 +16,7 @@ export class RateLimitService {
   constructor(
     @Inject(RATE_LIMIT_STORAGE)
     private readonly storage: IRateLimitStorage,
-    private readonly logger: SecurityLoggerService,
+    private readonly logger: SecurityAuditLoggerService,
   ) {}
 
   /**

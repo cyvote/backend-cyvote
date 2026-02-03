@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Request } from 'express';
 import { RateLimitService } from '../services/rate-limit.service';
 import { RateLimitConfig } from '../domain/rate-limit-config';
-import { SecurityLoggerService } from '../../utils/security-logger.service';
+import { SecurityAuditLoggerService } from '../../utils/security-audit-logger.service';
 import { RateLimitExceededException } from '../exceptions/rate-limit-exceeded.exception';
 
 @Injectable()
@@ -12,7 +12,7 @@ export abstract class BaseRateLimitGuard implements CanActivate {
 
   constructor(
     protected readonly rateLimitService: RateLimitService,
-    protected readonly logger: SecurityLoggerService,
+    protected readonly logger: SecurityAuditLoggerService,
   ) {}
 
   /**

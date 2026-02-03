@@ -3,13 +3,13 @@ import { ConfigService } from '@nestjs/config';
 import { Request, Response, NextFunction } from 'express';
 import { AllConfigType } from '../../config/config.type';
 import { IpExtractorUtil } from '../utils/ip-extractor.util';
-import { SecurityLoggerService } from '../utils/security-logger.service';
+import { SecurityAuditLoggerService } from '../utils/security-audit-logger.service';
 
 @Injectable()
 export class IpExtractorMiddleware implements NestMiddleware {
   constructor(
     private readonly configService: ConfigService<AllConfigType>,
-    private readonly logger: SecurityLoggerService,
+    private readonly logger: SecurityAuditLoggerService,
   ) {}
 
   use(req: Request, res: Response, next: NextFunction): void {
