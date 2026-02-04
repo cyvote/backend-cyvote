@@ -4,7 +4,7 @@ import { ElectionScheduleService } from './election-schedule.service';
 import { PublicElectionStatusResponseDto } from './dto';
 
 @ApiTags('Public - Election Status')
-@Controller('api/v1/election')
+@Controller({ path: 'election', version: '1' })
 export class PublicElectionController {
   constructor(
     private readonly electionScheduleService: ElectionScheduleService,

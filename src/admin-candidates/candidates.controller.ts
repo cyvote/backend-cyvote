@@ -24,7 +24,7 @@ import { VoterAuthGuard } from './guards/voter-auth.guard';
 @ApiTags('Candidates (Public)')
 @ApiBearerAuth()
 @UseGuards(VoterAuthGuard)
-@Controller('api/v1/candidates')
+@Controller({ path: 'candidates', version: '1' })
 export class CandidatesController {
   constructor(
     private readonly adminCandidatesService: AdminCandidatesService,

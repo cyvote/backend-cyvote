@@ -12,6 +12,10 @@ export type SecurityConfig = {
       ttl: number; // Time window in seconds (300)
       limit: number; // Max attempts per window (3)
     };
+    superadminAuditLogs: {
+      ttl: number; // Time window in seconds (60)
+      limit: number; // Max requests per window (30)
+    };
     storage: {
       cleanupInterval: number; // Cleanup interval in ms (60000)
     };

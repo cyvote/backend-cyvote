@@ -24,7 +24,7 @@ import { VoterAuthGuard } from './guards/voter-auth.guard';
 import { GlobalRateLimitGuard } from '../security/rate-limit/guards/global-rate-limit.guard';
 
 @ApiTags('Voting')
-@Controller('api/v1/vote')
+@Controller({ path: 'vote', version: '1' })
 @UseGuards(VoterAuthGuard, GlobalRateLimitGuard)
 @ApiBearerAuth()
 export class VotingController {

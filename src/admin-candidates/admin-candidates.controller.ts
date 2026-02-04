@@ -41,7 +41,7 @@ import { CurrentAdmin } from '../auth-admin/decorators/current-admin.decorator';
 @ApiBearerAuth()
 @UseGuards(AdminAuthGuard, AdminRolesGuard)
 @AdminRoles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-@Controller('api/v1/admin/candidates')
+@Controller({ path: 'admin/candidates', version: '1' })
 export class AdminCandidatesController {
   constructor(
     private readonly adminCandidatesService: AdminCandidatesService,

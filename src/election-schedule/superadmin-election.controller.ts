@@ -27,7 +27,7 @@ import { AdminRole } from '../auth-admin/enums/admin-role.enum';
 
 @ApiTags('Superadmin - Election Management')
 @ApiBearerAuth()
-@Controller('api/v1/superadmin/election')
+@Controller({ path: 'superadmin/election', version: '1' })
 @UseGuards(AdminAuthGuard, AdminRolesGuard)
 @AdminRoles(AdminRole.SUPERADMIN)
 export class SuperadminElectionController {

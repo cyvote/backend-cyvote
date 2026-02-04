@@ -25,7 +25,7 @@ import { VoterTokenRateLimitGuard } from './guards/voter-token-rate-limit.guard'
 import { VoterSessionGuard } from './guards/voter-session.guard';
 
 @ApiTags('Voter Auth')
-@Controller('api/v1/auth/voter')
+@Controller({ path: 'auth/voter', version: '1' })
 export class AuthVoterController {
   constructor(private readonly authVoterService: AuthVoterService) {}
 
