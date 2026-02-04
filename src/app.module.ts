@@ -33,6 +33,7 @@ import { AuthAdminModule } from './auth-admin/auth-admin.module';
 import { AuthVoterModule } from './auth-voter/auth-voter.module';
 import { AdminVotersModule } from './admin-voters/admin-voters.module';
 import { AdminCandidatesModule } from './admin-candidates/admin-candidates.module';
+import { AdminDashboardModule } from './admin-dashboard/admin-dashboard.module';
 import { ElectionScheduleModule } from './election-schedule/election-schedule.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
@@ -116,6 +117,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     AuthVoterModule,
     AdminVotersModule,
     AdminCandidatesModule,
+    AdminDashboardModule,
     ElectionScheduleModule,
     VotingTokenModule,
     VotingModule,
