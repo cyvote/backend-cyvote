@@ -96,11 +96,20 @@ jobs:
             # Validate docker-compose config
             docker-compose --env-file .env.development -f docker-compose.dev.yaml config --quiet && echo "Docker Compose config is valid"
 
-            # Load .env.development explicitly and start containers
+            # Pull latest images first (docker-compose v1 compatible)
             docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-development \
               --env-file .env.development \
               -f docker-compose.dev.yaml \
-              up -d --force-recreate --pull always
+              pull
+
+            # Start containers (removed --pull always as it's not supported in docker-compose v1)
+            docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-development \
+              --env-file .env.development \
+              -f docker-compose.dev.yaml \
+              up -d --force-recreate
+
+            # Show running containers
+            docker ps --filter "name=${{ secrets.DOCKERHUB_APP_ID }}-development"
 
             # Show logs for debugging
             docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-development \
