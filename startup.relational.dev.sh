@@ -38,5 +38,16 @@ npm run migration:run
 echo "Running seeds..."
 npm run seed:run:relational
 
+echo ""
+echo "Checking dist folder..."
+ls -la /usr/src/app/dist/ 2>/dev/null || echo "dist folder not found!"
+ls -la /usr/src/app/dist/main.js 2>/dev/null || echo "dist/main.js not found!"
+
+# If dist doesn't exist, try to build
+if [ ! -f /usr/src/app/dist/main.js ]; then
+  echo "Building application..."
+  cd /usr/src/app && npm run build
+fi
+
 echo "Starting application..."
 npm run start:prod

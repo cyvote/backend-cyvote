@@ -18,9 +18,9 @@ services:
       - redis
     restart: unless-stopped
     volumes:
-      - ./src:/app/src
-      - ./files:/app/files
-      - ./logs:/app/logs
+      # Only mount files and logs, NOT src (to preserve built dist folder)
+      - ./files:/usr/src/app/files
+      - ./logs:/usr/src/app/logs
     env_file:
       - .env.development
 
