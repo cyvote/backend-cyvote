@@ -12,13 +12,26 @@ echo "Waiting for database at ${DB_HOST}:${DB_PORT}..."
 # Create .env file from current environment variables for env-cmd to use
 # This ensures TypeORM migrations use the correct database connection
 echo "Creating .env file from environment variables..."
-printenv | grep -E "^(NODE_ENV|APP_|API_|DATABASE_|FILE_|MAIL_|AUTH_|FRONTEND_|BACKEND_|WORKER_|SECURITY_|AUDIT_|SUPABASE_|VOTE_)=" > /usr/src/app/.env || true
+
+# Export all relevant environment variables to .env file
+# Use env instead of printenv and handle special characters
+env | while IFS='=' read -r name value; do
+  case "$name" in
+    NODE_ENV|APP_*|API_*|DATABASE_*|FILE_*|MAIL_*|AUTH_*|FRONTEND_*|BACKEND_*|WORKER_*|SECURITY_*|AUDIT_*|SUPABASE_*|VOTE_*)
+      # Write to .env, properly quoting values with special characters
+      echo "${name}=${value}" >> /usr/src/app/.env
+      ;;
+  esac
+done
 
 # Debug: Show database config in .env
 echo "Database config in .env:"
-grep "^DATABASE_HOST=" /usr/src/app/.env || echo "DATABASE_HOST not found"
-grep "^DATABASE_PORT=" /usr/src/app/.env || echo "DATABASE_PORT not found"
+cat /usr/src/app/.env | grep -E "^DATABASE_(HOST|PORT)=" || echo "Database vars not found in .env"
+echo ""
+echo "FRONTEND_DOMAIN value:"
+cat /usr/src/app/.env | grep "^FRONTEND_DOMAIN=" || echo "FRONTEND_DOMAIN not found"
 
+echo ""
 echo "Running migrations..."
 npm run migration:run
 
