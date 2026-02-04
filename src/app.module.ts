@@ -40,6 +40,7 @@ import { AuditLogContextInterceptor } from './audit-log/interceptors/audit-log-c
 import { SecurityModule } from './security/security.module';
 import { GlobalRateLimitGuard } from './security/rate-limit/guards/global-rate-limit.guard';
 import securityConfig from './security/config/security.config';
+import { VotingTokenModule } from './voting-token/voting-token.module';
 
 // <database-block>
 const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
@@ -115,6 +116,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     AdminVotersModule,
     AdminCandidatesModule,
     ElectionScheduleModule,
+    VotingTokenModule,
   ],
   providers: [
     {

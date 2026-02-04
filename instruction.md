@@ -2,43 +2,50 @@
 We will execute the task below
 
 **Description:**
-Endpoint untuk set jadwal pemilihan dan manage status election lifecycle.
+Service untuk generate token untuk semua voters dan schedule pengiriman email.
 
 **Acceptance Criteria:**
 
-- [ ] `POST /api/v1/superadmin/election/schedule` — set jadwal
-  - Terima: `{ start_date, end_date }` (ISO 8601, WIB)
-  - Validasi: end > start, duration min 6 jam, max 7 hari, start harus di masa depan
-  - Simpan ke `election_config` dengan status `SCHEDULED`
-  - Log action
-- [ ] `GET /api/v1/superadmin/election/config` — get current config
-- [ ] `GET /api/v1/election/status` — **public endpoint** return current election status dan dates
-- [ ] Automatic status transition:
-  - `SCHEDULED` → `ACTIVE` ketika current time >= start_date
-  - `ACTIVE` → `CLOSED` ketika current time >= end_date
-  - Status check ini dilakukan via middleware atau scheduler yang run sebelum setiap request
-- [ ] Protected: SUPERADMIN only (kecuali public status endpoint)
-- [ ] Action di-log
-
-**Description:**
-Endpoint untuk memperpanjang waktu voting oleh superadmin.
-
-**Acceptance Criteria:**
-
-- [ ] `PUT /api/v1/superadmin/election/extend` — terima `{ new_end_date, reason }`
-- [ ] Validasi:
-  - Election status harus `ACTIVE`
-  - `new_end_date` harus setelah `end_date` saat ini
-  - Extension max 24 jam dari end_date original
-  - `reason` required (min 10 chars)
-- [ ] Update `end_date` di `election_config`
-- [ ] Kirim notification email ke semua voters (pakai `EmailService` yang sudah ada). Kemudian buat template email baru dengan mengikuti template email src\mail\mail-templates\voting-token.hbs. Jangan lupa untuk menambahkan data yang diperlukan ke dalam template email tersebut.
-- [ ] Log action dengan reason
-- [ ] Protected: SUPERADMIN only
+- [ ] `TokenGenerationService` dibuat sebagai injectable service
+- [ ] Method `generateAllTokens()`:
+  - Ambil semua voters yang belum punya token
+  - Untuk setiap voter: generate 8 char alphanumeric token, pastikan unique
+  - Hash token dengan SHA-256 sebelum simpan ke database
+  - Simpan ke tabel `tokens`
+- [ ] Method `scheduleTokenEmails()`:
+  - Ambil semua tokens yang belum dikirim
+  - Batch per 50 emails/batch queue
+  - Kirim pakai `EmailService`
+  - Delay 150 detik antar batch
+  - Log delivery status setiap email
+  - Retry failed sends (max 3x)
+  - Kita akan menggunakan email template yang sudah ada di src\mail\mail-templates\voting-token.hbs.
+- [ ] Token ini harus di-trigger 10–15 menit sebelum `start_date` dari election config
+  - Implementasi sebagai scheduled job yang cek setiap menit apakah sudah waktunya
+- [ ] Log semua token generation events
 
 ---
 
-Put it in src/admin-voters/. In this project we use pnpm not npm. Also, follow the existing architecture (DDD). Analyze the code first. Create unit test, 30 test for positive test, 30 test for negative test, and 30 test for edge case test in different file. Follow the code quality standard that exist.
+**Description:**
+Endpoint untuk admin resend token ke voter tertentu.
+
+**Acceptance Criteria:**
+
+- [ ] `POST /api/v1/admin/voters/:id/resend-token`
+- [ ] Validasi:
+  - Voter harus ada
+  - `resend_count` harus < 3
+  - Election status harus `ACTIVE`
+  - Token belum digunakan
+- [ ] Kirim email langsung (tidak batched) pakai `EmailService`
+- [ ] Increment `resend_count` di tabel tokens
+- [ ] Jika resend_count sudah 3, return error: "Resend token sudah mencapai batas maksimum"
+- [ ] Log action dengan admin_id
+- [ ] Protected: ADMIN only
+
+---
+
+Put it in src/{kamu tentukan nama modulenya}/. In this project we use pnpm not npm. Also, follow the existing architecture (DDD). Analyze the code first. Follow the code quality standard that exist.
 
 </context>
 

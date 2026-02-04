@@ -10,6 +10,7 @@ export class Token {
   usedAt: Date | null;
   isUsed: boolean;
   resendCount: number;
+  emailSentAt: Date | null;
 
   constructor(partial?: Partial<Token>) {
     if (partial) {
