@@ -40,7 +40,7 @@ jobs:
       - name: Create .env.development file from environment variables
         run: |
           # Parse JSON and write to .env.development
-          echo "${{ toJSON(vars) }}" | jq -r 'to_entries[] | "\(.key)=\(.value)"' > .env.development
+          echo '${{ toJSON(vars) }}' | jq -r 'to_entries[] | "\(.key)=\(.value)"' > .env.development
 
       - name: Upload .env.development to VPS
         uses: appleboy/scp-action@v0.1.7
