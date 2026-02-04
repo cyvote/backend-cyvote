@@ -11,7 +11,7 @@ import { AdminResendTokenService } from './admin-resend-token.service';
 import { AdminResendTokenController } from './admin-resend-token.controller';
 import { AuditLogModule } from '../audit-log/audit-log.module';
 import { MailModule } from '../mail/mail.module';
-import { ElectionScheduleModule } from '../election-schedule/election-schedule.module';
+import { ElectionScheduleRelationalPersistenceModule } from '../election-schedule/infrastructure/persistence/relational/relational-persistence.module';
 
 @Module({
   imports: [
@@ -19,7 +19,7 @@ import { ElectionScheduleModule } from '../election-schedule/election-schedule.m
     ScheduleModule,
     AuditLogModule,
     MailModule,
-    forwardRef(() => ElectionScheduleModule),
+    ElectionScheduleRelationalPersistenceModule,
   ],
   controllers: [AdminResendTokenController],
   providers: [
