@@ -1,0 +1,13 @@
+{
+  "scheduleCreated": "Jadwal pemilihan berhasil dibuat",
+  "configRetrieved": "Konfigurasi pemilihan berhasil diambil",
+  "electionExtended": "Pemilihan berhasil diperpanjang. Notifikasi sedang dikirim ke voters.",
+  "noActiveElection": "Tidak ada konfigurasi pemilihan yang aktif",
+  "configAlreadyExists": "Konfigurasi pemilihan sudah ada",
+  "startMustBeFuture": "Tanggal mulai harus di masa depan",
+  "endMustBeAfterStart": "Tanggal selesai harus setelah tanggal mulai",
+  "invalidDuration": "Durasi pemilihan harus antara 6 jam dan 7 hari",
+  "notActive": "Pemilihan harus dalam status ACTIVE untuk diperpanjang",
+  "newEndMustBeAfterCurrent": "Tanggal akhir baru harus setelah tanggal akhir saat ini",
+  "extensionExceedsMax": "Perpanjangan tidak boleh melebihi 24 jam dari tanggal akhir saat ini"
+}

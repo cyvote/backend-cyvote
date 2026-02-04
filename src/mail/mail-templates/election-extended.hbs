@@ -1,0 +1,186 @@
+<html lang='id'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>Perpanjangan Waktu Voting - {{app_name}}</title>
+  </head>
+
+  <body
+    style='margin:0;padding:0;background-color:#f5f5f5;font-family:Arial,Helvetica,sans-serif'
+  >
+    <table
+      width='100%'
+      cellpadding='0'
+      cellspacing='0'
+      style='background-color:#f5f5f5;padding:20px 0'
+    >
+      <tr>
+        <td align='center'>
+          <table
+            width='600'
+            cellpadding='0'
+            cellspacing='0'
+            style='background:#ffffff;border-radius:6px;overflow:hidden;border:1px solid #e5e5e5'
+          >
+
+            <!-- Header -->
+            <tr>
+              <td style='background:#000000;padding:20px 30px'>
+                <h2
+                  style='margin:0;color:#ffffff;font-size:20px;font-weight:bold'
+                >
+                  {{app_name}}
+                </h2>
+              </td>
+            </tr>
+
+            <!-- Content -->
+            <tr>
+              <td style='padding:30px'>
+
+                <p style='margin:0 0 16px 0;color:#000000;font-size:14px'>
+                  Hai
+                  <strong>{{nama}}</strong>,
+                </p>
+
+                <p
+                  style='margin:0 0 20px 0;color:#333333;font-size:14px;line-height:1.6'
+                >
+                  Kami ingin menginformasikan bahwa waktu pemilihan telah
+                  <strong>diperpanjang</strong>.
+                </p>
+
+                <!-- New End Date Box -->
+                <table
+                  width='100%'
+                  cellpadding='0'
+                  cellspacing='0'
+                  style='margin:20px 0'
+                >
+                  <tr>
+                    <td align='center'>
+                      <div
+                        style='
+                          display:inline-block;
+                          padding:18px 30px;
+                          border:2px solid #000000;
+                          border-radius:8px;
+                          background:#fafafa;
+                        '
+                      >
+                        <p
+                          style='
+                            margin:0;
+                            font-size:12px;
+                            color:#666666;
+                            letter-spacing:1px;
+                            text-transform:uppercase
+                          '
+                        >
+                          Batas Akhir Voting Baru
+                        </p>
+                        <p
+                          style='
+                            margin:10px 0 0 0;
+                            font-size:24px;
+                            font-weight:bold;
+                            color:#000000;
+                          '
+                        >
+                          {{new_end_date}}
+                        </p>
+                        <p
+                          style='
+                            margin:5px 0 0 0;
+                            font-size:18px;
+                            color:#333333;
+                          '
+                        >
+                          pukul
+                          <strong>{{new_end_time}}</strong>
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Reason -->
+                <div
+                  style='
+                    background:#f0f0f0;
+                    border-left:4px solid #000000;
+                    padding:14px;
+                    border-radius:4px;
+                    margin-bottom:24px
+                  '
+                >
+                  <p
+                    style='margin:0;font-size:13px;color:#000000;line-height:1.7'
+                  >
+                    <strong>Alasan Perpanjangan:</strong><br />
+                    {{reason}}
+                  </p>
+                </div>
+
+                <!-- Info -->
+                <p
+                  style='margin:0 0 20px 0;color:#333333;font-size:14px;line-height:1.6'
+                >
+                  Jika Anda belum melakukan voting, silakan gunakan kesempatan
+                  ini untuk menyuarakan hak pilih Anda.
+                </p>
+
+                <!-- CTA -->
+                <div style='text-align:center;margin-bottom:30px'>
+                  <a
+                    href='{{voting_url}}'
+                    style='
+                      display:inline-block;
+                      background:#000000;
+                      color:#ffffff;
+                      text-decoration:none;
+                      padding:14px 36px;
+                      border-radius:6px;
+                      font-size:15px;
+                      font-weight:bold
+                    '
+                  >
+                    Voting Sekarang
+                  </a>
+                </div>
+
+                <!-- Help -->
+                <p
+                  style='margin:0;color:#555555;font-size:12px;line-height:1.6'
+                >
+                  Jika Anda memiliki pertanyaan, silakan hubungi panitia atau
+                  administrator sistem.
+                </p>
+
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td
+                style='background:#fafafa;padding:20px;text-align:center;border-top:1px solid #e5e5e5'
+              >
+                <p
+                  style='margin:0;font-size:11px;color:#777777;line-height:1.6'
+                >
+                  Email ini dikirim secara otomatis.<br />
+                  Mohon tidak membalas email ini.
+                </p>
+                <p style='margin:10px 0 0 0;font-size:11px;color:#777777'>
+                  © 2026
+                  {{app_name}}. All rights reserved.
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
