@@ -92,3 +92,6 @@ SECURITY_CSRF_TTL=3600
 SECURITY_IP_TRUST_PROXY=true
 SECURITY_IP_PROXY_HEADERS=x-forwarded-for,x-real-ip
 
+# Supabase Storage
+SUPABASE_PROJECT_URL=https://your-project.supabase.co
+SUPABASE_SECRET_KEY=your_supabase_secret_key

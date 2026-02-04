@@ -1,0 +1,22 @@
+/**
+ * Candidate error codes
+ */
+export enum CandidateErrorCode {
+  CANDIDATE_NOT_FOUND = 'CANDIDATE_NOT_FOUND',
+  CANDIDATE_DUPLICATE_NAME = 'CANDIDATE_DUPLICATE_NAME',
+  VOTING_ACTIVE_CANNOT_MODIFY = 'VOTING_ACTIVE_CANNOT_MODIFY',
+  VOTING_ACTIVE_CANNOT_DELETE = 'VOTING_ACTIVE_CANNOT_DELETE',
+  INVALID_FILE_TYPE_PHOTO = 'INVALID_FILE_TYPE_PHOTO',
+  INVALID_FILE_TYPE_PDF = 'INVALID_FILE_TYPE_PDF',
+  FILE_SIZE_EXCEEDED_PHOTO = 'FILE_SIZE_EXCEEDED_PHOTO',
+  FILE_SIZE_EXCEEDED_PDF = 'FILE_SIZE_EXCEEDED_PDF',
+  UPLOAD_FAILED = 'UPLOAD_FAILED',
+  DELETE_FILE_FAILED = 'DELETE_FILE_FAILED',
+}
+
+/**
+ * Type guard for candidate error codes
+ */
+export function isCandidateErrorCode(code: string): code is CandidateErrorCode {
+  return Object.values(CandidateErrorCode).includes(code as CandidateErrorCode);
+}

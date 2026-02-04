@@ -1,0 +1,17 @@
+{
+  "notFound": "Candidate not found",
+  "duplicateName": "Candidate with this name already exists",
+  "votingActiveCannotModify": "Cannot modify candidate while voting is active",
+  "votingActiveCannotDelete": "Cannot delete candidate while voting is active",
+  "invalidPhotoType": "Photo must be JPG or PNG",
+  "invalidPdfType": "Grand design must be PDF",
+  "photoSizeExceeded": "Photo must not exceed 2MB",
+  "pdfSizeExceeded": "Grand design must not exceed 10MB",
+  "uploadFailed": "File upload failed",
+  "created": "Candidate created successfully",
+  "updated": "Candidate updated successfully",
+  "deleted": "Candidate deleted successfully",
+  "authRequired": "Voter authentication required",
+  "invalidToken": "Invalid voter token",
+  "tokenExpired": "Voter token expired"
+}
