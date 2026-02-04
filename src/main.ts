@@ -95,6 +95,13 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('docs', app, document, {
+    customCssUrl: [
+      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css',
+    ],
+    customJs: [
+      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-bundle.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-standalone-preset.js',
+    ],
     swaggerOptions: {
       persistAuthorization: true,
     },
