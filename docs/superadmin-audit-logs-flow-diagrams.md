@@ -25,7 +25,7 @@ sequenceDiagram
     RG-->>Ctrl: Role Valid ✓
     Ctrl->>RL: Check Rate Limit
     RL-->>Ctrl: Rate Limit OK ✓
-    
+
     Ctrl->>Svc: queryLogs(filters, adminId)
     Svc->>Audit: Log access to audit logs
     Svc->>AS: findMany(filters)
@@ -34,14 +34,14 @@ sequenceDiagram
     DB-->>Repo: Result rows
     Repo-->>AS: AuditLog[] domain entities
     AS-->>Svc: Logs data
-    
+
     Svc->>AS: count(filters)
     AS->>Repo: Count with same filters
     Repo->>DB: SELECT COUNT(*) FROM audit_log WHERE ...
     DB-->>Repo: Total count
     Repo-->>AS: Count number
     AS-->>Svc: Total count
-    
+
     Svc->>Svc: Calculate totalPages
     Svc-->>Ctrl: { data, total, page, limit, totalPages }
     Ctrl-->>C: 200 OK + JSON Response
@@ -55,7 +55,7 @@ sequenceDiagram
     RG-->>Ctrl: Role Valid ✓
     Ctrl->>RL: Check Rate Limit
     RL-->>Ctrl: Rate Limit OK ✓
-    
+
     Ctrl->>Svc: getLogsForExport(filters)
     Svc->>Audit: Log export action
     Svc->>AS: findMany(filters with high limit)
@@ -64,13 +64,13 @@ sequenceDiagram
     DB-->>Repo: Result rows
     Repo-->>AS: AuditLog[]
     AS-->>Svc: All matching logs
-    
+
     Svc->>CSV: generateCsvContent(logs)
     CSV->>CSV: Build CSV headers
     CSV->>CSV: Escape and format each row
     CSV->>CSV: Join rows with newline
     CSV-->>Svc: CSV string
-    
+
     Svc-->>Ctrl: CSV content
     Ctrl->>Ctrl: Set headers (Content-Type, Content-Disposition)
     Ctrl-->>C: 200 OK + CSV Download

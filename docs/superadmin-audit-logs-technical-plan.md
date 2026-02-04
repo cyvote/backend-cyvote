@@ -7,12 +7,14 @@ Endpoint untuk superadmin query dan export audit logs dengan fitur filtering, pa
 ## 2. Architecture Analysis
 
 ### 2.1 Existing Components
+
 - **Database**: PostgreSQL dengan tabel `audit_log` (UUID primary key)
 - **Audit Log Module**: DDD architecture dengan repository pattern
 - **Auth**: AdminAuthGuard + AdminRolesGuard + AdminRole.SUPERADMIN
 - **Rate Limiting**: BaseRateLimitGuard dengan RateLimitService
 
 ### 2.2 Database Schema
+
 ```sql
 TABLE audit_log (
   id UUID PRIMARY KEY,
@@ -57,6 +59,7 @@ src/
 ## 4. Data Flow Diagram
 
 ### 4.1 Query Endpoint Flow
+
 ```
 ┌──────────┐
 │  Client  │
@@ -107,6 +110,7 @@ src/
 ```
 
 ### 4.2 Export CSV Flow
+
 ```
 ┌──────────┐
 │  Client  │
@@ -143,15 +147,18 @@ src/
 **Purpose**: Handle HTTP requests for audit logs query and export
 
 **Endpoints**:
+
 1. `GET /api/v1/superadmin/logs`
 2. `GET /api/v1/superadmin/logs/export`
 
 **Guards**:
+
 - `AdminAuthGuard` - Validate JWT token
 - `AdminRolesGuard` - Check AdminRole.SUPERADMIN
 - `SuperadminAuditLogsRateLimitGuard` - Rate limit protection
 
 **Methods**:
+
 ```typescript
 queryLogs(
   query: SuperadminAuditLogsQueryDto,
@@ -166,6 +173,7 @@ exportLogsAsCSV(
 ```
 
 **Decorators**:
+
 - `@ApiTags('Superadmin - Audit Logs')`
 - `@ApiBearerAuth()`
 - `@Controller('api/v1/superadmin/logs')`
@@ -173,6 +181,7 @@ exportLogsAsCSV(
 - `@AdminRoles(AdminRole.SUPERADMIN)`
 
 **Audit Logging**:
+
 - Log SUPERADMIN accessing audit logs
 - Log export actions
 - Include filters in audit details
@@ -184,6 +193,7 @@ exportLogsAsCSV(
 **Purpose**: Business logic for querying and preparing audit logs data
 
 **Dependencies**:
+
 - `AuditLogService` (inject existing service)
 - `AuditLogLoggerService` (for logging admin actions)
 
@@ -252,6 +262,7 @@ private escapeCsvValue(value: any): string
 **Purpose**: Validate and type query parameters
 
 **Fields**:
+
 ```typescript
 @IsOptional()
 @IsInt()
@@ -292,6 +303,7 @@ search?: string; // for actorId search
 ```
 
 **Mapping to AuditLogQueryDto**:
+
 ```typescript
 toAuditLogQueryDto(): AuditLogQueryDto {
   return {
@@ -314,6 +326,7 @@ toAuditLogQueryDto(): AuditLogQueryDto {
 **Purpose**: Type response structure
 
 **Fields**:
+
 ```typescript
 @ApiProperty({ type: [AuditLog] })
 data: AuditLog[];
@@ -338,11 +351,13 @@ totalPages: number;
 **Purpose**: Rate limiting for audit logs endpoints
 
 **Configuration**:
+
 - TTL: 60 seconds
 - Limit: 30 requests per minute
 - Identifier: IP + AdminId
 
 **Implementation**:
+
 ```typescript
 @Injectable()
 export class SuperadminAuditLogsRateLimitGuard extends BaseRateLimitGuard {
@@ -355,8 +370,10 @@ export class SuperadminAuditLogsRateLimitGuard extends BaseRateLimitGuard {
     configService: ConfigService<AllConfigType>,
   ) {
     super(rateLimitService, logger);
-    
-    const config = configService.get('security.rateLimit.superadminAuditLogs', { infer: true });
+
+    const config = configService.get('security.rateLimit.superadminAuditLogs', {
+      infer: true,
+    });
     this.rateLimitConfig = new RateLimitConfig(
       config?.ttl || 60,
       config?.limit || 30,
@@ -394,11 +411,12 @@ export class SuperadminAuditLogsModule {}
 ```
 
 **Register in app.module.ts**:
+
 ```typescript
 imports: [
   // ...existing imports
   SuperadminAuditLogsModule,
-]
+];
 ```
 
 ## 7. API Specifications
@@ -410,18 +428,19 @@ imports: [
 **Auth**: Bearer token (SUPERADMIN only)
 
 **Query Parameters**:
-| Parameter  | Type   | Required | Default | Description                |
+| Parameter | Type | Required | Default | Description |
 |------------|--------|----------|---------|----------------------------|
-| page       | number | No       | 1       | Page number                |
-| limit      | number | No       | 20      | Items per page (max 100)   |
-| dateFrom   | Date   | No       | -       | Filter from date           |
-| dateTo     | Date   | No       | -       | Filter to date             |
-| action     | enum   | No       | -       | Filter by AuditAction      |
-| actorType  | enum   | No       | -       | Filter by AuditActorType   |
-| ip         | string | No       | -       | Filter by IP address       |
-| search     | string | No       | -       | Search by actorId          |
+| page | number | No | 1 | Page number |
+| limit | number | No | 20 | Items per page (max 100) |
+| dateFrom | Date | No | - | Filter from date |
+| dateTo | Date | No | - | Filter to date |
+| action | enum | No | - | Filter by AuditAction |
+| actorType | enum | No | - | Filter by AuditActorType |
+| ip | string | No | - | Filter by IP address |
+| search | string | No | - | Search by actorId |
 
 **Success Response** (200):
+
 ```json
 {
   "data": [
@@ -448,6 +467,7 @@ imports: [
 ```
 
 **Error Responses**:
+
 - 401: Unauthorized (invalid/missing token)
 - 403: Forbidden (not SUPERADMIN)
 - 429: Too Many Requests (rate limit exceeded)
@@ -462,17 +482,20 @@ imports: [
 **Query Parameters**: Same as query endpoint (except page, limit)
 
 **Success Response** (200):
+
 - Content-Type: `text/csv; charset=utf-8`
 - Content-Disposition: `attachment; filename="audit-logs-{timestamp}.csv"`
 - Body: CSV file content
 
 **CSV Format**:
+
 ```csv
 ID,Actor ID,Actor Type,Action,Resource Type,Resource ID,IP Address,User Agent,Status,Message,Details,Created At
 uuid1,admin-uuid,SUPERADMIN,VOTE_CAST,VOTE,vote-uuid,192.168.1.1,"Mozilla/5.0...",SUCCESS,"Vote cast","{""candidateId"":""candidate-uuid""}",2024-01-01T12:00:00Z
 ```
 
 **Error Responses**:
+
 - 401: Unauthorized
 - 403: Forbidden
 - 429: Too Many Requests
@@ -481,26 +504,31 @@ uuid1,admin-uuid,SUPERADMIN,VOTE_CAST,VOTE,vote-uuid,192.168.1.1,"Mozilla/5.0...
 ## 8. Security Considerations
 
 ### 8.1 Authentication & Authorization
+
 - ✅ JWT-based authentication via AdminAuthGuard
 - ✅ Role-based access control (SUPERADMIN only)
 - ✅ Token validation on every request
 
 ### 8.2 Rate Limiting
+
 - ✅ IP + AdminId based rate limiting
 - ✅ 30 requests per minute per admin
 - ✅ Separate rate limit for export endpoint (lower limit)
 
 ### 8.3 Audit Logging
+
 - ✅ Log all access to audit logs endpoint
 - ✅ Log export actions with filters
 - ✅ Include admin ID, IP, action in audit
 
 ### 8.4 Data Protection
+
 - ✅ No sensitive data exposure in logs
 - ✅ HTTPS only (enforced at infrastructure level)
 - ✅ CORS configuration for admin domains only
 
 ### 8.5 Input Validation
+
 - ✅ DTO validation with class-validator
 - ✅ Sanitize CSV output (escape special characters)
 - ✅ Limit export size to prevent resource exhaustion
@@ -508,23 +536,27 @@ uuid1,admin-uuid,SUPERADMIN,VOTE_CAST,VOTE,vote-uuid,192.168.1.1,"Mozilla/5.0...
 ## 9. Performance Considerations
 
 ### 9.1 Database Optimization
+
 - ✅ Use existing indexes on createdAt, actorId, actorType, action
 - ✅ Pagination to limit result set
 - ✅ Count query optimization (use same WHERE conditions)
 
 ### 9.2 CSV Export Optimization
+
 - ✅ Stream large result sets (if needed)
 - ✅ Batch processing for very large exports
 - ✅ Set maximum export limit (50,000 records)
 - ✅ Background job for very large exports (future enhancement)
 
 ### 9.3 Caching (Future Enhancement)
+
 - Consider caching count results for same filters
 - Cache TTL: 5 minutes
 
 ## 10. Testing Strategy
 
 ### 10.1 Unit Tests
+
 - SuperadminAuditLogsService
   - queryLogs with various filters
   - getLogsForExport
@@ -534,6 +566,7 @@ uuid1,admin-uuid,SUPERADMIN,VOTE_CAST,VOTE,vote-uuid,192.168.1.1,"Mozilla/5.0...
   - escapeCsvValue (special characters, quotes, commas)
 
 ### 10.2 Integration Tests
+
 - Controller endpoints
   - Authentication (401 without token)
   - Authorization (403 for non-SUPERADMIN)
@@ -542,6 +575,7 @@ uuid1,admin-uuid,SUPERADMIN,VOTE_CAST,VOTE,vote-uuid,192.168.1.1,"Mozilla/5.0...
   - Rate limiting
 
 ### 10.3 E2E Tests
+
 - Complete flow from request to response
 - CSV download and content verification
 - Rate limit enforcement
@@ -570,6 +604,7 @@ uuid1,admin-uuid,SUPERADMIN,VOTE_CAST,VOTE,vote-uuid,192.168.1.1,"Mozilla/5.0...
 **CSV Generation**: Use Node.js built-in string manipulation (no external library needed)
 
 **Rationale**:
+
 - Lightweight solution
 - No external dependencies
 - Full control over CSV format
@@ -592,41 +627,49 @@ rateLimit: {
 ## 14. SOLID Principles Application
 
 ### Single Responsibility Principle (SRP)
+
 - ✅ Controller: Handle HTTP requests/responses only
 - ✅ Service: Business logic and data orchestration
 - ✅ CsvExportService: CSV generation only
 - ✅ Repository: Data access only
 
 ### Open/Closed Principle (OCP)
+
 - ✅ Extend BaseRateLimitGuard (not modify)
 - ✅ Use existing AuditLogService (not modify)
 - ✅ Add new module without modifying existing code
 
 ### Liskov Substitution Principle (LSP)
+
 - ✅ SuperadminAuditLogsRateLimitGuard properly extends BaseRateLimitGuard
 - ✅ Can be substituted with any rate limit guard
 
 ### Interface Segregation Principle (ISP)
+
 - ✅ Use specific DTOs for superadmin queries
 - ✅ Don't force unnecessary dependencies
 
 ### Dependency Inversion Principle (DIP)
+
 - ✅ Depend on AuditLogService abstraction (not concrete implementation)
 - ✅ Inject dependencies via constructor
 
 ## 15. Error Handling
 
 ### Expected Errors
+
 - Invalid query parameters → 400 Bad Request
 - Missing/invalid JWT → 401 Unauthorized
 - Insufficient permissions → 403 Forbidden
 - Rate limit exceeded → 429 Too Many Requests
 
 ### Unexpected Errors
+
 - Database errors → Log error, return 500 Internal Server Error
 - CSV generation errors → Log error, return 500 Internal Server Error
 
 ### Error Response Format
+
 ```json
 {
   "statusCode": 400,
