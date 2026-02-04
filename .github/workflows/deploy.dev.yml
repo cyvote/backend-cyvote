@@ -42,16 +42,6 @@ jobs:
           # Parse JSON and write to .env.development
           echo '${{ toJSON(vars) }}' | jq -r 'to_entries[] | "\(.key)=\(.value)"' > .env.development
 
-      - name: Upload .env.development to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.DEPLOYMENT_HOST }}
-          port: ${{ secrets.DEPLOYMENT_PORT }}
-          username: ${{ secrets.DEPLOYMENT_USER }}
-          key: ${{ secrets.DEPLOYMENT_SSH_KEY }}
-          source: '.env.development'
-          target: '/opt/${{ secrets.DOCKERHUB_APP_ID }}/development'
-
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -67,6 +57,29 @@ jobs:
 
             # Stop existing containers
             docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-development -f docker-compose.dev.yaml down
+
+      - name: Upload .env.development to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOYMENT_HOST }}
+          port: ${{ secrets.DEPLOYMENT_PORT }}
+          username: ${{ secrets.DEPLOYMENT_USER }}
+          key: ${{ secrets.DEPLOYMENT_SSH_KEY }}
+          source: '.env.development'
+          target: '/opt/${{ secrets.DOCKERHUB_APP_ID }}/development'
+
+      - name: Start containers
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DEPLOYMENT_HOST }}
+          port: ${{ secrets.DEPLOYMENT_PORT }}
+          username: ${{ secrets.DEPLOYMENT_USER }}
+          key: ${{ secrets.DEPLOYMENT_SSH_KEY }}
+          script: |
+            cd /opt/${{ secrets.DOCKERHUB_APP_ID }}/development
+
+            # Verify .env.development exists
+            ls -la .env.development
 
             # Load .env.development explicitly and start containers
             docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-development \
