@@ -6,9 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-    environment: Development
 
     steps:
       - name: Checkout repo
@@ -32,15 +31,16 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}:development
           no-cache: true
 
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment: Development
+
+    steps:
       - name: Create .env.development file from environment variables
         run: |
-          cat > .env.development << EOF
-          ${{ toJSON(vars) }}
-          ${{ toJSON(secrets) }}
-          EOF
-          # Parse JSON and write to .env properly
+          # Parse JSON and write to .env.development
           echo "${{ toJSON(vars) }}" | jq -r 'to_entries[] | "\(.key)=\(.value)"' > .env.development
-          echo "${{ toJSON(secrets) }}" | jq -r 'to_entries[] | select(.key | test("DOCKERHUB_|DEPLOYMENT_|SSH_") | not) | "\(.key)=\(.value)"' >> .env.development
 
       - name: Upload .env.development to VPS
         uses: appleboy/scp-action@v0.1.7
