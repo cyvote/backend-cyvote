@@ -64,5 +64,15 @@ jobs:
             git fetch origin
             git reset --hard origin/development
             git clean -fd
+
+            # Stop existing containers
             docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-development -f docker-compose.dev.yaml down
-            docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-development -f docker-compose.dev.yaml up -d --force-recreate --pull always
+
+            # Load .env.development explicitly and start containers
+            docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-development \
+              --env-file .env.development \
+              -f docker-compose.dev.yaml \
+              up -d --force-recreate --pull always
+
+            # Show logs for debugging
+            docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-development -f docker-compose.dev.yaml logs --tail=50
