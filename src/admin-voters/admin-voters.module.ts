@@ -18,6 +18,6 @@ const infrastructurePersistenceModule = (databaseConfig() as DatabaseConfig)
   imports: [AuditLogModule, infrastructurePersistenceModule],
   controllers: [AdminVotersController],
   providers: [AdminVotersService],
-  exports: [AdminVotersService],
+  exports: [AdminVotersService, infrastructurePersistenceModule],
 })
 export class AdminVotersModule {}

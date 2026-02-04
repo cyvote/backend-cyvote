@@ -2,38 +2,39 @@
 We will execute the task below
 
 **Description:**
-Endpoint CRUD untuk manajemen kandidat beserta upload file.
+Endpoint untuk set jadwal pemilihan dan manage status election lifecycle.
 
 **Acceptance Criteria:**
 
-- [ ] `POST /api/v1/admin/candidates` — create candidate
-  - Terima: nama, visi_misi, program_kerja, photo (file), grand_design (file)
-  - Upload photo ke Supabase Storage (max 2MB, JPG/PNG)
-  - Upload grand_design ke Supabase Storage (max 10MB, PDF only)
-  - Validasi: visi_misi max 2000 chars, program_kerja max 3000 chars
-  - Sanitize HTML dari visi_misi dan program_kerja
-- [ ] `GET /api/v1/admin/candidates` — list semua candidates
-- [ ] `GET /api/v1/candidates` — public endpoint untuk voter (return data yang sama)
-- [ ] `GET /api/v1/candidates/:id` — detail satu candidate (public)
-- [ ] `PUT /api/v1/admin/candidates/:id` — update candidate
-  - Tidak bisa edit jika voting sudah aktif
-  - Jika photo/PDF baru di-upload, delete file lama dari storage
-- [ ] `DELETE /api/v1/admin/candidates/:id` — delete candidate
-  - Tidak bisa delete jika voting sudah dimulai
-  - Delete file dari storage juga
-- [ ] Semua mutation endpoint protected: ADMIN only
-- [ ] Semua action di-log
+- [ ] `POST /api/v1/superadmin/election/schedule` — set jadwal
+  - Terima: `{ start_date, end_date }` (ISO 8601, WIB)
+  - Validasi: end > start, duration min 6 jam, max 7 hari, start harus di masa depan
+  - Simpan ke `election_config` dengan status `SCHEDULED`
+  - Log action
+- [ ] `GET /api/v1/superadmin/election/config` — get current config
+- [ ] `GET /api/v1/election/status` — **public endpoint** return current election status dan dates
+- [ ] Automatic status transition:
+  - `SCHEDULED` → `ACTIVE` ketika current time >= start_date
+  - `ACTIVE` → `CLOSED` ketika current time >= end_date
+  - Status check ini dilakukan via middleware atau scheduler yang run sebelum setiap request
+- [ ] Protected: SUPERADMIN only (kecuali public status endpoint)
+- [ ] Action di-log
 
-Berikut detail supabasenya
+**Description:**
+Endpoint untuk memperpanjang waktu voting oleh superadmin.
 
-```
-SUPABASE_SECRET_KEYS=sb_secret_t1sWm2dN44TGnZI0G7B27Q_M-LBuxsz
-SUPABASE_PROJECT_URL-https://ytdkbqslvnivtdycfwom.supabase.co
-```
+**Acceptance Criteria:**
 
-Jadi nanti yang disimpan ke dalam database kita hanya link file dari supabase saja. Oh iya, untuk supabase storage, aku sudah membuat bucket-nya yaitu `uploads`. Untuk yang foto kandidat aku sudah membuat folder di dalam bucket tersebut dengan nama `candidates_profile_photo` sehingga nant untuk profil kandidat kita taruh di sana. Lalu, untuk grand design itu aku belum membuat foldernya, jadi nanti aku ingin dicek dulu apakah ada folder `grand_designs` atau tidak. Jika tidak, buat dulu, kalau sudah ada gausah dibuat. Untuk file grand design akan ditaruh di folder tersebut.
-
-Kedua key itu dimasukkan ke dalam file env-example-document dan env-example-relational saja. Nanti biar aku yang masukin ke .env dan .env.production.
+- [ ] `PUT /api/v1/superadmin/election/extend` — terima `{ new_end_date, reason }`
+- [ ] Validasi:
+  - Election status harus `ACTIVE`
+  - `new_end_date` harus setelah `end_date` saat ini
+  - Extension max 24 jam dari end_date original
+  - `reason` required (min 10 chars)
+- [ ] Update `end_date` di `election_config`
+- [ ] Kirim notification email ke semua voters (pakai `EmailService` yang sudah ada). Kemudian buat template email baru dengan mengikuti template email src\mail\mail-templates\voting-token.hbs. Jangan lupa untuk menambahkan data yang diperlukan ke dalam template email tersebut.
+- [ ] Log action dengan reason
+- [ ] Protected: SUPERADMIN only
 
 ---
 

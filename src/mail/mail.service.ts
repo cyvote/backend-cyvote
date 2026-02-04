@@ -218,4 +218,58 @@ export class MailService {
       htmlBody,
     });
   }
+
+  /**
+   * Sends election extended notification email to voter
+   * @param mailData - Mail data containing voter info and extension details
+   * @returns Promise<SendEmailResult> - Result of email send operation
+   */
+  async sendElectionExtended(mailData: {
+    to: string;
+    data: {
+      nama: string;
+      new_end_date: string;
+      new_end_time: string;
+      reason: string;
+    };
+  }): Promise<SendEmailResult> {
+    // Get voting URL from config
+    const votingUrl =
+      this.configService.getOrThrow('app.frontendDomain', {
+        infer: true,
+      }) + '/vote';
+
+    // Prepare template context
+    const templateContext = {
+      app_name: this.configService.get('app.name', { infer: true }),
+      voting_url: votingUrl,
+      ...mailData.data,
+    };
+
+    // Get template path
+    const templatePath = path.join(
+      this.configService.getOrThrow('app.workingDirectory', {
+        infer: true,
+      }),
+      'src',
+      'mail',
+      'mail-templates',
+      'election-extended.hbs',
+    );
+
+    // Render template manually
+    const fs = await import('node:fs/promises');
+    const Handlebars = await import('handlebars');
+    const template = await fs.readFile(templatePath, 'utf-8');
+    const htmlBody = Handlebars.compile(template, {
+      strict: true,
+    })(templateContext);
+
+    // Send email with retry logic
+    return await this.emailService.sendEmail({
+      to: mailData.to,
+      subject: 'Perpanjangan Waktu Voting - CyVote',
+      htmlBody,
+    });
+  }
 }

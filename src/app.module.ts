@@ -33,6 +33,8 @@ import { AuthAdminModule } from './auth-admin/auth-admin.module';
 import { AuthVoterModule } from './auth-voter/auth-voter.module';
 import { AdminVotersModule } from './admin-voters/admin-voters.module';
 import { AdminCandidatesModule } from './admin-candidates/admin-candidates.module';
+import { ElectionScheduleModule } from './election-schedule/election-schedule.module';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { AuditLogContextInterceptor } from './audit-log/interceptors/audit-log-context.interceptor';
 import { SecurityModule } from './security/security.module';
@@ -71,6 +73,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
       ],
       envFilePath: ['.env'],
     }),
+    ScheduleModule.forRoot({}),
     infrastructureDatabaseModule,
     I18nModule.forRootAsync({
       useFactory: (configService: ConfigService<AllConfigType>) => ({
@@ -111,6 +114,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     AuthVoterModule,
     AdminVotersModule,
     AdminCandidatesModule,
+    ElectionScheduleModule,
   ],
   providers: [
     {

@@ -1,0 +1,13 @@
+{
+  "scheduleCreated": "Election schedule created successfully",
+  "configRetrieved": "Election configuration retrieved",
+  "electionExtended": "Election extended successfully. Notifications being sent to voters.",
+  "noActiveElection": "No active election configuration found",
+  "configAlreadyExists": "An election configuration already exists",
+  "startMustBeFuture": "Start date must be in the future",
+  "endMustBeAfterStart": "End date must be after start date",
+  "invalidDuration": "Election duration must be between 6 hours and 7 days",
+  "notActive": "Election must be ACTIVE to extend",
+  "newEndMustBeAfterCurrent": "New end date must be after current end date",
+  "extensionExceedsMax": "Extension cannot exceed 24 hours from current end date"
+}

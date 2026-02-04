@@ -5,6 +5,7 @@ export enum AuditResourceType {
   VOTE = 'VOTE',
   TOKEN = 'TOKEN',
   ELECTION = 'ELECTION',
+  ELECTION_CONFIG = 'ELECTION_CONFIG',
   RESULTS = 'RESULTS',
   EXPORT = 'EXPORT',
   SECURITY = 'SECURITY',
