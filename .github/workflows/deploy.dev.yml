@@ -39,12 +39,21 @@ jobs:
     steps:
       - name: Create .env.development file from environment variables
         run: |
-          # Parse JSON and write to .env.development with proper quoting for values with special characters
-          echo '${{ toJSON(vars) }}' | jq -r 'to_entries[] | "\(.key)=\"\(.value | gsub("\""; "\\\""))\""' > .env.development
+          # Parse JSON and write to .env.development
+          # Only quote values that contain spaces, special chars, or are empty
+          echo '${{ toJSON(vars) }}' | jq -r 'to_entries[] | 
+            if (.value | test("[ \t\"'\''\\\\]")) or (.value == "") then
+              "\(.key)=\"\(.value | gsub("\""; "\\\""))\""
+            else
+              "\(.key)=\(.value)"
+            end
+          ' > .env.development
 
-          # Debug: Show the generated env file content (redacted sensitive values)
-          echo "Generated .env.development keys:"
-          grep -oP '^[^=]+' .env.development || true
+          # Debug: Show the generated env file content
+          echo "Generated .env.development:"
+          cat .env.development | head -20
+          echo "..."
+          echo "Total lines: $(wc -l < .env.development)"
 
       - name: Upload .env.development to VPS
         uses: appleboy/scp-action@v0.1.7
@@ -86,32 +95,34 @@ jobs:
           script: |
             cd /opt/${{ secrets.DOCKERHUB_APP_ID }}/development
 
-            # Verify .env.development exists
+            # Verify .env.development exists and show database config
             ls -la .env.development
-
-            # Debug: Show APP_PORT value
-            echo "APP_PORT value:"
-            grep "^APP_PORT=" .env.development
+            echo "Database config:"
+            grep "^DATABASE_HOST=" .env.development
+            grep "^DATABASE_PORT=" .env.development
 
             # Validate docker-compose config
             docker-compose --env-file .env.development -f docker-compose.dev.yaml config --quiet && echo "Docker Compose config is valid"
 
-            # Pull latest images first (docker-compose v1 compatible)
+            # Pull latest redis image
             docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-development \
               --env-file .env.development \
               -f docker-compose.dev.yaml \
-              pull
+              pull redis
 
-            # Start containers (removed --pull always as it's not supported in docker-compose v1)
+            # Build and start containers (--build to rebuild with updated startup script)
             docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-development \
               --env-file .env.development \
               -f docker-compose.dev.yaml \
-              up -d --force-recreate
+              up -d --force-recreate --build
 
             # Show running containers
             docker ps --filter "name=${{ secrets.DOCKERHUB_APP_ID }}-development"
 
+            # Wait a few seconds for the app to start
+            sleep 10
+
             # Show logs for debugging
             docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-development \
               --env-file .env.development \
-              -f docker-compose.dev.yaml logs --tail=50
+              -f docker-compose.dev.yaml logs --tail=100
