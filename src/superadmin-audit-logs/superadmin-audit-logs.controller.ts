@@ -31,7 +31,7 @@ import { SuperadminAuditLogsRateLimitGuard } from './guards/superadmin-audit-log
 
 @ApiTags('Superadmin - Audit Logs')
 @ApiBearerAuth()
-@Controller('api/v1/superadmin/logs')
+@Controller({ path: 'superadmin/logs', version: '1' })
 @UseGuards(AdminAuthGuard, AdminRolesGuard, SuperadminAuditLogsRateLimitGuard)
 @AdminRoles(AdminRole.SUPERADMIN)
 export class SuperadminAuditLogsController {
@@ -51,7 +51,6 @@ export class SuperadminAuditLogsController {
     description:
       'Retrieve paginated audit logs with various filters. Requires SUPERADMIN role. Default sort: created_at DESC.',
   })
-  @ApiQuery({ type: SuperadminAuditLogsQueryDto })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Audit logs retrieved successfully',

@@ -25,7 +25,7 @@ import { CurrentAdmin } from '../auth-admin/decorators/current-admin.decorator';
 @ApiTags('Admin - Voting Token')
 @ApiBearerAuth()
 @UseGuards(AdminAuthGuard, AdminRolesGuard)
-@Controller('api/v1/admin/voters')
+@Controller({ path: 'admin/voters', version: '1' })
 export class AdminResendTokenController {
   constructor(
     private readonly adminResendTokenService: AdminResendTokenService,
