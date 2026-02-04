@@ -46,11 +46,18 @@ async function bootstrap() {
     ],
   });
 
-  // Apply Helmet security middleware
+  // Apply Helmet security middleware with Swagger exception
   const helmetOptionsFactory = app.get(HelmetOptionsFactory);
   const helmetOptions = helmetOptionsFactory.createHelmetOptions();
   if (helmetOptions) {
-    app.use(helmet(helmetOptions));
+    app.use((req, res, next) => {
+      // Disable CSP for Swagger routes to allow Swagger UI assets
+      if (req.path.startsWith('/docs')) {
+        next();
+      } else {
+        helmet(helmetOptions)(req, res, next);
+      }
+    });
   }
 
   app.enableShutdownHooks();
@@ -87,7 +94,11 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, options);
-  SwaggerModule.setup('docs', app, document);
+  SwaggerModule.setup('docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
 
   await app.listen(configService.getOrThrow('app.port', { infer: true }));
 }
@@ -126,11 +137,18 @@ export default async function handler(req: any, res: any) {
     ],
   });
 
-  // Apply Helmet security middleware
+  // Apply Helmet security middleware with Swagger exception
   const helmetOptionsFactory = app.get(HelmetOptionsFactory);
   const helmetOptions = helmetOptionsFactory.createHelmetOptions();
   if (helmetOptions) {
-    app.use(helmet(helmetOptions));
+    app.use((req, res, next) => {
+      // Disable CSP for Swagger routes to allow Swagger UI assets
+      if (req.path.startsWith('/docs')) {
+        next();
+      } else {
+        helmet(helmetOptions)(req, res, next);
+      }
+    });
   }
 
   app.enableShutdownHooks();
@@ -165,7 +183,11 @@ export default async function handler(req: any, res: any) {
     .build();
 
   const document = SwaggerModule.createDocument(app, options);
-  SwaggerModule.setup('docs', app, document);
+  SwaggerModule.setup('docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
 
   await app.init();
 
