@@ -33,6 +33,9 @@ export class TokenEntity {
   @Column({ name: 'resend_count', type: 'int', default: 0 })
   resendCount: number;
 
+  @Column({ name: 'email_sent_at', type: 'timestamp', nullable: true })
+  emailSentAt: Date | null;
+
   @ManyToOne(() => VoterEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'voter_id' })
   voter?: VoterEntity;
@@ -49,6 +52,7 @@ export class TokenEntity {
       usedAt: this.usedAt,
       isUsed: this.isUsed,
       resendCount: this.resendCount,
+      emailSentAt: this.emailSentAt,
     });
   }
 }

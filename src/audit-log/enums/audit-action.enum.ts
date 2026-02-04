@@ -53,4 +53,8 @@ export enum AuditAction {
   // Email
   EMAIL_SENT = 'EMAIL_SENT',
   EMAIL_FAILED = 'EMAIL_FAILED',
+
+  // Token Batch Operations
+  TOKEN_BATCH_GENERATED = 'TOKEN_BATCH_GENERATED',
+  TOKEN_EMAIL_BATCH_SENT = 'TOKEN_EMAIL_BATCH_SENT',
 }
