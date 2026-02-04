@@ -9,6 +9,7 @@ import { MailConfig } from '../mail/config/mail-config.type';
 import { AuditLogConfig } from '../audit-log/config/audit-log-config.type';
 import { SecurityConfig } from '../security/config/security-config.type';
 import { AdminAuthConfig } from '../auth-admin/config/admin-auth-config.type';
+import { VotingConfig } from '../voting/config/voting-config.type';
 
 export type AllConfigType = {
   app: AppConfig;
@@ -22,4 +23,5 @@ export type AllConfigType = {
   auditLog: AuditLogConfig;
   security: SecurityConfig;
   adminAuth: AdminAuthConfig;
+  voting: VotingConfig;
 };

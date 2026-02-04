@@ -1,0 +1,10 @@
+{
+  "electionNotActive": "Election is not currently active. Voting is only allowed during the active election period.",
+  "candidateNotFound": "The specified candidate was not found.",
+  "alreadyVoted": "You have already cast your vote. Each voter can only vote once.",
+  "voterNotFound": "Voter not found.",
+  "voteFailed": "Failed to cast vote. Please try again.",
+  "authRequired": "Authentication required. Please log in to vote.",
+  "invalidToken": "Invalid authentication token.",
+  "tokenExpired": "Authentication token has expired. Please log in again."
+}

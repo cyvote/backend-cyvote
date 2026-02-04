@@ -2,46 +2,39 @@
 We will execute the task below
 
 **Description:**
-Service untuk generate token untuk semua voters dan schedule pengiriman email.
+Endpoint utama untuk pemilih melakukan vote. Ini yang paling critical di seluruh sistem.
 
 **Acceptance Criteria:**
 
-- [ ] `TokenGenerationService` dibuat sebagai injectable service
-- [ ] Method `generateAllTokens()`:
-  - Ambil semua voters yang belum punya token
-  - Untuk setiap voter: generate 8 char alphanumeric token, pastikan unique
-  - Hash token dengan SHA-256 sebelum simpan ke database
-  - Simpan ke tabel `tokens`
-- [ ] Method `scheduleTokenEmails()`:
-  - Ambil semua tokens yang belum dikirim
-  - Batch per 50 emails/batch queue
-  - Kirim pakai `EmailService`
-  - Delay 150 detik antar batch
-  - Log delivery status setiap email
-  - Retry failed sends (max 3x)
-  - Kita akan menggunakan email template yang sudah ada di src\mail\mail-templates\voting-token.hbs.
-- [ ] Token ini harus di-trigger 10–15 menit sebelum `start_date` dari election config
-  - Implementasi sebagai scheduled job yang cek setiap menit apakah sudah waktunya
-- [ ] Log semua token generation events
+- [ ] `POST /api/v1/vote` — terima `{ candidate_id }` dari authenticated voter
+- [ ] Validasi chain (urutan penting):
+  1. Voter harus authenticated (JWT valid)
+  2. Election status harus `ACTIVE`
+  3. Candidate harus exist di database
+  4. Voter belum pernah voting (`has_voted = false`) — double-check di DB level
+- [ ] Jika semua validasi pass, jalankan **dalam satu database transaction:**
+  1. Insert ke tabel `votes` (voter_id, candidate_id, vote_hash, voted_at, receipt_code)
+  2. Generate vote_hash: `SHA256(voter_uuid + candidate_id + timestamp + salt)`
+  3. Generate receipt_code: `VOTE-{short_hash}`
+  4. Insert ke tabel `vote_hashes`
+  5. Update voter: `has_voted = true`, `voted_at = now()`
+- [ ] Jika transaction gagal, rollback semua dan return error
+- [ ] Log: **hanya** `"User with ID {uuid} has successfully voted!"` — jangan log candidate_id (LUBERJUDIL)
+- [ ] Return: `{ receiptCode: "VOTE-xxxxx" }`
+- [ ] Database constraint: `voter_id` di tabel `votes` harus UNIQUE (prevent double vote di DB level)
+- [ ] Protected: Voter authenticated only
 
 ---
 
 **Description:**
-Endpoint untuk admin resend token ke voter tertentu.
+Endpoint untuk FE cek apakah voter sudah voting atau belum (dipakai saat voter login untuk decide redirect).
 
 **Acceptance Criteria:**
 
-- [ ] `POST /api/v1/admin/voters/:id/resend-token`
-- [ ] Validasi:
-  - Voter harus ada
-  - `resend_count` harus < 3
-  - Election status harus `ACTIVE`
-  - Token belum digunakan
-- [ ] Kirim email langsung (tidak batched) pakai `EmailService`
-- [ ] Increment `resend_count` di tabel tokens
-- [ ] Jika resend_count sudah 3, return error: "Resend token sudah mencapai batas maksimum"
-- [ ] Log action dengan admin_id
-- [ ] Protected: ADMIN only
+- [ ] `GET /api/v1/vote/status` — return status voting dari authenticated voter
+- [ ] Response: `{ hasVoted: boolean, receiptCode?: string }`
+- [ ] Jika sudah voting, return receipt code mereka
+- [ ] Protected: Voter authenticated only
 
 ---
 

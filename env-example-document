@@ -95,3 +95,6 @@ SECURITY_IP_PROXY_HEADERS=x-forwarded-for,x-real-ip
 # Supabase Storage
 SUPABASE_PROJECT_URL=https://your-project.supabase.co
 SUPABASE_SECRET_KEY=your_supabase_secret_key
+
+# Voting Configuration
+VOTE_HASH_SALT=your-secure-random-salt-minimum-32-characters-long
