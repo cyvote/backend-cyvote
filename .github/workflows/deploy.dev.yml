@@ -39,8 +39,12 @@ jobs:
     steps:
       - name: Create .env.development file from environment variables
         run: |
-          # Parse JSON and write to .env.development
-          echo '${{ toJSON(vars) }}' | jq -r 'to_entries[] | "\(.key)=\(.value)"' > .env.development
+          # Parse JSON and write to .env.development with proper quoting for values with special characters
+          echo '${{ toJSON(vars) }}' | jq -r 'to_entries[] | "\(.key)=\"\(.value | gsub("\""; "\\\""))\""' > .env.development
+
+          # Debug: Show the generated env file content (redacted sensitive values)
+          echo "Generated .env.development keys:"
+          grep -oP '^[^=]+' .env.development || true
 
       - name: Upload .env.development to VPS
         uses: appleboy/scp-action@v0.1.7
@@ -85,6 +89,13 @@ jobs:
             # Verify .env.development exists
             ls -la .env.development
 
+            # Debug: Show APP_PORT value
+            echo "APP_PORT value:"
+            grep "^APP_PORT=" .env.development
+
+            # Validate docker-compose config
+            docker-compose --env-file .env.development -f docker-compose.dev.yaml config --quiet && echo "Docker Compose config is valid"
+
             # Load .env.development explicitly and start containers
             docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-development \
               --env-file .env.development \
@@ -92,4 +103,6 @@ jobs:
               up -d --force-recreate --pull always
 
             # Show logs for debugging
-            docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-development -f docker-compose.dev.yaml logs --tail=50
+            docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-development \
+              --env-file .env.development \
+              -f docker-compose.dev.yaml logs --tail=50
