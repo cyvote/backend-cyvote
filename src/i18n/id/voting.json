@@ -1,0 +1,10 @@
+{
+  "electionNotActive": "Pemilihan belum aktif. Voting hanya diperbolehkan saat periode pemilihan aktif.",
+  "candidateNotFound": "Kandidat yang dipilih tidak ditemukan.",
+  "alreadyVoted": "Anda sudah memberikan suara. Setiap pemilih hanya dapat voting satu kali.",
+  "voterNotFound": "Pemilih tidak ditemukan.",
+  "voteFailed": "Gagal memberikan suara. Silakan coba lagi.",
+  "authRequired": "Autentikasi diperlukan. Silakan login untuk voting.",
+  "invalidToken": "Token autentikasi tidak valid.",
+  "tokenExpired": "Token autentikasi sudah kadaluarsa. Silakan login kembali."
+}
