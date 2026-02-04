@@ -1,0 +1,68 @@
+name: Build and Push to Development
+
+on:
+  push:
+    branches: [development]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: Development
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./
+          file: ./Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}:development
+          no-cache: true
+
+      - name: Create .env.development file from environment variables
+        run: |
+          cat > .env.development << EOF
+          ${{ toJSON(vars) }}
+          ${{ toJSON(secrets) }}
+          EOF
+          # Parse JSON and write to .env properly
+          echo "${{ toJSON(vars) }}" | jq -r 'to_entries[] | "\(.key)=\(.value)"' > .env.development
+          echo "${{ toJSON(secrets) }}" | jq -r 'to_entries[] | select(.key | test("DOCKERHUB_|DEPLOYMENT_|SSH_") | not) | "\(.key)=\(.value)"' >> .env.development
+
+      - name: Upload .env.development to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOYMENT_HOST }}
+          port: ${{ secrets.DEPLOYMENT_PORT }}
+          username: ${{ secrets.DEPLOYMENT_USER }}
+          key: ${{ secrets.DEPLOYMENT_SSH_KEY }}
+          source: '.env.development'
+          target: '/opt/${{ secrets.DOCKERHUB_APP_ID }}/development'
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DEPLOYMENT_HOST }}
+          port: ${{ secrets.DEPLOYMENT_PORT }}
+          username: ${{ secrets.DEPLOYMENT_USER }}
+          key: ${{ secrets.DEPLOYMENT_SSH_KEY }}
+          script: |
+            cd /opt/${{ secrets.DOCKERHUB_APP_ID }}/development
+            git fetch origin
+            git reset --hard origin/development
+            git clean -fd
+            docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-development -f docker-compose.yaml -f docker-compose.dev.yaml down
+            docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-development -f docker-compose.yaml -f docker-compose.dev.yaml up -d --force-recreate --pull always
