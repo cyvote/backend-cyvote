@@ -2,22 +2,18 @@
 We will execute the task below
 
 **Description:**
-Endpoint untuk admin dashboard yang return voting stats dan voter list.
+Endpoint untuk superadmin query dan export audit logs.
 
 **Acceptance Criteria:**
 
-- [ ] `GET /api/v1/admin/dashboard/stats` — return:
-  - `totalVoters` — total registered (non-deleted)
-  - `totalVoted` — count where `has_voted = true`
-  - `totalNotVoted` — count where `has_voted = false`
-  - `participationRate` — percentage (2 decimal)
-- [ ] `GET /api/admin/monitor/voters` — return voter list untuk monitoring
-  - Query params: `page`, `limit`, `filter` (all/voted/not-voted)
-  - Columns: id, nim, nama, angkatan, email, has_voted, voted_at
-  - **Tidak include** pilihan candidate (prinsip rahasia)
-  - Default sort: nama ASC
-- [ ] Protected: ADMIN only
-- [ ] Query dioptimasi dengan indexes (sudah di BE-2)
+- [ ] `GET /api/v1/superadmin/logs` — paginated query
+  - Query params: `page`, `limit`, `dateFrom`, `dateTo`, `action` (enum), `actorType`, `ip`, `search` (actor_id)
+  - Return: `{ data: [...logs], total, page, limit }`
+  - Default sort: created_at DESC
+- [ ] `GET /api/v1/superadmin/logs/export` — export sebagai CSV
+  - Apply filter yang sama dari query params
+  - Response: CSV file download
+- [ ] Protected: SUPERADMIN only
 
 ---
 

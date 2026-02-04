@@ -35,6 +35,16 @@ class EnvironmentVariablesValidator {
   SECURITY_RATE_LIMIT_TOKEN_VERIFY_LIMIT: number;
 
   @IsInt()
+  @Min(1)
+  @IsOptional()
+  SECURITY_RATE_LIMIT_SUPERADMIN_AUDIT_LOGS_TTL: number;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  SECURITY_RATE_LIMIT_SUPERADMIN_AUDIT_LOGS_LIMIT: number;
+
+  @IsInt()
   @Min(1000)
   @IsOptional()
   SECURITY_RATE_LIMIT_CLEANUP_INTERVAL: number;
@@ -105,6 +115,20 @@ export default registerAs<SecurityConfig>('security', () => {
         limit: process.env.SECURITY_RATE_LIMIT_TOKEN_VERIFY_LIMIT
           ? parseInt(process.env.SECURITY_RATE_LIMIT_TOKEN_VERIFY_LIMIT, 10)
           : 3,
+      },
+      superadminAuditLogs: {
+        ttl: process.env.SECURITY_RATE_LIMIT_SUPERADMIN_AUDIT_LOGS_TTL
+          ? parseInt(
+              process.env.SECURITY_RATE_LIMIT_SUPERADMIN_AUDIT_LOGS_TTL,
+              10,
+            )
+          : 60,
+        limit: process.env.SECURITY_RATE_LIMIT_SUPERADMIN_AUDIT_LOGS_LIMIT
+          ? parseInt(
+              process.env.SECURITY_RATE_LIMIT_SUPERADMIN_AUDIT_LOGS_LIMIT,
+              10,
+            )
+          : 30,
       },
       storage: {
         cleanupInterval: process.env.SECURITY_RATE_LIMIT_CLEANUP_INTERVAL

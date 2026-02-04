@@ -43,6 +43,7 @@ import { GlobalRateLimitGuard } from './security/rate-limit/guards/global-rate-l
 import securityConfig from './security/config/security.config';
 import { VotingTokenModule } from './voting-token/voting-token.module';
 import { VotingModule } from './voting/voting.module';
+import { SuperadminAuditLogsModule } from './superadmin-audit-logs/superadmin-audit-logs.module';
 
 // <database-block>
 const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
@@ -121,6 +122,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     ElectionScheduleModule,
     VotingTokenModule,
     VotingModule,
+    SuperadminAuditLogsModule,
   ],
   providers: [
     {
