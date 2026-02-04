@@ -64,5 +64,5 @@ jobs:
             git fetch origin
             git reset --hard origin/development
             git clean -fd
-            docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-development -f docker-compose.yaml -f docker-compose.dev.yaml down
-            docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-development -f docker-compose.yaml -f docker-compose.dev.yaml up -d --force-recreate --pull always
+            docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-development -f docker-compose.dev.yaml down
+            docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-development -f docker-compose.dev.yaml up -d --force-recreate --pull always
