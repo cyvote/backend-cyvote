@@ -32,6 +32,7 @@ import { AuditLogModule } from './audit-log/audit-log.module';
 import { AuthAdminModule } from './auth-admin/auth-admin.module';
 import { AuthVoterModule } from './auth-voter/auth-voter.module';
 import { AdminVotersModule } from './admin-voters/admin-voters.module';
+import { AdminCandidatesModule } from './admin-candidates/admin-candidates.module';
 import { APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { AuditLogContextInterceptor } from './audit-log/interceptors/audit-log-context.interceptor';
 import { SecurityModule } from './security/security.module';
@@ -109,6 +110,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     AuthAdminModule,
     AuthVoterModule,
     AdminVotersModule,
+    AdminCandidatesModule,
   ],
   providers: [
     {

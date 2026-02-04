@@ -1,0 +1,17 @@
+{
+  "notFound": "Kandidat tidak ditemukan",
+  "duplicateName": "Kandidat dengan nama ini sudah ada",
+  "votingActiveCannotModify": "Tidak dapat mengubah kandidat saat pemilihan sedang aktif",
+  "votingActiveCannotDelete": "Tidak dapat menghapus kandidat saat pemilihan sedang aktif",
+  "invalidPhotoType": "Foto harus berformat JPG atau PNG",
+  "invalidPdfType": "Grand design harus berformat PDF",
+  "photoSizeExceeded": "Ukuran foto tidak boleh melebihi 2MB",
+  "pdfSizeExceeded": "Ukuran grand design tidak boleh melebihi 10MB",
+  "uploadFailed": "Gagal mengunggah file",
+  "created": "Kandidat berhasil dibuat",
+  "updated": "Kandidat berhasil diperbarui",
+  "deleted": "Kandidat berhasil dihapus",
+  "authRequired": "Autentikasi pemilih diperlukan",
+  "invalidToken": "Token pemilih tidak valid",
+  "tokenExpired": "Token pemilih telah kedaluwarsa"
+}

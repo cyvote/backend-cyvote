@@ -2,17 +2,38 @@
 We will execute the task below
 
 **Description:**
-Endpoint untuk export list pemilih yang belum voting sebagai CSV.
+Endpoint CRUD untuk manajemen kandidat beserta upload file.
 
 **Acceptance Criteria:**
 
-- [ ] `GET /api/admin/voters/export/non-voters` — return CSV file
-- [ ] CSV columns: `NIM,Nama,Angkatan,Email`
-- [ ] Only return voters where `has_voted = false` dan `deleted_at IS NULL`
-- [ ] Response header: `Content-Type: text/csv`, `Content-Disposition: attachment`
-- [ ] Action di-log
-- [ ] Protected: ADMIN only
-- [ ] Nama file CSV haruslah `TIMESTAMP-non-voters.csv`. Untuk timestampnya itu cukup tanggal, bulan, tahun, jam, menit, detik saja waktu WIB.
+- [ ] `POST /api/v1/admin/candidates` — create candidate
+  - Terima: nama, visi_misi, program_kerja, photo (file), grand_design (file)
+  - Upload photo ke Supabase Storage (max 2MB, JPG/PNG)
+  - Upload grand_design ke Supabase Storage (max 10MB, PDF only)
+  - Validasi: visi_misi max 2000 chars, program_kerja max 3000 chars
+  - Sanitize HTML dari visi_misi dan program_kerja
+- [ ] `GET /api/v1/admin/candidates` — list semua candidates
+- [ ] `GET /api/v1/candidates` — public endpoint untuk voter (return data yang sama)
+- [ ] `GET /api/v1/candidates/:id` — detail satu candidate (public)
+- [ ] `PUT /api/v1/admin/candidates/:id` — update candidate
+  - Tidak bisa edit jika voting sudah aktif
+  - Jika photo/PDF baru di-upload, delete file lama dari storage
+- [ ] `DELETE /api/v1/admin/candidates/:id` — delete candidate
+  - Tidak bisa delete jika voting sudah dimulai
+  - Delete file dari storage juga
+- [ ] Semua mutation endpoint protected: ADMIN only
+- [ ] Semua action di-log
+
+Berikut detail supabasenya
+
+```
+SUPABASE_SECRET_KEYS=sb_secret_t1sWm2dN44TGnZI0G7B27Q_M-LBuxsz
+SUPABASE_PROJECT_URL-https://ytdkbqslvnivtdycfwom.supabase.co
+```
+
+Jadi nanti yang disimpan ke dalam database kita hanya link file dari supabase saja. Oh iya, untuk supabase storage, aku sudah membuat bucket-nya yaitu `uploads`. Untuk yang foto kandidat aku sudah membuat folder di dalam bucket tersebut dengan nama `candidates_profile_photo` sehingga nant untuk profil kandidat kita taruh di sana. Lalu, untuk grand design itu aku belum membuat foldernya, jadi nanti aku ingin dicek dulu apakah ada folder `grand_designs` atau tidak. Jika tidak, buat dulu, kalau sudah ada gausah dibuat. Untuk file grand design akan ditaruh di folder tersebut.
+
+Kedua key itu dimasukkan ke dalam file env-example-document dan env-example-relational saja. Nanti biar aku yang masukin ke .env dan .env.production.
 
 ---
 
