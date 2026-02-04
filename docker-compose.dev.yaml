@@ -13,7 +13,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - ${APP_PORT}:${APP_PORT}
+      - '${APP_PORT}:${APP_PORT}'
     environment:
       - NODE_ENV=${NODE_ENV}
       - APP_PORT=${APP_PORT}
