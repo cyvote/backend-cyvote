@@ -46,18 +46,11 @@ async function bootstrap() {
     ],
   });
 
-  // Apply Helmet security middleware with Swagger exception
+  // Apply Helmet security middleware
   const helmetOptionsFactory = app.get(HelmetOptionsFactory);
   const helmetOptions = helmetOptionsFactory.createHelmetOptions();
   if (helmetOptions) {
-    app.use((req, res, next) => {
-      // Disable CSP for Swagger routes to allow Swagger UI assets
-      if (req.path.startsWith('/docs')) {
-        next();
-      } else {
-        helmet(helmetOptions)(req, res, next);
-      }
-    });
+    app.use(helmet(helmetOptions));
   }
 
   app.enableShutdownHooks();
@@ -94,18 +87,7 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, options);
-  SwaggerModule.setup('docs', app, document, {
-    customCssUrl: [
-      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css',
-    ],
-    customJs: [
-      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-bundle.js',
-      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-standalone-preset.js',
-    ],
-    swaggerOptions: {
-      persistAuthorization: true,
-    },
-  });
+  SwaggerModule.setup('docs', app, document);
 
   await app.listen(configService.getOrThrow('app.port', { infer: true }));
 }
@@ -144,18 +126,11 @@ export default async function handler(req: any, res: any) {
     ],
   });
 
-  // Apply Helmet security middleware with Swagger exception
+  // Apply Helmet security middleware
   const helmetOptionsFactory = app.get(HelmetOptionsFactory);
   const helmetOptions = helmetOptionsFactory.createHelmetOptions();
   if (helmetOptions) {
-    app.use((req, res, next) => {
-      // Disable CSP for Swagger routes to allow Swagger UI assets
-      if (req.path.startsWith('/docs')) {
-        next();
-      } else {
-        helmet(helmetOptions)(req, res, next);
-      }
-    });
+    app.use(helmet(helmetOptions));
   }
 
   app.enableShutdownHooks();
@@ -190,11 +165,7 @@ export default async function handler(req: any, res: any) {
     .build();
 
   const document = SwaggerModule.createDocument(app, options);
-  SwaggerModule.setup('docs', app, document, {
-    swaggerOptions: {
-      persistAuthorization: true,
-    },
-  });
+  SwaggerModule.setup('docs', app, document);
 
   await app.init();
 
