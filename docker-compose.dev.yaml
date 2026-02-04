@@ -31,6 +31,8 @@ services:
       - ./src:/app/src
       - ./files:/app/files
       - ./logs:/app/logs
+    env_file:
+      - .env.development
 
 volumes:
   redis-data:
