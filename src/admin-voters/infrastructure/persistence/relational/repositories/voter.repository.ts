@@ -198,6 +198,19 @@ export class VoterRepository implements VoterRepositoryInterface {
     return savedEntities.map((entity) => VoterMapper.toDomain(entity));
   }
 
+  /**
+   * Find all non-voters (has_voted = false, not soft-deleted)
+   * Ordered by angkatan ASC, nama_lengkap ASC for consistent CSV output
+   */
+  async findNonVoters(): Promise<Voter[]> {
+    const entities = await this.voterRepository.find({
+      where: { hasVoted: false },
+      order: { angkatan: 'ASC', namaLengkap: 'ASC' },
+    });
+
+    return entities.map((entity) => VoterMapper.toDomain(entity));
+  }
+
   private applyAngkatanFilter(
     queryBuilder: ReturnType<Repository<VoterEntity>['createQueryBuilder']>,
     angkatan: string,

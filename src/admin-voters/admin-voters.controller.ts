@@ -10,8 +10,10 @@ import {
   Post,
   Put,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import { Response } from 'express';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -31,6 +33,7 @@ import {
   DeleteVoterResponseDto,
 } from './dto/voter-response.dto';
 import { PaginatedVotersResponseDto } from './dto/paginated-voters-response.dto';
+import { ExportNonVotersErrorResponseDto } from './dto/export-non-voters-response.dto';
 import { AdminAuthGuard } from '../auth-admin/guards/admin-auth.guard';
 import { AdminRolesGuard } from '../auth-admin/guards/admin-roles.guard';
 import { AdminRoles } from '../auth-admin/decorators/admin-roles.decorator';
@@ -276,5 +279,41 @@ export class AdminVotersController {
     @CurrentAdmin('id') adminId: string,
   ): Promise<SingleVoterResponseDto> {
     return this.adminVotersService.restore(id, adminId);
+  }
+
+  @Get('export/non-voters')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Export non-voters as CSV file' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'CSV file with non-voters data',
+    content: {
+      'text/csv': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'No non-voters found',
+    type: ExportNonVotersErrorResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized',
+  })
+  async exportNonVoters(
+    @CurrentAdmin('id') adminId: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const { csv, filename } =
+      await this.adminVotersService.exportNonVoters(adminId);
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(csv);
   }
 }
