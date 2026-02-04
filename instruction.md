@@ -2,39 +2,22 @@
 We will execute the task below
 
 **Description:**
-Endpoint utama untuk pemilih melakukan vote. Ini yang paling critical di seluruh sistem.
+Endpoint untuk admin dashboard yang return voting stats dan voter list.
 
 **Acceptance Criteria:**
 
-- [ ] `POST /api/v1/vote` — terima `{ candidate_id }` dari authenticated voter
-- [ ] Validasi chain (urutan penting):
-  1. Voter harus authenticated (JWT valid)
-  2. Election status harus `ACTIVE`
-  3. Candidate harus exist di database
-  4. Voter belum pernah voting (`has_voted = false`) — double-check di DB level
-- [ ] Jika semua validasi pass, jalankan **dalam satu database transaction:**
-  1. Insert ke tabel `votes` (voter_id, candidate_id, vote_hash, voted_at, receipt_code)
-  2. Generate vote_hash: `SHA256(voter_uuid + candidate_id + timestamp + salt)`
-  3. Generate receipt_code: `VOTE-{short_hash}`
-  4. Insert ke tabel `vote_hashes`
-  5. Update voter: `has_voted = true`, `voted_at = now()`
-- [ ] Jika transaction gagal, rollback semua dan return error
-- [ ] Log: **hanya** `"User with ID {uuid} has successfully voted!"` — jangan log candidate_id (LUBERJUDIL)
-- [ ] Return: `{ receiptCode: "VOTE-xxxxx" }`
-- [ ] Database constraint: `voter_id` di tabel `votes` harus UNIQUE (prevent double vote di DB level)
-- [ ] Protected: Voter authenticated only
-
----
-
-**Description:**
-Endpoint untuk FE cek apakah voter sudah voting atau belum (dipakai saat voter login untuk decide redirect).
-
-**Acceptance Criteria:**
-
-- [ ] `GET /api/v1/vote/status` — return status voting dari authenticated voter
-- [ ] Response: `{ hasVoted: boolean, receiptCode?: string }`
-- [ ] Jika sudah voting, return receipt code mereka
-- [ ] Protected: Voter authenticated only
+- [ ] `GET /api/v1/admin/dashboard/stats` — return:
+  - `totalVoters` — total registered (non-deleted)
+  - `totalVoted` — count where `has_voted = true`
+  - `totalNotVoted` — count where `has_voted = false`
+  - `participationRate` — percentage (2 decimal)
+- [ ] `GET /api/admin/monitor/voters` — return voter list untuk monitoring
+  - Query params: `page`, `limit`, `filter` (all/voted/not-voted)
+  - Columns: id, nim, nama, angkatan, email, has_voted, voted_at
+  - **Tidak include** pilihan candidate (prinsip rahasia)
+  - Default sort: nama ASC
+- [ ] Protected: ADMIN only
+- [ ] Query dioptimasi dengan indexes (sudah di BE-2)
 
 ---
 
