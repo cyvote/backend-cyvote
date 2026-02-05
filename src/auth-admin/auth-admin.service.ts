@@ -116,6 +116,9 @@ export class AuthAdminService {
     });
 
     return {
+      message: this.i18n.t('adminAuth.loginSuccess', {
+        lang: I18nContext.current()?.lang,
+      }),
       token,
       tokenExpires,
     };

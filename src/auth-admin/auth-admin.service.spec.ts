@@ -48,7 +48,10 @@ describe('AuthAdminService', () => {
   };
 
   const mockI18nService = {
-    t: jest.fn().mockReturnValue('Invalid credentials'),
+    t: jest.fn().mockImplementation((key: string) => {
+      if (key === 'adminAuth.loginSuccess') return 'Login successful';
+      return 'Invalid credentials';
+    }),
   };
 
   const mockAdmin = {
@@ -374,15 +377,38 @@ describe('AuthAdminService', () => {
       expect(result.token).toBe('mock-jwt-token');
     });
 
-    it('should return response with exactly two properties', async () => {
+    it('should return response with exactly three properties', async () => {
       mockAdminRepository.findByUsername.mockResolvedValue(mockAdmin);
 
       const dto: AdminLoginDto = { username: 'admin1', password: 'admin123' };
       const result = await service.validateLogin(dto);
 
-      expect(Object.keys(result)).toHaveLength(2);
+      expect(Object.keys(result)).toHaveLength(3);
+      expect(Object.keys(result)).toContain('message');
       expect(Object.keys(result)).toContain('token');
       expect(Object.keys(result)).toContain('tokenExpires');
+    });
+
+    it('should return success message on successful login', async () => {
+      mockAdminRepository.findByUsername.mockResolvedValue(mockAdmin);
+
+      const dto: AdminLoginDto = { username: 'admin1', password: 'admin123' };
+      const result = await service.validateLogin(dto);
+
+      expect(result).toHaveProperty('message');
+      expect(result.message).toBe('Login successful');
+    });
+
+    it('should call i18n.t for success message', async () => {
+      mockAdminRepository.findByUsername.mockResolvedValue(mockAdmin);
+
+      const dto: AdminLoginDto = { username: 'admin1', password: 'admin123' };
+      await service.validateLogin(dto);
+
+      expect(mockI18nService.t).toHaveBeenCalledWith(
+        'adminAuth.loginSuccess',
+        expect.any(Object),
+      );
     });
 
     it('should handle login for multiple admin users sequentially', async () => {
