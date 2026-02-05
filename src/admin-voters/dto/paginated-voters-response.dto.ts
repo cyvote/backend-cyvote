@@ -9,6 +9,13 @@ export class FiltersMetaDto {
   status?: string;
 
   @ApiPropertyOptional({
+    description:
+      'Deletion status filter applied (active: non-deleted, inactive: soft-deleted)',
+    example: 'active',
+  })
+  deletionStatus?: string;
+
+  @ApiPropertyOptional({
     description: 'Search keyword applied',
     example: 'keyword',
   })

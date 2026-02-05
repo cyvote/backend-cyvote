@@ -8,6 +8,11 @@ export enum VoterFilterStatus {
   NOT_VOTED = 'not-voted',
 }
 
+export enum VoterStatusFilter {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+}
+
 export enum SortOrder {
   ASC = 'asc',
   DESC = 'desc',
@@ -67,6 +72,17 @@ export class QueryVotersDto {
   @IsOptional()
   @IsEnum(VoterFilterStatus)
   filter?: VoterFilterStatus = VoterFilterStatus.ALL;
+
+  @ApiPropertyOptional({
+    description:
+      'Filter by soft-delete status (active: non-deleted, inactive: soft-deleted)',
+    enum: VoterStatusFilter,
+    default: VoterStatusFilter.ACTIVE,
+    example: 'active',
+  })
+  @IsOptional()
+  @IsEnum(VoterStatusFilter)
+  status?: VoterStatusFilter = VoterStatusFilter.ACTIVE;
 
   @ApiPropertyOptional({
     description:

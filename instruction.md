@@ -1,23 +1,7 @@
 <context>
 We will execute the task below
 
-**Description:**
-Endpoint untuk superadmin query dan export audit logs.
-
-**Acceptance Criteria:**
-
-- [ ] `GET /api/v1/superadmin/logs` — paginated query
-  - Query params: `page`, `limit`, `dateFrom`, `dateTo`, `action` (enum), `actorType`, `ip`, `search` (actor_id)
-  - Return: `{ data: [...logs], total, page, limit }`
-  - Default sort: created_at DESC
-- [ ] `GET /api/v1/superadmin/logs/export` — export sebagai CSV
-  - Apply filter yang sama dari query params
-  - Response: CSV file download
-- [ ] Protected: SUPERADMIN only
-
----
-
-Put it in src/{kamu tentukan nama modulenya}/. In this project we use pnpm not npm. Also, follow the existing architecture (DDD). Analyze the code first. Follow the code quality standard that exist.
+The GET endpoint `/api/v1/admin/voters` currently has the parameters page, limit, search, filter, angkatan, sort, order, and the header parameter x-custom-lang. Now, we will add one more query parameter. That is the `status` parameter. So, later on, this `status` query parameter will have the value `active` or `inactive`. By default, the value of the `status` query parameter is `active`. The `status` query parameter is optional. When set to `active` or the default value, it will only display data for voters who have not been soft deleted. However, if the `status` parameter is set to `inactive`, it will ONLY display data for voters who have been soft deleted.
 
 </context>
 
