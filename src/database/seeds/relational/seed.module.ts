@@ -9,11 +9,13 @@ import { StatusSeedModule } from './status/status-seed.module';
 import { UserSeedModule } from './user/user-seed.module';
 import { AdminSeedModule } from './admin/admin-seed.module';
 import { VoterSeedModule } from './voter/voter-seed.module';
+import { SeedTrackerModule } from './seed-tracker/seed-tracker.module';
 import databaseConfig from '../../config/database.config';
 import appConfig from '../../../config/app.config';
 
 @Module({
   imports: [
+    SeedTrackerModule,
     RoleSeedModule,
     StatusSeedModule,
     UserSeedModule,
