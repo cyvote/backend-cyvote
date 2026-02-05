@@ -111,6 +111,7 @@ export class AdminVotersService {
       hasNextPage: page < totalPages,
       filters: {
         status: query.filter || 'all',
+        deletionStatus: query.status || 'active',
         search: query.search,
         angkatan: query.angkatan,
         sort: query.sort,
