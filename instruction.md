@@ -1,7 +1,7 @@
 <context>
 We will execute the task below
 
-The GET endpoint `/api/v1/admin/voters` currently has the parameters page, limit, search, filter, angkatan, sort, order, and the header parameter x-custom-lang. Now, we will add one more query parameter. That is the `status` parameter. So, later on, this `status` query parameter will have the value `active` or `inactive`. By default, the value of the `status` query parameter is `active`. The `status` query parameter is optional. When set to `active` or the default value, it will only display data for voters who have not been soft deleted. However, if the `status` parameter is set to `inactive`, it will ONLY display data for voters who have been soft deleted.
+At the POST endpoint `/api/v1/auth/admin/login`, there is no message when it is successful or unsuccessful. Well, I want there to be a message when it is successful or unsuccessful. So, in the JSON response, we add the key “message” and its value is a message that is descriptive enough but does not compromise security.
 
 </context>
 
