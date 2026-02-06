@@ -1,5 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
+import { CandidateStatus } from '../enums/candidate-status.enum';
 
 /**
  * DTO for updating a candidate
@@ -34,4 +35,13 @@ export class UpdateCandidateDto {
   @IsString()
   @MaxLength(3000)
   program_kerja?: string;
+
+  @ApiPropertyOptional({
+    description: 'Candidate status (active or inactive)',
+    enum: CandidateStatus,
+    example: CandidateStatus.ACTIVE,
+  })
+  @IsOptional()
+  @IsEnum(CandidateStatus)
+  status?: CandidateStatus;
 }

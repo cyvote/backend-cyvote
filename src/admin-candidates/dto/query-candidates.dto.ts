@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsInt, Min, Max, IsString } from 'class-validator';
+import { IsOptional, IsInt, Min, Max, IsString, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
+import { CandidateStatus } from '../enums/candidate-status.enum';
 
 /**
  * DTO for querying candidates with pagination
@@ -39,4 +40,13 @@ export class QueryCandidatesDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by candidate status',
+    enum: CandidateStatus,
+    example: CandidateStatus.ACTIVE,
+  })
+  @IsOptional()
+  @IsEnum(CandidateStatus)
+  status?: CandidateStatus;
 }

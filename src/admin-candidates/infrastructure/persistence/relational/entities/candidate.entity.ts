@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Candidate } from '../../../../domain/candidate';
+import { CandidateStatus } from '../../../../enums/candidate-status.enum';
 
 /**
  * TypeORM entity for candidates table
@@ -17,6 +18,13 @@ export class CandidateEntity {
 
   @Column({ type: 'varchar', length: 100 })
   nama: string;
+
+  @Column({
+    type: 'varchar',
+    length: 20,
+    default: CandidateStatus.ACTIVE,
+  })
+  status: string;
 
   @Column({ name: 'photo_url', type: 'varchar', length: 500, nullable: true })
   photoUrl: string | null;
@@ -48,6 +56,7 @@ export class CandidateEntity {
     const candidate = new Candidate();
     candidate.id = this.id;
     candidate.nama = this.nama;
+    candidate.status = this.status as CandidateStatus;
     candidate.photoUrl = this.photoUrl;
     candidate.visiMisi = this.visiMisi;
     candidate.programKerja = this.programKerja;
@@ -64,6 +73,7 @@ export class CandidateEntity {
     const entity = new CandidateEntity();
     entity.id = candidate.id;
     entity.nama = candidate.nama;
+    entity.status = candidate.status;
     entity.photoUrl = candidate.photoUrl;
     entity.visiMisi = candidate.visiMisi;
     entity.programKerja = candidate.programKerja;

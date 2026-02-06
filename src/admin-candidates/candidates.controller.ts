@@ -31,18 +31,19 @@ export class CandidatesController {
   ) {}
 
   /**
-   * Get all candidates with pagination (for voters)
+   * Get all active candidates with pagination (for voters)
+   * Only candidates with status 'active' are returned
    */
   @Get()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'List all candidates',
+    summary: 'List all active candidates',
     description:
-      'Get paginated list of all candidates. Requires voter authentication (verified token).',
+      'Get paginated list of active candidates only. Inactive candidates are not shown. Requires voter authentication (verified token).',
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'List of candidates',
+    description: 'List of active candidates',
     type: PaginatedCandidatesResponseDto,
   })
   @ApiResponse({
@@ -52,18 +53,19 @@ export class CandidatesController {
   async findMany(
     @Query() query: QueryCandidatesDto,
   ): Promise<PaginatedCandidatesResponseDto> {
-    return this.adminCandidatesService.findMany(query);
+    return this.adminCandidatesService.findMany(query, true);
   }
 
   /**
-   * Get single candidate by ID (for voters)
+   * Get single active candidate by ID (for voters)
+   * Returns 404 if candidate is inactive
    */
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Get candidate by ID',
+    summary: 'Get active candidate by ID',
     description:
-      'Get detailed information of a single candidate. Requires voter authentication (verified token).',
+      'Get detailed information of an active candidate. Returns 404 if candidate is inactive. Requires voter authentication (verified token).',
   })
   @ApiParam({
     name: 'id',
@@ -78,7 +80,7 @@ export class CandidatesController {
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
-    description: 'Candidate not found',
+    description: 'Candidate not found or inactive',
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
@@ -87,6 +89,6 @@ export class CandidatesController {
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<SingleCandidateResponseDto> {
-    return this.adminCandidatesService.findById(id);
+    return this.adminCandidatesService.findById(id, true);
   }
 }
