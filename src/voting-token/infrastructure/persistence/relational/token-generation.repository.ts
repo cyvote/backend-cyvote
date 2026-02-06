@@ -46,6 +46,52 @@ export class TokenGenerationRepository
   }
 
   /**
+   * Find all active voters without a valid token for the current election.
+   * A valid token is one that is unused and was generated on or after the election's created_at.
+   * Uses LEFT JOIN per project convention.
+   */
+  async findVotersWithoutValidToken(
+    electionCreatedAt: Date,
+  ): Promise<VoterInfo[]> {
+    const voters = await this.voterRepository
+      .createQueryBuilder('voter')
+      .leftJoin(
+        'tokens',
+        'token',
+        'token.voter_id = voter.id AND token.is_used = false AND token.generated_at >= :electionCreatedAt',
+        { electionCreatedAt },
+      )
+      .where('voter.deleted_at IS NULL')
+      .andWhere('token.id IS NULL')
+      .select([
+        'voter.id as id',
+        'voter.email as email',
+        'voter.nama_lengkap as "namaLengkap"',
+        'voter.nim as nim',
+      ])
+      .getRawMany();
+
+    return voters;
+  }
+
+  /**
+   * Invalidate all stale tokens generated before the current election.
+   * Marks them as used so they cannot be reused.
+   * @returns Number of tokens invalidated
+   */
+  async invalidateStaleTokens(electionCreatedAt: Date): Promise<number> {
+    const result = await this.tokenRepository
+      .createQueryBuilder()
+      .update(TokenEntity)
+      .set({ isUsed: true, usedAt: new Date() })
+      .where('is_used = false')
+      .andWhere('generated_at < :electionCreatedAt', { electionCreatedAt })
+      .execute();
+
+    return result.affected || 0;
+  }
+
+  /**
    * Create a new token for a voter
    */
   async createToken(voterId: string, tokenHash: string): Promise<Token> {

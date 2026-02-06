@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { VoterRepositoryInterface } from './interfaces/voter.repository.interface';
 import { AuditLogService } from '../audit-log/audit-log.service';
@@ -31,13 +31,21 @@ import {
   NoNonVotersFoundException,
 } from './errors';
 import { generateCsv, generateTimestampFilename } from './utils/csv.util';
+import { ElectionConfigRepositoryInterface } from '../election-schedule/interfaces/election-config.repository.interface';
+import { ElectionStatus } from '../election-schedule/domain/election-config.model';
+import { TokenGenerationOrchestratorService } from '../voting-token/token-generation-orchestrator.service';
 
 @Injectable()
 export class AdminVotersService {
+  private readonly logger = new Logger(AdminVotersService.name);
+
   constructor(
     @Inject('VoterRepositoryInterface')
     private readonly voterRepository: VoterRepositoryInterface,
+    @Inject('ElectionConfigRepositoryInterface')
+    private readonly electionConfigRepository: ElectionConfigRepositoryInterface,
     private readonly auditLogService: AuditLogService,
+    private readonly tokenGenerationOrchestrator: TokenGenerationOrchestratorService,
     private readonly i18n: I18nService,
   ) {}
 
@@ -87,6 +95,9 @@ export class AdminVotersService {
         email: createdVoter.email,
       },
     });
+
+    // Fire-and-forget: generate token and send email if election is ACTIVE
+    this.triggerTokenGenerationIfElectionActive(createdVoter.id);
 
     return {
       data: this.mapToResponseDto(createdVoter),
@@ -326,6 +337,9 @@ export class AdminVotersService {
       },
     });
 
+    // Fire-and-forget: generate token and send email if election is ACTIVE
+    this.triggerTokenGenerationIfElectionActive(restoredVoter.id);
+
     return {
       data: this.mapToResponseDto(restoredVoter),
       message: this.i18n.t('adminVoters.voterRestored', {
@@ -475,6 +489,13 @@ export class AdminVotersService {
       },
     });
 
+    // Fire-and-forget: generate tokens and send emails for created voters if election is ACTIVE
+    if (createdVoters.length > 0) {
+      this.triggerBulkTokenGenerationIfElectionActive(
+        createdVoters.map((v) => v.id),
+      );
+    }
+
     // Determine message based on results
     let messageKey: string;
     if (failedCount === 0) {
@@ -573,6 +594,58 @@ export class AdminVotersService {
         }),
       );
     }
+  }
+
+  /**
+   * Check if election is currently ACTIVE. If yes, trigger token generation
+   * for a single voter (fire-and-forget).
+   */
+  private triggerTokenGenerationIfElectionActive(voterId: string): void {
+    this.electionConfigRepository
+      .findCurrentConfig()
+      .then((config) => {
+        if (config && config.status === ElectionStatus.ACTIVE) {
+          this.logger.log(
+            `Election is ACTIVE — triggering token generation for voter ${voterId}`,
+          );
+          return this.tokenGenerationOrchestrator.onVoterRegisteredDuringActiveElection(
+            voterId,
+            config,
+          );
+        }
+      })
+      .catch((error) => {
+        this.logger.error(
+          `Failed to trigger token generation for voter ${voterId}`,
+          error instanceof Error ? error.stack : String(error),
+        );
+      });
+  }
+
+  /**
+   * Check if election is currently ACTIVE. If yes, trigger token generation
+   * for bulk voters (fire-and-forget).
+   */
+  private triggerBulkTokenGenerationIfElectionActive(voterIds: string[]): void {
+    this.electionConfigRepository
+      .findCurrentConfig()
+      .then((config) => {
+        if (config && config.status === ElectionStatus.ACTIVE) {
+          this.logger.log(
+            `Election is ACTIVE — triggering token generation for ${voterIds.length} voters`,
+          );
+          return this.tokenGenerationOrchestrator.onBulkVotersRegisteredDuringActiveElection(
+            voterIds,
+            config,
+          );
+        }
+      })
+      .catch((error) => {
+        this.logger.error(
+          'Failed to trigger bulk token generation',
+          error instanceof Error ? error.stack : String(error),
+        );
+      });
   }
 
   private mapToResponseDto(voter: Voter): VoterResponseDto {

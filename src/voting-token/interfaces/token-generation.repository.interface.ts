@@ -12,6 +12,26 @@ export interface TokenGenerationRepositoryInterface {
   findVotersWithoutToken(): Promise<VoterInfo[]>;
 
   /**
+   * Find all active voters without a valid token for the current election.
+   * A "valid token" is one that is unused (is_used = false) and was generated
+   * on or after the election's created_at timestamp.
+   * Uses LEFT JOIN to find voters missing valid tokens.
+   *
+   * @param electionCreatedAt - The current election config's created_at timestamp
+   * @returns Array of voter info for voters needing token generation
+   */
+  findVotersWithoutValidToken(electionCreatedAt: Date): Promise<VoterInfo[]>;
+
+  /**
+   * Invalidate all stale tokens that were generated before the current election.
+   * Marks them as used so they cannot be reused.
+   *
+   * @param electionCreatedAt - The current election config's created_at timestamp
+   * @returns Number of tokens invalidated
+   */
+  invalidateStaleTokens(electionCreatedAt: Date): Promise<number>;
+
+  /**
    * Create a new token for a voter
    * @param voterId - The voter's UUID
    * @param tokenHash - The hashed token (SHA-256)
