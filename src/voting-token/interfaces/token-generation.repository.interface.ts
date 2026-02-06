@@ -83,4 +83,13 @@ export interface TokenGenerationRepositoryInterface {
    * @param tokenId - The token's UUID
    */
   incrementResendCount(tokenId: string): Promise<void>;
+
+  /**
+   * Find the latest token for a voter regardless of used status
+   * Used for resend status checks where we need to distinguish
+   * "no token exists" from "token was used"
+   * @param voterId - The voter's UUID
+   * @returns The latest token if found, null otherwise
+   */
+  findLatestTokenByVoterId(voterId: string): Promise<Token | null>;
 }

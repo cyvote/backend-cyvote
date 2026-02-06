@@ -166,6 +166,20 @@ export default registerAs<SecurityConfig>('security', () => {
           ? parseInt(process.env.SECURITY_RATE_LIMIT_PUBLIC_RESULTS_LIMIT, 10)
           : 30,
       },
+      adminResendStatus: {
+        ttl: process.env.SECURITY_RATE_LIMIT_ADMIN_RESEND_STATUS_TTL
+          ? parseInt(
+              process.env.SECURITY_RATE_LIMIT_ADMIN_RESEND_STATUS_TTL,
+              10,
+            )
+          : 60,
+        limit: process.env.SECURITY_RATE_LIMIT_ADMIN_RESEND_STATUS_LIMIT
+          ? parseInt(
+              process.env.SECURITY_RATE_LIMIT_ADMIN_RESEND_STATUS_LIMIT,
+              10,
+            )
+          : 30,
+      },
       storage: {
         cleanupInterval: process.env.SECURITY_RATE_LIMIT_CLEANUP_INTERVAL
           ? parseInt(process.env.SECURITY_RATE_LIMIT_CLEANUP_INTERVAL, 10)
