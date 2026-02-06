@@ -1,27 +1,9 @@
 <context>
 We will execute the task below
 
-**Description:**
-Public endpoint yang dipakai oleh user portal homepage untuk tampilkan hasil.
+In the current cron job for generating tokens and sending the token email blast to voters, we configure it to run 10–15 minutes before voting begins. In addition, this cron job also performs a flagging process that prevents the system from generating tokens and sending them again because the status is already stored in memory. As a result, when the election schedule is deleted and recreated (since only ONE election schedule is allowed to exist in the database), the system can no longer generate tokens and send emails again. Furthermore, if new voter data is added outside of that 10–15 minute window, those voters do not receive their tokens via email. This happens because, as mentioned earlier, we store in memory that tokens have already been generated and emails have already been sent.
 
-**Acceptance Criteria:**
-
-- [ ] `GET /api/v1/election/results` — **public, no auth required**
-- [ ] Jika election status bukan `PUBLISHED`, return `{ published: false }`
-- [ ] Jika sudah `PUBLISHED`, return:
-  - `published: true`
-  - `results: [{ candidateId, nama, photo_url, totalVotes, percentage }]`
-  - `winner: { candidateId, nama, photo_url }`
-  - `totalVotesCast`
-  - `participationRate`
-  - `votingPeriod: { start, end }`
-  - `publishedAt`
-
----
-
-Endpoint yang akan kita buat ini tidak akan menggunakan Bearer Token karena ini nanti diintegrasikan frontend di halaman public yang bisa diakses siapa saja.
-
-Put it in src/{kamu tentukan nama modulenya}/. In this project we use pnpm not npm. Also, follow the existing architecture (DDD). Analyze the code first. Follow the code quality standard that exist.
+The current system is not effective. Therefore, we need to change how it works. First, we will generate tokens and send the token email blast to voters IF AND ONLY IF the election schedule status has changed to ACTIVE. If, during the election period (meaning the election status is still ACTIVE), new voters are added, their tokens will be generated immediately and sent via email. Then, in this new workflow, we will no longer use in-memory storage. Instead, we need to think of a better way to determine whether tokens have already been generated and sent (without adding a new migration). Also, make sure that whenever there is a new election configuration (since this is still in the development and testing phase and election data will often be deleted and recreated), previously generated and sent tokens will immediately become invalid, and we will generate new tokens and send them again as soon as the election status becomes ACTIVE.
 
 </context>
 

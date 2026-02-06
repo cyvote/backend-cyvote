@@ -25,13 +25,18 @@ export class TokenGenerationRepository
   ) {}
 
   /**
-   * Find all active voters without a token
+   * Find all active voters without an unused token.
+   * Only joins on tokens where is_used = false, so voters whose tokens
+   * have been invalidated (is_used = true) will correctly be included.
    */
   async findVotersWithoutToken(): Promise<VoterInfo[]> {
-    // Using left join to find voters without tokens
     const voters = await this.voterRepository
       .createQueryBuilder('voter')
-      .leftJoin('tokens', 'token', 'token.voter_id = voter.id')
+      .leftJoin(
+        'tokens',
+        'token',
+        'token.voter_id = voter.id AND token.is_used = false',
+      )
       .where('voter.deleted_at IS NULL')
       .andWhere('token.id IS NULL')
       .select([
@@ -43,6 +48,24 @@ export class TokenGenerationRepository
       .getRawMany();
 
     return voters;
+  }
+
+  /**
+   * Invalidate ALL unused tokens by marking them as used.
+   * Called when a new election becomes ACTIVE to ensure every voter
+   * gets a fresh token. This avoids timezone mismatch issues between
+   * PostgreSQL DEFAULT now() and Node.js new Date().
+   * @returns Number of tokens invalidated
+   */
+  async invalidateAllUnusedTokens(): Promise<number> {
+    const result = await this.tokenRepository
+      .createQueryBuilder()
+      .update(TokenEntity)
+      .set({ isUsed: true, usedAt: new Date() })
+      .where('is_used = false')
+      .execute();
+
+    return result.affected || 0;
   }
 
   /**

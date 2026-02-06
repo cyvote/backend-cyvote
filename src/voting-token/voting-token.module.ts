@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TokenEntity } from '../auth-voter/infrastructure/persistence/relational/entities/token.entity';
@@ -7,6 +7,7 @@ import { TokenGenerationRepository } from './infrastructure/persistence/relation
 import { TokenGenerationService } from './token-generation.service';
 import { TokenEmailDistributionService } from './token-email-distribution.service';
 import { TokenGenerationSchedulerService } from './token-generation-scheduler.service';
+import { TokenGenerationOrchestratorService } from './token-generation-orchestrator.service';
 import { AdminResendTokenService } from './admin-resend-token.service';
 import { AdminResendTokenController } from './admin-resend-token.controller';
 import { AuditLogModule } from '../audit-log/audit-log.module';
@@ -30,11 +31,13 @@ import { ElectionScheduleRelationalPersistenceModule } from '../election-schedul
     TokenGenerationService,
     TokenEmailDistributionService,
     TokenGenerationSchedulerService,
+    TokenGenerationOrchestratorService,
     AdminResendTokenService,
   ],
   exports: [
     TokenGenerationService,
     TokenEmailDistributionService,
+    TokenGenerationOrchestratorService,
     'TokenGenerationRepositoryInterface',
   ],
 })

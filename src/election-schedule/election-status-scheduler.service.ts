@@ -7,6 +7,7 @@ import { AuditActorType } from '../audit-log/enums/audit-actor-type.enum';
 import { AuditStatus } from '../audit-log/enums/audit-status.enum';
 import { AuditResourceType } from '../audit-log/enums/audit-resource-type.enum';
 import { ElectionStatus } from './domain/election-config.model';
+import { TokenGenerationOrchestratorService } from '../voting-token/token-generation-orchestrator.service';
 
 @Injectable()
 export class ElectionStatusSchedulerService {
@@ -16,12 +17,16 @@ export class ElectionStatusSchedulerService {
     @Inject('ElectionConfigRepositoryInterface')
     private readonly electionConfigRepository: ElectionConfigRepositoryInterface,
     private readonly auditLogService: AuditLogService,
+    private readonly tokenGenerationOrchestrator: TokenGenerationOrchestratorService,
   ) {}
 
   /**
    * Cron job that runs every minute to check and update election status
    * SCHEDULED -> ACTIVE when current time >= start_date
    * ACTIVE -> CLOSED when current time >= end_date
+   *
+   * When transitioning to ACTIVE, triggers token generation and email distribution
+   * via the TokenGenerationOrchestratorService (fire-and-forget).
    */
   @Cron(CronExpression.EVERY_MINUTE)
   async handleStatusTransition(): Promise<void> {
@@ -45,7 +50,7 @@ export class ElectionStatusSchedulerService {
           `Transitioning election ${config.id} from SCHEDULED to ACTIVE`,
         );
 
-        await this.electionConfigRepository.updateStatus(
+        const updatedConfig = await this.electionConfigRepository.updateStatus(
           config.id,
           ElectionStatus.ACTIVE,
         );
@@ -68,6 +73,18 @@ export class ElectionStatusSchedulerService {
         this.logger.log(
           `Election ${config.id} successfully transitioned to ACTIVE`,
         );
+
+        // Fire-and-forget: trigger token generation and email distribution
+        // Uses the updated config which now has ACTIVE status
+        this.tokenGenerationOrchestrator
+          .onElectionActivated(updatedConfig)
+          .catch((error) => {
+            this.logger.error(
+              'Failed to trigger token generation on election activation',
+              error instanceof Error ? error.stack : String(error),
+            );
+          });
+
         return;
       }
 
