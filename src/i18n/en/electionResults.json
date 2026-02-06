@@ -1,0 +1,11 @@
+{
+  "resultsPreview": "Election results calculated successfully",
+  "verificationComplete": "Vote integrity verification completed",
+  "resultsPublished": "Election results published successfully",
+  "electionNotClosed": "Election must be in CLOSED status to view results",
+  "electionNotClosedForPublish": "Election must be in CLOSED status to publish results",
+  "verificationRequired": "Vote integrity verification must be run and result PASS before publishing",
+  "verificationNotPassed": "Last vote integrity verification failed (FAIL). Cannot publish results.",
+  "electionConfigNotFound": "Election configuration not found",
+  "noVotesFound": "No votes have been recorded yet"
+}

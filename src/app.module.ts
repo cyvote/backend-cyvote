@@ -44,6 +44,7 @@ import securityConfig from './security/config/security.config';
 import { VotingTokenModule } from './voting-token/voting-token.module';
 import { VotingModule } from './voting/voting.module';
 import { SuperadminAuditLogsModule } from './superadmin-audit-logs/superadmin-audit-logs.module';
+import { ElectionResultsModule } from './election-results/election-results.module';
 
 // <database-block>
 const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
@@ -123,6 +124,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     VotingTokenModule,
     VotingModule,
     SuperadminAuditLogsModule,
+    ElectionResultsModule,
   ],
   providers: [
     {
