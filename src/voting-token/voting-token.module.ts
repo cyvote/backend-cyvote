@@ -10,8 +10,12 @@ import { TokenGenerationSchedulerService } from './token-generation-scheduler.se
 import { TokenGenerationOrchestratorService } from './token-generation-orchestrator.service';
 import { AdminResendTokenService } from './admin-resend-token.service';
 import { AdminResendTokenController } from './admin-resend-token.controller';
+import { AdminResendStatusService } from './admin-resend-status.service';
+import { AdminResendStatusController } from './admin-resend-status.controller';
+import { AdminResendStatusRateLimitGuard } from './guards/admin-resend-status-rate-limit.guard';
 import { AuditLogModule } from '../audit-log/audit-log.module';
 import { MailModule } from '../mail/mail.module';
+import { SecurityModule } from '../security/security.module';
 import { ElectionScheduleRelationalPersistenceModule } from '../election-schedule/infrastructure/persistence/relational/relational-persistence.module';
 
 @Module({
@@ -20,9 +24,10 @@ import { ElectionScheduleRelationalPersistenceModule } from '../election-schedul
     ScheduleModule,
     AuditLogModule,
     MailModule,
+    SecurityModule,
     ElectionScheduleRelationalPersistenceModule,
   ],
-  controllers: [AdminResendTokenController],
+  controllers: [AdminResendTokenController, AdminResendStatusController],
   providers: [
     {
       provide: 'TokenGenerationRepositoryInterface',
@@ -33,6 +38,8 @@ import { ElectionScheduleRelationalPersistenceModule } from '../election-schedul
     TokenGenerationSchedulerService,
     TokenGenerationOrchestratorService,
     AdminResendTokenService,
+    AdminResendStatusService,
+    AdminResendStatusRateLimitGuard,
   ],
   exports: [
     TokenGenerationService,

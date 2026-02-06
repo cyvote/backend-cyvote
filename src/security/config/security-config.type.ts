@@ -24,6 +24,10 @@ export type SecurityConfig = {
       ttl: number; // Time window in seconds (60)
       limit: number; // Max requests per window (30)
     };
+    adminResendStatus: {
+      ttl: number; // Time window in seconds (60)
+      limit: number; // Max requests per window (30)
+    };
     storage: {
       cleanupInterval: number; // Cleanup interval in ms (60000)
     };

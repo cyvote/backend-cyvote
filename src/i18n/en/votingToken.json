@@ -4,5 +4,6 @@
   "tokenNotFound": "Token not found for this voter",
   "tokenAlreadyUsed": "Token already used and cannot be resent",
   "resendLimitReached": "Resend token has reached maximum limit (3 times)",
-  "tokenResent": "Token resent successfully"
+  "tokenResent": "Token resent successfully",
+  "resendStatusRetrieved": "Resend status retrieved successfully"
 }

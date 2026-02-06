@@ -201,4 +201,20 @@ export class TokenGenerationRepository
   async incrementResendCount(tokenId: string): Promise<void> {
     await this.tokenRepository.increment({ id: tokenId }, 'resendCount', 1);
   }
+
+  /**
+   * Find the latest token for a voter regardless of used status
+   */
+  async findLatestTokenByVoterId(voterId: string): Promise<Token | null> {
+    const entity = await this.tokenRepository.findOne({
+      where: {
+        voterId,
+      },
+      order: {
+        generatedAt: 'DESC',
+      },
+    });
+
+    return entity ? entity.toDomain() : null;
+  }
 }
