@@ -20,6 +20,7 @@ import {
   ResultsPreviewResponseDto,
   VerificationResponseDto,
   PublishResponseDto,
+  PublicResultsResponseDto,
 } from './dto';
 import {
   ElectionResultsErrorCode,
@@ -344,6 +345,119 @@ export class ElectionResultsService {
       message: this.i18n.t('electionResults.resultsPublished', {
         lang: I18nContext.current()?.lang,
       }),
+    };
+  }
+
+  /**
+   * Get public election results for the user portal homepage
+   *
+   * Flow:
+   * 1. Fetch current election config
+   * 2. If status !== PUBLISHED, return { published: false }
+   * 3. Fetch vote counts per candidate with photo (LEFT JOIN)
+   * 4. Fetch total votes cast
+   * 5. Fetch total registered voters for participation rate
+   * 6. Calculate percentages for each candidate
+   * 7. Determine winner (highest votes, handle ties)
+   * 8. Calculate participation rate
+   * 9. Log audit (fire & forget) for monitoring
+   * 10. Build and return response matching acceptance criteria
+   */
+  async getPublicResults(): Promise<PublicResultsResponseDto> {
+    // Step 1: Get election config
+    const electionConfig =
+      await this.resultsRepository.findCurrentElectionConfig();
+
+    // Step 2: If no config or status is not PUBLISHED, return not published
+    if (!electionConfig || electionConfig.status !== ElectionStatus.PUBLISHED) {
+      return { published: false };
+    }
+
+    // Step 3: Fetch vote counts per candidate with photo URL
+    const candidateVoteCounts =
+      await this.resultsRepository.getVoteCountsByCandidateWithPhoto();
+
+    // Step 4: Fetch total votes cast
+    const totalVotesCast = await this.resultsRepository.getTotalVoteCount();
+
+    // Step 5: Fetch total registered voters for participation rate
+    const totalRegisteredVoters =
+      await this.resultsRepository.getTotalRegisteredVoters();
+
+    // Step 6: Calculate percentages using existing domain logic
+    const candidateResults = candidateVoteCounts.map(
+      (c) =>
+        new CandidateResult({
+          candidateId: c.candidateId,
+          candidateName: c.nama,
+          voteCount: c.voteCount,
+        }),
+    );
+
+    const withPercentages = ElectionResults.calculatePercentages(
+      candidateResults,
+      totalVotesCast,
+    );
+
+    // Step 7: Determine winner
+    const { winner } = ElectionResults.determineWinner(withPercentages);
+
+    // Build lookup maps for photo URLs and names by candidateId
+    const photoUrlMap = new Map<string, string | null>();
+    const namaMap = new Map<string, string>();
+    for (const c of candidateVoteCounts) {
+      photoUrlMap.set(c.candidateId, c.photoUrl);
+      namaMap.set(c.candidateId, c.nama);
+    }
+
+    // Step 8: Calculate participation rate (2 decimal places)
+    const participationRate =
+      totalRegisteredVoters > 0
+        ? Math.round((totalVotesCast / totalRegisteredVoters) * 10000) / 100
+        : 0;
+
+    // Step 9: Audit log (fire & forget)
+    this.auditLogService.log({
+      actorId: null,
+      actorType: AuditActorType.ANONYMOUS,
+      action: AuditAction.PUBLIC_RESULTS_VIEWED,
+      resourceType: AuditResourceType.RESULTS,
+      resourceId: electionConfig.id,
+      status: AuditStatus.SUCCESS,
+      details: {
+        totalVotesCast,
+        totalRegisteredVoters,
+        participationRate,
+        candidateCount: candidateVoteCounts.length,
+      },
+    });
+
+    // Step 10: Build and return response matching acceptance criteria
+    return {
+      published: true,
+      results: withPercentages.map((c) => ({
+        candidateId: c.candidateId,
+        nama: namaMap.get(c.candidateId) || c.candidateName,
+        photo_url: photoUrlMap.get(c.candidateId) || null,
+        totalVotes: c.voteCount,
+        percentage: c.percentage,
+      })),
+      winner: winner
+        ? {
+            candidateId: winner.candidateId,
+            nama: namaMap.get(winner.candidateId) || winner.candidateName,
+            photo_url: photoUrlMap.get(winner.candidateId) || null,
+          }
+        : null,
+      totalVotesCast,
+      participationRate,
+      votingPeriod: {
+        start: this.formatToWib(electionConfig.startDate),
+        end: this.formatToWib(electionConfig.endDate),
+      },
+      publishedAt: electionConfig.resultsPublishedAt
+        ? this.formatToWib(electionConfig.resultsPublishedAt)
+        : this.formatToWib(new Date()),
     };
   }
 

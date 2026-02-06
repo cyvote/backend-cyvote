@@ -2,6 +2,8 @@
   "resultsPreview": "Hasil sementara berhasil dihitung",
   "verificationComplete": "Verifikasi integritas suara selesai",
   "resultsPublished": "Hasil pemilihan berhasil dipublikasikan",
+  "publicResultsFetched": "Hasil pemilihan publik berhasil diambil",
+  "publicResultsNotPublished": "Hasil pemilihan belum dipublikasikan",
   "electionNotClosed": "Pemilihan harus dalam status CLOSED untuk melihat hasil",
   "electionNotClosedForPublish": "Pemilihan harus dalam status CLOSED untuk dipublikasikan",
   "verificationRequired": "Verifikasi integritas suara harus dijalankan dan hasilnya PASS sebelum publish",
