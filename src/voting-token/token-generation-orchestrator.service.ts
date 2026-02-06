@@ -72,14 +72,14 @@ export class TokenGenerationOrchestratorService {
         `Election ${electionConfig.id} activated — starting batch token generation`,
       );
 
-      // Step 1: Invalidate all stale tokens from previous elections
-      const invalidatedCount = await this.tokenRepository.invalidateStaleTokens(
-        electionConfig.createdAt,
-      );
+      // Step 1: Invalidate ALL unused tokens to ensure clean slate
+      // This avoids timezone mismatch between PostgreSQL now() and Node.js Date()
+      const invalidatedCount =
+        await this.tokenRepository.invalidateAllUnusedTokens();
 
       if (invalidatedCount > 0) {
         this.logger.log(
-          `Invalidated ${invalidatedCount} stale tokens from previous election(s)`,
+          `Invalidated ${invalidatedCount} unused tokens from previous election(s)`,
         );
 
         this.auditLogService.log({
@@ -92,15 +92,12 @@ export class TokenGenerationOrchestratorService {
           details: {
             invalidatedCount,
             electionId: electionConfig.id,
-            electionCreatedAt: electionConfig.createdAt.toISOString(),
           },
         });
       }
 
-      // Step 2: Find all voters that need tokens for this election
-      const voters = await this.tokenRepository.findVotersWithoutValidToken(
-        electionConfig.createdAt,
-      );
+      // Step 2: Find all voters without any unused token
+      const voters = await this.tokenRepository.findVotersWithoutToken();
 
       if (voters.length === 0) {
         this.logger.log('No voters need token generation');
@@ -289,10 +286,8 @@ export class TokenGenerationOrchestratorService {
         return;
       }
 
-      // Find voters without valid tokens for the current election
-      const voters = await this.tokenRepository.findVotersWithoutValidToken(
-        config.createdAt,
-      );
+      // Find voters without any unused token
+      const voters = await this.tokenRepository.findVotersWithoutToken();
 
       if (voters.length === 0) {
         return;

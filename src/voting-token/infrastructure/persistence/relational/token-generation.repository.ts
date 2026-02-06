@@ -25,41 +25,17 @@ export class TokenGenerationRepository
   ) {}
 
   /**
-   * Find all active voters without a token
+   * Find all active voters without an unused token.
+   * Only joins on tokens where is_used = false, so voters whose tokens
+   * have been invalidated (is_used = true) will correctly be included.
    */
   async findVotersWithoutToken(): Promise<VoterInfo[]> {
-    // Using left join to find voters without tokens
-    const voters = await this.voterRepository
-      .createQueryBuilder('voter')
-      .leftJoin('tokens', 'token', 'token.voter_id = voter.id')
-      .where('voter.deleted_at IS NULL')
-      .andWhere('token.id IS NULL')
-      .select([
-        'voter.id as id',
-        'voter.email as email',
-        'voter.nama_lengkap as "namaLengkap"',
-        'voter.nim as nim',
-      ])
-      .getRawMany();
-
-    return voters;
-  }
-
-  /**
-   * Find all active voters without a valid token for the current election.
-   * A valid token is one that is unused and was generated on or after the election's created_at.
-   * Uses LEFT JOIN per project convention.
-   */
-  async findVotersWithoutValidToken(
-    electionCreatedAt: Date,
-  ): Promise<VoterInfo[]> {
     const voters = await this.voterRepository
       .createQueryBuilder('voter')
       .leftJoin(
         'tokens',
         'token',
-        'token.voter_id = voter.id AND token.is_used = false AND token.generated_at >= :electionCreatedAt',
-        { electionCreatedAt },
+        'token.voter_id = voter.id AND token.is_used = false',
       )
       .where('voter.deleted_at IS NULL')
       .andWhere('token.id IS NULL')
@@ -75,17 +51,18 @@ export class TokenGenerationRepository
   }
 
   /**
-   * Invalidate all stale tokens generated before the current election.
-   * Marks them as used so they cannot be reused.
+   * Invalidate ALL unused tokens by marking them as used.
+   * Called when a new election becomes ACTIVE to ensure every voter
+   * gets a fresh token. This avoids timezone mismatch issues between
+   * PostgreSQL DEFAULT now() and Node.js new Date().
    * @returns Number of tokens invalidated
    */
-  async invalidateStaleTokens(electionCreatedAt: Date): Promise<number> {
+  async invalidateAllUnusedTokens(): Promise<number> {
     const result = await this.tokenRepository
       .createQueryBuilder()
       .update(TokenEntity)
       .set({ isUsed: true, usedAt: new Date() })
       .where('is_used = false')
-      .andWhere('generated_at < :electionCreatedAt', { electionCreatedAt })
       .execute();
 
     return result.affected || 0;

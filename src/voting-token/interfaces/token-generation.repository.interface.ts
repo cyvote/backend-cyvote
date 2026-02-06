@@ -6,30 +6,23 @@ import { TokenWithVoter, VoterInfo } from './token-with-voter.interface';
  */
 export interface TokenGenerationRepositoryInterface {
   /**
-   * Find all active voters without a token
-   * @returns Array of voter info for voters who don't have tokens yet
+   * Find all active voters without an unused token.
+   * Only considers tokens where is_used = false, so voters whose tokens
+   * have been invalidated will correctly appear in the results.
+   *
+   * @returns Array of voter info for voters who need token generation
    */
   findVotersWithoutToken(): Promise<VoterInfo[]>;
 
   /**
-   * Find all active voters without a valid token for the current election.
-   * A "valid token" is one that is unused (is_used = false) and was generated
-   * on or after the election's created_at timestamp.
-   * Uses LEFT JOIN to find voters missing valid tokens.
+   * Invalidate ALL unused tokens by marking them as used.
+   * Called when a new election becomes ACTIVE to ensure every voter
+   * gets a fresh token. This avoids timezone mismatch issues between
+   * PostgreSQL DEFAULT now() and Node.js new Date().
    *
-   * @param electionCreatedAt - The current election config's created_at timestamp
-   * @returns Array of voter info for voters needing token generation
-   */
-  findVotersWithoutValidToken(electionCreatedAt: Date): Promise<VoterInfo[]>;
-
-  /**
-   * Invalidate all stale tokens that were generated before the current election.
-   * Marks them as used so they cannot be reused.
-   *
-   * @param electionCreatedAt - The current election config's created_at timestamp
    * @returns Number of tokens invalidated
    */
-  invalidateStaleTokens(electionCreatedAt: Date): Promise<number>;
+  invalidateAllUnusedTokens(): Promise<number>;
 
   /**
    * Create a new token for a voter
