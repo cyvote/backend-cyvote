@@ -13,5 +13,6 @@
   "deleted": "Candidate deleted successfully",
   "authRequired": "Voter authentication required",
   "invalidToken": "Invalid voter token",
-  "tokenExpired": "Voter token expired"
+  "tokenExpired": "Voter token expired",
+  "invalidStatus": "Status must be either 'active' or 'inactive'"
 }

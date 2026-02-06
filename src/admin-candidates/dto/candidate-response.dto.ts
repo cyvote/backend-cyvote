@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { CandidateStatus } from '../enums/candidate-status.enum';
 
 /**
  * DTO for single candidate response
@@ -15,6 +16,13 @@ export class CandidateResponseDto {
     example: 'John Doe',
   })
   nama: string;
+
+  @ApiProperty({
+    description: 'Candidate status (active or inactive)',
+    enum: CandidateStatus,
+    example: CandidateStatus.ACTIVE,
+  })
+  status: string;
 
   @ApiPropertyOptional({
     description: 'Photo URL from Supabase Storage',

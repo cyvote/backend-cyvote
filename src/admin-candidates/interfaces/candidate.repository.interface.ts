@@ -12,14 +12,17 @@ export interface CandidateRepositoryInterface {
 
   /**
    * Find candidate by ID
+   * @param activeOnly - If true, only return candidate with status 'active'
    */
-  findById(id: string): Promise<Candidate | null>;
+  findById(id: string, activeOnly?: boolean): Promise<Candidate | null>;
 
   /**
    * Find many candidates with pagination
+   * @param activeOnly - If true, only return candidates with status 'active'
    */
   findMany(
     query: QueryCandidatesDto,
+    activeOnly?: boolean,
   ): Promise<{ data: Candidate[]; total: number }>;
 
   /**

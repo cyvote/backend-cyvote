@@ -1,5 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
+import { CandidateStatus } from '../enums/candidate-status.enum';
 
 /**
  * DTO for creating a new candidate
@@ -34,4 +41,14 @@ export class CreateCandidateDto {
   @IsString()
   @MaxLength(3000)
   program_kerja?: string;
+
+  @ApiPropertyOptional({
+    description: 'Candidate status (active or inactive)',
+    enum: CandidateStatus,
+    example: CandidateStatus.ACTIVE,
+    default: CandidateStatus.ACTIVE,
+  })
+  @IsOptional()
+  @IsEnum(CandidateStatus)
+  status?: CandidateStatus;
 }

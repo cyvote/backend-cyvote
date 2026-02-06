@@ -1,8 +1,7 @@
 <context>
 We will execute the task below
 
-At the POST endpoint `/api/v1/auth/admin/login`, there is no message when it is successful or unsuccessful. Well, I want there to be a message when it is successful or unsuccessful. So, in the JSON response, we add the key “message” and its value is a message that is descriptive enough but does not compromise security.
-
+The endpoint `/api/v1/admin/candidates` currently accepts requests in the form of name, vision_mission, work_programme, photo (file), and grand_design (file). Now, we will add a new request in the form of `status`. The value of `status` will be either `active` or `inactive`. We also need to create a new migration to add the `status` column to the `candidates` table. Then, at the endpoint `/api/v1/candidates`, if the candidate's status is `inactive`, the data will not appear. Only after the status is `active` will it appear.
 </context>
 
 <role>

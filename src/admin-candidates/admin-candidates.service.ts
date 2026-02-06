@@ -12,6 +12,7 @@ import { CandidateRepositoryInterface } from './interfaces/candidate.repository.
 import { ElectionConfigRepositoryInterface } from './interfaces/election-config.repository.interface';
 import { StorageServiceInterface } from './interfaces/storage.service.interface';
 import { Candidate } from './domain/candidate';
+import { CandidateStatus } from './enums/candidate-status.enum';
 import { CreateCandidateDto } from './dto/create-candidate.dto';
 import { UpdateCandidateDto } from './dto/update-candidate.dto';
 import { QueryCandidatesDto } from './dto/query-candidates.dto';
@@ -117,6 +118,7 @@ export class AdminCandidatesService {
     return {
       id: candidate.id,
       nama: candidate.nama,
+      status: candidate.status,
       photo_url: candidate.photoUrl,
       visi_misi: candidate.visiMisi,
       program_kerja: candidate.programKerja,
@@ -186,6 +188,7 @@ export class AdminCandidatesService {
     // Create candidate
     const candidate = new Candidate();
     candidate.nama = dto.nama;
+    candidate.status = dto.status || CandidateStatus.ACTIVE;
     candidate.photoUrl = photoUrl;
     candidate.visiMisi = this.sanitizeContent(dto.visi_misi);
     candidate.programKerja = this.sanitizeContent(dto.program_kerja);
@@ -203,6 +206,7 @@ export class AdminCandidatesService {
       status: AuditStatus.SUCCESS,
       details: {
         nama: saved.nama,
+        candidateStatus: saved.status,
         hasPhoto: !!photoUrl,
         hasGrandDesign: !!grandDesignUrl,
       },
@@ -213,11 +217,16 @@ export class AdminCandidatesService {
 
   /**
    * Find many candidates with pagination
+   * @param activeOnly - If true, only return candidates with status 'active' (used by public endpoint)
    */
   async findMany(
     query: QueryCandidatesDto,
+    activeOnly: boolean = false,
   ): Promise<PaginatedCandidatesResponseDto> {
-    const { data, total } = await this.candidateRepository.findMany(query);
+    const { data, total } = await this.candidateRepository.findMany(
+      query,
+      activeOnly,
+    );
     const page = query.page || 1;
     const limit = query.limit || 10;
     const totalPages = Math.ceil(total / limit);
@@ -239,9 +248,13 @@ export class AdminCandidatesService {
 
   /**
    * Find candidate by ID
+   * @param activeOnly - If true, only return candidate with status 'active' (used by public endpoint)
    */
-  async findById(id: string): Promise<SingleCandidateResponseDto> {
-    const candidate = await this.candidateRepository.findById(id);
+  async findById(
+    id: string,
+    activeOnly: boolean = false,
+  ): Promise<SingleCandidateResponseDto> {
+    const candidate = await this.candidateRepository.findById(id, activeOnly);
 
     if (!candidate) {
       throw new NotFoundException(
@@ -305,6 +318,7 @@ export class AdminCandidatesService {
     const updateData: Partial<Candidate> = {};
 
     if (dto.nama !== undefined) updateData.nama = dto.nama;
+    if (dto.status !== undefined) updateData.status = dto.status;
     if (dto.visi_misi !== undefined)
       updateData.visiMisi = this.sanitizeContent(dto.visi_misi);
     if (dto.program_kerja !== undefined)
