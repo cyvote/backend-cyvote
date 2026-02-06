@@ -1,7 +1,58 @@
 <context>
 We will execute the task below
 
-The endpoint `/api/v1/admin/candidates` currently accepts requests in the form of name, vision_mission, work_programme, photo (file), and grand_design (file). Now, we will add a new request in the form of `status`. The value of `status` will be either `active` or `inactive`. We also need to create a new migration to add the `status` column to the `candidates` table. Then, at the endpoint `/api/v1/candidates`, if the candidate's status is `inactive`, the data will not appear. Only after the status is `active` will it appear.
+**Description:**
+Service untuk hitung hasil voting dan cache hasilnya.
+
+**Acceptance Criteria:**
+
+- [ ] `ResultsService` dibuat dengan method `calculateResults()`:
+  - Query `votes` table, GROUP BY `candidate_id`
+  - COUNT votes per candidate
+  - Hitung percentage masing-masing
+  - Determine winner (highest vote count)
+- [ ] `GET /api/v1/superadmin/results/preview` — return calculated results
+  - Hanya bisa diakses ketika election status `CLOSED`
+- [ ] Protected: SUPERADMIN only
+
+---
+
+**Description:**
+Endpoint untuk verify integrity semua votes sebelum publish.
+
+**Acceptance Criteria:**
+
+- [ ] `POST /api/v1/superadmin/results/verify` — trigger verification
+- [ ] Logic:
+  1. Ambil semua votes dari tabel `votes`
+  2. Untuk setiap vote, recalculate hash: `SHA256(voter_uuid + candidate_id + voted_at + salt)`
+  3. Compare dengan `vote_hash` yang tersimpan
+  4. Jika semua match → status `PASS`
+  5. Jika ada yang tidak match → status `FAIL`, return list vote IDs yang corrupted
+- [ ] Return: `{ status: 'PASS' | 'FAIL', totalVerified, corruptedVotes?: [id] }`
+- [ ] Log verification action
+- [ ] Protected: SUPERADMIN only
+
+---
+
+**Description:**
+Endpoint untuk publish results ke publik setelah superadmin approve.
+
+**Acceptance Criteria:**
+
+- [ ] `POST /api/v1/superadmin/results/publish`
+- [ ] Validasi:
+  - Election status harus `CLOSED`
+  - Hash verification harus sudah dijalankan dan hasilnya `PASS` (bisa simpan last verification status)
+- [ ] Update election status ke `PUBLISHED`
+- [ ] Set `results_published_at` timestamp
+- [ ] Log action
+- [ ] Protected: SUPERADMIN only
+
+---
+
+Put it in src/{kamu tentukan nama modulenya}/. In this project we use pnpm not npm. Also, follow the existing architecture (DDD). Analyze the code first. Follow the code quality standard that exist.
+
 </context>
 
 <role>

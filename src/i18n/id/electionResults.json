@@ -1,0 +1,11 @@
+{
+  "resultsPreview": "Hasil sementara berhasil dihitung",
+  "verificationComplete": "Verifikasi integritas suara selesai",
+  "resultsPublished": "Hasil pemilihan berhasil dipublikasikan",
+  "electionNotClosed": "Pemilihan harus dalam status CLOSED untuk melihat hasil",
+  "electionNotClosedForPublish": "Pemilihan harus dalam status CLOSED untuk dipublikasikan",
+  "verificationRequired": "Verifikasi integritas suara harus dijalankan dan hasilnya PASS sebelum publish",
+  "verificationNotPassed": "Verifikasi integritas suara terakhir gagal (FAIL). Tidak dapat publish hasil.",
+  "electionConfigNotFound": "Konfigurasi pemilihan tidak ditemukan",
+  "noVotesFound": "Belum ada suara yang tercatat"
+}
