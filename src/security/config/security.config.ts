@@ -55,6 +55,16 @@ class EnvironmentVariablesValidator {
   SECURITY_RATE_LIMIT_ELECTION_RESULTS_LIMIT: number;
 
   @IsInt()
+  @Min(1)
+  @IsOptional()
+  SECURITY_RATE_LIMIT_PUBLIC_RESULTS_TTL: number;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  SECURITY_RATE_LIMIT_PUBLIC_RESULTS_LIMIT: number;
+
+  @IsInt()
   @Min(1000)
   @IsOptional()
   SECURITY_RATE_LIMIT_CLEANUP_INTERVAL: number;
@@ -147,6 +157,14 @@ export default registerAs<SecurityConfig>('security', () => {
         limit: process.env.SECURITY_RATE_LIMIT_ELECTION_RESULTS_LIMIT
           ? parseInt(process.env.SECURITY_RATE_LIMIT_ELECTION_RESULTS_LIMIT, 10)
           : 10,
+      },
+      publicResults: {
+        ttl: process.env.SECURITY_RATE_LIMIT_PUBLIC_RESULTS_TTL
+          ? parseInt(process.env.SECURITY_RATE_LIMIT_PUBLIC_RESULTS_TTL, 10)
+          : 60,
+        limit: process.env.SECURITY_RATE_LIMIT_PUBLIC_RESULTS_LIMIT
+          ? parseInt(process.env.SECURITY_RATE_LIMIT_PUBLIC_RESULTS_LIMIT, 10)
+          : 30,
       },
       storage: {
         cleanupInterval: process.env.SECURITY_RATE_LIMIT_CLEANUP_INTERVAL

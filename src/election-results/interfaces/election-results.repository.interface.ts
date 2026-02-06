@@ -10,6 +10,16 @@ export interface CandidateVoteCount {
 }
 
 /**
+ * Vote count per candidate with photo URL for public results
+ */
+export interface CandidateVoteCountWithPhoto {
+  candidateId: string;
+  nama: string;
+  photoUrl: string | null;
+  voteCount: number;
+}
+
+/**
  * Vote data needed for integrity verification
  */
 export interface VoteForVerification {
@@ -32,9 +42,22 @@ export interface ElectionResultsRepositoryInterface {
   getVoteCountsByCandidate(): Promise<CandidateVoteCount[]>;
 
   /**
+   * Get vote counts grouped by candidate with photo URL using LEFT JOIN
+   * Returns all active candidates with their vote counts, names, and photo URLs
+   * Used by public results endpoint
+   */
+  getVoteCountsByCandidateWithPhoto(): Promise<CandidateVoteCountWithPhoto[]>;
+
+  /**
    * Get the total number of votes cast
    */
   getTotalVoteCount(): Promise<number>;
+
+  /**
+   * Get total number of registered (non-deleted) voters
+   * Used to calculate participation rate
+   */
+  getTotalRegisteredVoters(): Promise<number>;
 
   /**
    * Get all votes with fields needed for hash verification

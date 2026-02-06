@@ -20,6 +20,10 @@ export type SecurityConfig = {
       ttl: number; // Time window in seconds (60)
       limit: number; // Max requests per window (10)
     };
+    publicResults: {
+      ttl: number; // Time window in seconds (60)
+      limit: number; // Max requests per window (30)
+    };
     storage: {
       cleanupInterval: number; // Cleanup interval in ms (60000)
     };

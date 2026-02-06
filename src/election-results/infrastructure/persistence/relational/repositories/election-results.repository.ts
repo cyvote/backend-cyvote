@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import {
   ElectionResultsRepositoryInterface,
   CandidateVoteCount,
+  CandidateVoteCountWithPhoto,
   VoteForVerification,
 } from '../../../../interfaces/election-results.repository.interface';
 import { VoteEntity } from '../../../../../voting/infrastructure/persistence/relational/entities/vote.entity';
 import { CandidateEntity } from '../../../../../admin-candidates/infrastructure/persistence/relational/entities/candidate.entity';
 import { ElectionConfigEntity } from '../../../../../election-schedule/infrastructure/persistence/relational/entities/election-config.entity';
+import { VoterEntity } from '../../../../../admin-voters/infrastructure/persistence/relational/entities/voter.entity';
 import {
   ElectionConfig,
   ElectionStatus,
@@ -25,6 +27,8 @@ export class ElectionResultsRepository
     private readonly candidateRepository: Repository<CandidateEntity>,
     @InjectRepository(ElectionConfigEntity)
     private readonly electionConfigRepository: Repository<ElectionConfigEntity>,
+    @InjectRepository(VoterEntity)
+    private readonly voterRepository: Repository<VoterEntity>,
   ) {}
 
   /**
@@ -97,6 +101,46 @@ export class ElectionResultsRepository
     }
 
     return entity.toDomain();
+  }
+
+  /**
+   * Get vote counts grouped by candidate with photo URL using LEFT JOIN
+   * Includes all active candidates, even those with 0 votes
+   * Used by public results endpoint
+   */
+  async getVoteCountsByCandidateWithPhoto(): Promise<
+    CandidateVoteCountWithPhoto[]
+  > {
+    const results = await this.candidateRepository
+      .createQueryBuilder('c')
+      .leftJoin(VoteEntity, 'v', 'c.id = v.candidate_id')
+      .select('c.id', 'candidateId')
+      .addSelect('c.nama', 'nama')
+      .addSelect('c.photo_url', 'photoUrl')
+      .addSelect('COUNT(v.id)', 'voteCount')
+      .where('c.status = :status', { status: 'active' })
+      .groupBy('c.id')
+      .addGroupBy('c.nama')
+      .addGroupBy('c.photo_url')
+      .orderBy('"voteCount"', 'DESC')
+      .getRawMany();
+
+    return results.map((r) => ({
+      candidateId: r.candidateId,
+      nama: r.nama,
+      photoUrl: r.photoUrl || null,
+      voteCount: parseInt(r.voteCount, 10) || 0,
+    }));
+  }
+
+  /**
+   * Get total number of registered (non-deleted) voters
+   * Uses soft-delete aware count (deleted_at IS NULL)
+   */
+  async getTotalRegisteredVoters(): Promise<number> {
+    return this.voterRepository.count({
+      where: { deletedAt: IsNull() },
+    });
   }
 
   /**
