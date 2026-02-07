@@ -28,9 +28,14 @@ class EnvironmentVariablesValidator {
   @IsOptional()
   APP_PORT: number;
 
-  @IsUrl({ require_tld: false })
   @IsOptional()
-  FRONTEND_DOMAIN: string;
+  @Transform(({ value }) =>
+    typeof value === 'string'
+      ? value.split(',').map(v => v.trim())
+      : value
+  )
+  @IsUrl({ require_tld: false }, { each: true })
+  FRONTEND_DOMAIN: string[];
 
   @IsUrl({ require_tld: false })
   @IsOptional()
