@@ -1,6 +1,7 @@
 import { registerAs } from '@nestjs/config';
 import { AppConfig } from './app-config.type';
 import validateConfig from '.././utils/validate-config';
+import { Transform } from 'class-transformer';
 import {
   IsEnum,
   IsInt,
