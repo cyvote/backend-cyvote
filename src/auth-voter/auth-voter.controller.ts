@@ -93,7 +93,7 @@ export class AuthVoterController {
   })
   @ApiResponse({
     status: HttpStatus.TOO_MANY_REQUESTS,
-    description: 'Rate limit exceeded (3 attempts per 5 minutes).',
+    description: 'Rate limit exceeded (3 attempts per 1 minute).',
   })
   async verifyToken(
     @Body() dto: VerifyTokenDto,

@@ -131,7 +131,7 @@ export default registerAs<SecurityConfig>('security', () => {
       tokenVerify: {
         ttl: process.env.SECURITY_RATE_LIMIT_TOKEN_VERIFY_TTL
           ? parseInt(process.env.SECURITY_RATE_LIMIT_TOKEN_VERIFY_TTL, 10)
-          : 300,
+          : 60,
         limit: process.env.SECURITY_RATE_LIMIT_TOKEN_VERIFY_LIMIT
           ? parseInt(process.env.SECURITY_RATE_LIMIT_TOKEN_VERIFY_LIMIT, 10)
           : 3,
