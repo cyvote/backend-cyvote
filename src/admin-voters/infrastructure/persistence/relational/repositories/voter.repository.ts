@@ -9,6 +9,7 @@ import {
   QueryVotersDto,
   VoterFilterStatus,
   VoterSortField,
+  VoterStatusFilter,
   SortOrder,
 } from '../../../../dto/query-voters.dto';
 
@@ -73,9 +74,18 @@ export class VoterRepository implements VoterRepositoryInterface {
       angkatan,
       sort = VoterSortField.CREATED_AT,
       order = SortOrder.DESC,
+      status = VoterStatusFilter.ACTIVE,
     } = query;
 
     const queryBuilder = this.voterRepository.createQueryBuilder('voter');
+
+    // Handle soft-delete status filter
+    if (status === VoterStatusFilter.INACTIVE) {
+      // Show ONLY soft-deleted voters
+      queryBuilder.withDeleted();
+      queryBuilder.andWhere('voter.deleted_at IS NOT NULL');
+    }
+    // If status === ACTIVE (default), TypeORM automatically filters deleted_at IS NULL
 
     // Apply search filter (nim, nama_lengkap, email)
     if (search?.trim()) {

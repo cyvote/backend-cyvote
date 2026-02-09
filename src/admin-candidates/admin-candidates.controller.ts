@@ -80,6 +80,12 @@ export class AdminCandidatesController {
           maxLength: 3000,
           description: 'Work program',
         },
+        status: {
+          type: 'string',
+          enum: ['active', 'inactive'],
+          default: 'active',
+          description: 'Candidate status (active or inactive)',
+        },
         photo: {
           type: 'string',
           format: 'binary',
@@ -100,7 +106,7 @@ export class AdminCandidatesController {
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
-    description: 'Invalid file type or size exceeded',
+    description: 'Invalid file type, size exceeded, or invalid status value',
   })
   @ApiResponse({
     status: HttpStatus.CONFLICT,
@@ -209,6 +215,11 @@ export class AdminCandidatesController {
           type: 'string',
           maxLength: 3000,
           description: 'Work program',
+        },
+        status: {
+          type: 'string',
+          enum: ['active', 'inactive'],
+          description: 'Candidate status (active or inactive)',
         },
         photo: {
           type: 'string',

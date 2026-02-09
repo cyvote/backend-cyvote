@@ -1,19 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Column, Entity, PrimaryGeneratedColumn, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { ElectionConfigRepositoryInterface } from '../../../../interfaces/election-config.repository.interface';
-
-/**
- * TypeORM entity for election_config table (read-only for status check)
- */
-@Entity('election_config')
-class ElectionConfigEntity {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column({ type: 'varchar', length: 20 })
-  status: string;
-}
+import { ElectionConfigEntity } from '../entities/election-config.entity';
 
 /**
  * Repository for checking election status
@@ -39,5 +28,3 @@ export class ElectionConfigRepository
     return activeElection !== null;
   }
 }
-
-export { ElectionConfigEntity };

@@ -8,6 +8,7 @@ import { ElectionExtensionEmailService } from './election-extension-email.servic
 import { AuditLogModule } from '../audit-log/audit-log.module';
 import { MailModule } from '../mail/mail.module';
 import { AdminVotersModule } from '../admin-voters/admin-voters.module';
+import { VotingTokenModule } from '../voting-token/voting-token.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { AdminVotersModule } from '../admin-voters/admin-voters.module';
     AuditLogModule,
     MailModule,
     forwardRef(() => AdminVotersModule),
+    VotingTokenModule,
   ],
   controllers: [SuperadminElectionController, PublicElectionController],
   providers: [

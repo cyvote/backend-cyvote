@@ -13,5 +13,6 @@
   "deleted": "Kandidat berhasil dihapus",
   "authRequired": "Autentikasi pemilih diperlukan",
   "invalidToken": "Token pemilih tidak valid",
-  "tokenExpired": "Token pemilih telah kedaluwarsa"
+  "tokenExpired": "Token pemilih telah kedaluwarsa",
+  "invalidStatus": "Status harus berupa 'active' atau 'inactive'"
 }

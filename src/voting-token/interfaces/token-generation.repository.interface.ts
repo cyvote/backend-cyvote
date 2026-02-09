@@ -6,10 +6,23 @@ import { TokenWithVoter, VoterInfo } from './token-with-voter.interface';
  */
 export interface TokenGenerationRepositoryInterface {
   /**
-   * Find all active voters without a token
-   * @returns Array of voter info for voters who don't have tokens yet
+   * Find all active voters without an unused token.
+   * Only considers tokens where is_used = false, so voters whose tokens
+   * have been invalidated will correctly appear in the results.
+   *
+   * @returns Array of voter info for voters who need token generation
    */
   findVotersWithoutToken(): Promise<VoterInfo[]>;
+
+  /**
+   * Invalidate ALL unused tokens by marking them as used.
+   * Called when a new election becomes ACTIVE to ensure every voter
+   * gets a fresh token. This avoids timezone mismatch issues between
+   * PostgreSQL DEFAULT now() and Node.js new Date().
+   *
+   * @returns Number of tokens invalidated
+   */
+  invalidateAllUnusedTokens(): Promise<number>;
 
   /**
    * Create a new token for a voter
@@ -70,4 +83,13 @@ export interface TokenGenerationRepositoryInterface {
    * @param tokenId - The token's UUID
    */
   incrementResendCount(tokenId: string): Promise<void>;
+
+  /**
+   * Find the latest token for a voter regardless of used status
+   * Used for resend status checks where we need to distinguish
+   * "no token exists" from "token was used"
+   * @param voterId - The voter's UUID
+   * @returns The latest token if found, null otherwise
+   */
+  findLatestTokenByVoterId(voterId: string): Promise<Token | null>;
 }

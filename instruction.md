@@ -1,24 +1,28 @@
 <context>
 We will execute the task below
 
-**Description:**
-Endpoint untuk superadmin query dan export audit logs.
+At the POST endpoint `/api/v1/admin/voters/{id}/resend-token`, when the request is successful, it will return a response as shown below
 
-**Acceptance Criteria:**
+```json
+{
+  ‘success’: true,
+  ‘message’: ‘Token successfully resent’,
+  ‘resendCount’: 2,
+  ‘remainingResends’: 1
+}
+```
 
-- [ ] `GET /api/v1/superadmin/logs` — paginated query
-  - Query params: `page`, `limit`, `dateFrom`, `dateTo`, `action` (enum), `actorType`, `ip`, `search` (actor_id)
-  - Return: `{ data: [...logs], total, page, limit }`
-  - Default sort: created_at DESC
-- [ ] `GET /api/v1/superadmin/logs/export` — export sebagai CSV
-  - Apply filter yang sama dari query params
-  - Response: CSV file download
-- [ ] Protected: SUPERADMIN only
+The frontend team created another endpoint to find out how many times a voter has resent tokens (done by the admin). So, we will create a GET endpoint `/api/v1/admin/voters/{id}/resend-status`. The conditions are as follows
 
----
+- [ ] Validation:
+  - Voter must exist
+  - Token has not been used
+- [ ] Response:
+  - Display the voter's UUID, remaining resends, and resend count
+- [ ] Log action with admin_id
+- [ ] Protected: ADMIN only
 
 Put it in src/{kamu tentukan nama modulenya}/. In this project we use pnpm not npm. Also, follow the existing architecture (DDD). Analyze the code first. Follow the code quality standard that exist.
-
 </context>
 
 <role>

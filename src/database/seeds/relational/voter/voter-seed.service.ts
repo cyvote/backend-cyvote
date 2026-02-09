@@ -14,22 +14,16 @@ export class VoterSeedService {
     // Voter test data (same as test-email-send.ts)
     const voterData = [
       {
-        nim: '2210512109',
+        nim: '2210512999',
         namaLengkap: 'Nugraha Adhitama',
         angkatan: 2022,
         email: 'nugrahaadhitama22@gmail.com',
       },
       {
-        nim: '2210512125',
+        nim: '2210512998',
         namaLengkap: 'Haikal Bintang',
         angkatan: 2022,
         email: 'hbintang225@gmail.com',
-      },
-      {
-        nim: '2210512130',
-        namaLengkap: 'Test Voter',
-        angkatan: 2022,
-        email: '2210512109@mahasiswa.upnvj.ac.id',
       },
     ];
 

@@ -4,5 +4,6 @@
   "tokenNotFound": "Token tidak ditemukan untuk voter ini",
   "tokenAlreadyUsed": "Token sudah digunakan dan tidak dapat dikirim ulang",
   "resendLimitReached": "Resend token sudah mencapai batas maksimum (3 kali)",
-  "tokenResent": "Token berhasil dikirim ulang"
+  "tokenResent": "Token berhasil dikirim ulang",
+  "resendStatusRetrieved": "Status resend berhasil diambil"
 }
