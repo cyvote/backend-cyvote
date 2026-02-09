@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { I18nService, I18nContext } from 'nestjs-i18n';
 import { ElectionScheduleService } from './election-schedule.service';
 import { ElectionExtensionEmailService } from './election-extension-email.service';
@@ -22,6 +23,7 @@ describe('ElectionScheduleService', () => {
   let auditLogService: jest.Mocked<AuditLogService>;
   let electionExtensionEmailService: jest.Mocked<ElectionExtensionEmailService>;
   let i18nService: jest.Mocked<I18nService>;
+  let configService: { get: jest.Mock };
 
   const mockAdminId = '123e4567-e89b-12d3-a456-426614174000';
 
@@ -62,6 +64,10 @@ describe('ElectionScheduleService', () => {
       t: jest.fn().mockImplementation((key: string) => key),
     };
 
+    const mockConfigService = {
+      get: jest.fn().mockReturnValue('development'),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ElectionScheduleService,
@@ -75,6 +81,7 @@ describe('ElectionScheduleService', () => {
           useValue: mockElectionExtensionEmailService,
         },
         { provide: I18nService, useValue: mockI18nService },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 
@@ -83,6 +90,7 @@ describe('ElectionScheduleService', () => {
     auditLogService = module.get(AuditLogService);
     electionExtensionEmailService = module.get(ElectionExtensionEmailService);
     i18nService = module.get(I18nService);
+    configService = module.get(ConfigService);
 
     // Mock I18nContext
     jest.spyOn(I18nContext, 'current').mockReturnValue({
@@ -187,7 +195,8 @@ describe('ElectionScheduleService', () => {
     });
 
     // Test 6
-    it('should create schedule with minimum duration (6 hours)', async () => {
+    it('should create schedule with minimum duration (6 hours) in production', async () => {
+      configService.get.mockReturnValue('production');
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 1);
       const endDate = new Date(futureDate.getTime() + 6 * 60 * 60 * 1000);
@@ -480,7 +489,8 @@ describe('ElectionScheduleService', () => {
     });
 
     // Test 20
-    it('should throw InvalidElectionDurationException when duration is less than 6 hours', async () => {
+    it('should throw InvalidElectionDurationException when duration is less than 6 hours in production', async () => {
+      configService.get.mockReturnValue('production');
       electionConfigRepository.findCurrentConfig.mockResolvedValue(null);
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 1);
@@ -642,7 +652,8 @@ describe('ElectionScheduleService', () => {
     });
 
     // Test 29
-    it('should throw when duration is exactly at lower boundary minus 1 minute', async () => {
+    it('should throw when duration is exactly at lower boundary minus 1 minute in production', async () => {
+      configService.get.mockReturnValue('production');
       electionConfigRepository.findCurrentConfig.mockResolvedValue(null);
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 1);
@@ -867,6 +878,145 @@ describe('ElectionScheduleService', () => {
       );
 
       expect(result.data.id).toBe(originalId);
+    });
+  });
+
+  describe('Non-Production Duration Rules', () => {
+    // Test 41
+    it('should allow duration less than 6 hours in non-production environment', async () => {
+      configService.get.mockReturnValue('development');
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1);
+      const endDate = new Date(futureDate.getTime() + 2 * 60 * 1000); // 2 minutes
+
+      electionConfigRepository.findCurrentConfig.mockResolvedValue(null);
+      electionConfigRepository.create.mockResolvedValue(
+        createMockElectionConfig({
+          startDate: futureDate,
+          endDate: endDate,
+        }),
+      );
+
+      const result = await service.setSchedule(
+        {
+          startDate: futureDate.toISOString(),
+          endDate: endDate.toISOString(),
+        },
+        mockAdminId,
+      );
+
+      expect(result.data).toBeDefined();
+    });
+
+    // Test 42
+    it('should enforce minimum 1 minute duration in non-production environment', async () => {
+      configService.get.mockReturnValue('development');
+      electionConfigRepository.findCurrentConfig.mockResolvedValue(null);
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1);
+      const endDate = new Date(futureDate.getTime() + 30 * 1000); // 30 seconds
+
+      await expect(
+        service.setSchedule(
+          {
+            startDate: futureDate.toISOString(),
+            endDate: endDate.toISOString(),
+          },
+          mockAdminId,
+        ),
+      ).rejects.toThrow(InvalidElectionDurationException);
+    });
+
+    // Test 43
+    it('should still enforce 6-hour minimum in production environment', async () => {
+      configService.get.mockReturnValue('production');
+      electionConfigRepository.findCurrentConfig.mockResolvedValue(null);
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1);
+      const endDate = new Date(futureDate.getTime() + 2 * 60 * 1000); // 2 minutes
+
+      await expect(
+        service.setSchedule(
+          {
+            startDate: futureDate.toISOString(),
+            endDate: endDate.toISOString(),
+          },
+          mockAdminId,
+        ),
+      ).rejects.toThrow(InvalidElectionDurationException);
+    });
+
+    // Test 44
+    it('should still enforce 7-day maximum in non-production environment', async () => {
+      configService.get.mockReturnValue('development');
+      electionConfigRepository.findCurrentConfig.mockResolvedValue(null);
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1);
+      const endDate = new Date(
+        futureDate.getTime() + 8 * 24 * 60 * 60 * 1000,
+      ); // 8 days
+
+      await expect(
+        service.setSchedule(
+          {
+            startDate: futureDate.toISOString(),
+            endDate: endDate.toISOString(),
+          },
+          mockAdminId,
+        ),
+      ).rejects.toThrow(InvalidElectionDurationException);
+    });
+
+    // Test 45
+    it('should allow exactly 1 minute duration in non-production environment', async () => {
+      configService.get.mockReturnValue('development');
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1);
+      const endDate = new Date(futureDate.getTime() + 1 * 60 * 1000); // exactly 1 minute
+
+      electionConfigRepository.findCurrentConfig.mockResolvedValue(null);
+      electionConfigRepository.create.mockResolvedValue(
+        createMockElectionConfig({
+          startDate: futureDate,
+          endDate: endDate,
+        }),
+      );
+
+      const result = await service.setSchedule(
+        {
+          startDate: futureDate.toISOString(),
+          endDate: endDate.toISOString(),
+        },
+        mockAdminId,
+      );
+
+      expect(result.data).toBeDefined();
+    });
+
+    // Test 46
+    it('should allow duration less than 6 hours in test environment', async () => {
+      configService.get.mockReturnValue('test');
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1);
+      const endDate = new Date(futureDate.getTime() + 5 * 60 * 1000); // 5 minutes
+
+      electionConfigRepository.findCurrentConfig.mockResolvedValue(null);
+      electionConfigRepository.create.mockResolvedValue(
+        createMockElectionConfig({
+          startDate: futureDate,
+          endDate: endDate,
+        }),
+      );
+
+      const result = await service.setSchedule(
+        {
+          startDate: futureDate.toISOString(),
+          endDate: endDate.toISOString(),
+        },
+        mockAdminId,
+      );
+
+      expect(result.data).toBeDefined();
     });
   });
 });
