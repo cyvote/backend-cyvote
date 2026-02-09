@@ -2,18 +2,22 @@ export class RateLimitEntry {
   count: number;
   resetTime: number; // Unix timestamp in milliseconds
   firstRequestTime: number; // Unix timestamp in milliseconds
+  lastActivityTime: number; // Unix timestamp in milliseconds - tracks last request activity
 
   constructor(ttlSeconds: number) {
+    const now = Date.now();
     this.count = 0;
-    this.firstRequestTime = Date.now();
-    this.resetTime = this.firstRequestTime + ttlSeconds * 1000;
+    this.firstRequestTime = now;
+    this.lastActivityTime = now;
+    this.resetTime = now + ttlSeconds * 1000;
   }
 
   /**
-   * Increment the request count
+   * Increment the request count and update last activity time
    */
   increment(): void {
     this.count++;
+    this.lastActivityTime = Date.now();
   }
 
   /**
@@ -24,12 +28,24 @@ export class RateLimitEntry {
   }
 
   /**
+   * Check if the entry is stale (no activity for longer than maxInactivityMs).
+   * A stale entry is one that has had no new requests for a period longer
+   * than the given threshold, indicating the client has stopped retrying.
+   * @param maxInactivityMs - Maximum allowed inactivity period in milliseconds
+   */
+  isStale(maxInactivityMs: number): boolean {
+    return Date.now() - this.lastActivityTime > maxInactivityMs;
+  }
+
+  /**
    * Reset the entry with a new TTL
    */
   reset(ttlSeconds: number): void {
+    const now = Date.now();
     this.count = 0;
-    this.firstRequestTime = Date.now();
-    this.resetTime = this.firstRequestTime + ttlSeconds * 1000;
+    this.firstRequestTime = now;
+    this.lastActivityTime = now;
+    this.resetTime = now + ttlSeconds * 1000;
   }
 
   /**
@@ -54,6 +70,7 @@ export class RateLimitEntry {
       count: this.count,
       resetTime: this.resetTime,
       firstRequestTime: this.firstRequestTime,
+      lastActivityTime: this.lastActivityTime,
     };
   }
 
@@ -65,6 +82,7 @@ export class RateLimitEntry {
     entry.count = data.count;
     entry.resetTime = data.resetTime;
     entry.firstRequestTime = data.firstRequestTime;
+    entry.lastActivityTime = data.lastActivityTime ?? data.firstRequestTime;
     return entry;
   }
 }

@@ -11,6 +11,7 @@ export class InMemoryRateLimitStorageService
 {
   private readonly store: Map<string, RateLimitEntry> = new Map();
   private cleanupIntervalId: NodeJS.Timeout | null = null;
+  private cleanupIntervalMs: number = 60000; // Default cleanup interval in ms
 
   constructor(
     private readonly logger: SecurityAuditLoggerService,
@@ -24,6 +25,8 @@ export class InMemoryRateLimitStorageService
     );
 
     if (cleanupInterval && cleanupInterval > 0) {
+      this.cleanupIntervalMs = cleanupInterval;
+
       this.cleanupIntervalId = setInterval(() => {
         this.cleanup().catch((error) => {
           this.logger.error('Error during cleanup', { error });
@@ -85,24 +88,40 @@ export class InMemoryRateLimitStorageService
   }
 
   cleanup(): Promise<number> {
-    let deletedCount = 0;
+    let expiredCount = 0;
+    let staleCount = 0;
     const now = Date.now();
 
     for (const [key, entry] of this.store.entries()) {
+      // Primary check: remove entries whose TTL has fully expired
       if (entry.resetTime < now) {
         this.store.delete(key);
-        deletedCount++;
+        expiredCount++;
+        continue;
+      }
+
+      // Secondary check: remove stale entries that have had no activity
+      // for longer than the cleanup interval. This ensures blocked entries
+      // (e.g., rate-limited voters) are flushed even when their TTL
+      // exceeds the cleanup interval, preventing indefinite lockout.
+      if (entry.isStale(this.cleanupIntervalMs)) {
+        this.store.delete(key);
+        staleCount++;
       }
     }
 
-    if (deletedCount > 0) {
+    const totalDeleted = expiredCount + staleCount;
+
+    if (totalDeleted > 0) {
       this.logger.debug('Rate limit cleanup completed', {
-        deletedCount,
+        deletedCount: totalDeleted,
+        expiredCount,
+        staleCount,
         remainingCount: this.store.size,
       });
     }
 
-    return Promise.resolve(deletedCount);
+    return Promise.resolve(totalDeleted);
   }
 
   /**
