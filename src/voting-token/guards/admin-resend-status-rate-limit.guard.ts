@@ -5,6 +5,7 @@ import { BaseRateLimitGuard } from '../../security/rate-limit/guards/base-rate-l
 import { RateLimitService } from '../../security/rate-limit/services/rate-limit.service';
 import { RateLimitConfig } from '../../security/rate-limit/domain/rate-limit-config';
 import { SecurityAuditLoggerService } from '../../security/utils/security-audit-logger.service';
+import { IpExtractorUtil } from '../../security/utils/ip-extractor.util';
 import { AllConfigType } from '../../config/config.type';
 
 @Injectable()
@@ -31,7 +32,8 @@ export class AdminResendStatusRateLimitGuard extends BaseRateLimitGuard {
   }
 
   protected getIdentifier(request: Request): string {
-    const ip = (request as any).realIp || request.ip || '0.0.0.0';
+    const rawIp = (request as any).realIp || request.ip || '0.0.0.0';
+    const ip = IpExtractorUtil.normalizeIp(rawIp);
     const adminId = (request as any).user?.id || 'anonymous';
     return `${ip}:${adminId}`;
   }

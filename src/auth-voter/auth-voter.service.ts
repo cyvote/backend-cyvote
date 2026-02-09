@@ -14,6 +14,7 @@ import { AuditAction } from '../audit-log/enums/audit-action.enum';
 import { AuditActorType } from '../audit-log/enums/audit-actor-type.enum';
 import { AuditStatus } from '../audit-log/enums/audit-status.enum';
 import { AuditResourceType } from '../audit-log/enums/audit-resource-type.enum';
+import { RateLimitService } from '../security/rate-limit/services/rate-limit.service';
 import { AllConfigType } from '../config/config.type';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 
@@ -27,6 +28,7 @@ export class AuthVoterService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService<AllConfigType>,
     private readonly auditLogService: AuditLogService,
+    private readonly rateLimitService: RateLimitService,
     private readonly i18n: I18nService,
   ) {}
 
@@ -91,6 +93,13 @@ export class AuthVoterService {
         nama: voter.namaLengkap,
       },
     });
+
+    // Reset rate limit for this NIM after successful login (fire-and-forget)
+    this.rateLimitService
+      .resetLimit(`nim:${nim}`, '/api/v1/auth/voter/login')
+      .catch(() => {
+        // Silently ignore - rate limit reset failure should not affect login
+      });
 
     return {
       sessionToken,

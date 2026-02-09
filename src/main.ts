@@ -29,6 +29,10 @@ async function bootstrap() {
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   const configService = app.get(ConfigService<AllConfigType>);
 
+  // Enable trust proxy so Express resolves real client IPs behind Docker/nginx
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.set('trust proxy', true);
+
   // Configure CORS
   const allowedOrigins = process.env.FRONTEND_DOMAIN
     ? process.env.FRONTEND_DOMAIN.split(',').map((origin) => origin.trim())
@@ -108,6 +112,10 @@ export default async function handler(req: any, res: any) {
   const app = await NestFactory.create(AppModule);
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   const configService = app.get(ConfigService<AllConfigType>);
+
+  // Enable trust proxy so Express resolves real client IPs behind Docker/nginx
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.set('trust proxy', true);
 
   // Configure CORS
   const allowedOrigins = process.env.FRONTEND_DOMAIN
