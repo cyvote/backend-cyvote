@@ -39,7 +39,7 @@ export class SuperadminElectionController {
   @ApiOperation({
     summary: 'Set election schedule',
     description:
-      'Create new election schedule with start and end dates. Duration must be between 6 hours and 7 days. Start date must be in the future.',
+      'Create new election schedule with start and end dates. In production, duration must be between 6 hours and 7 days. In non-production environments, the minimum duration is 1 minute. Start date must be in the future.',
   })
   @ApiBody({ type: SetScheduleDto })
   @ApiResponse({

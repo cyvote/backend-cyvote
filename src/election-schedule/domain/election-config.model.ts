@@ -54,13 +54,18 @@ export class ElectionConfig {
   }
 
   /**
-   * Check if election duration is valid (6 hours to 7 days)
+   * Check if election duration is valid.
+   * In production: 6 hours to 7 days.
+   * In non-production: 1 minute to 7 days.
+   * @param isProduction - Whether the environment is production (default: true)
    */
-  isWithinValidDuration(): boolean {
+  isWithinValidDuration(isProduction: boolean = true): boolean {
     const durationMs = this.endDate.getTime() - this.startDate.getTime();
-    const sixHoursMs = 6 * 60 * 60 * 1000;
-    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
-    return durationMs >= sixHoursMs && durationMs <= sevenDaysMs;
+    const minDurationMs = isProduction
+      ? 6 * 60 * 60 * 1000 // 6 hours
+      : 1 * 60 * 1000; // 1 minute
+    const maxDurationMs = 7 * 24 * 60 * 60 * 1000; // 7 days
+    return durationMs >= minDurationMs && durationMs <= maxDurationMs;
   }
 
   /**
