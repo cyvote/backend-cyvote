@@ -69,11 +69,35 @@ export class RateLimitService {
         };
       }
 
-      // Entry exists and not expired - increment and check limit
+      // Already over the limit from a previous request - return blocked without incrementing
+      // This prevents the counter from growing unboundedly on repeated blocked requests
+      if (entry.count > config.limit) {
+        const retryAfter = entry.getRemainingTime();
+
+        this.logger.logRateLimitExceeded({
+          identifier,
+          endpoint,
+          limit: config.limit,
+          count: entry.count,
+          retryAfter,
+          timestamp: new Date(),
+        });
+
+        return {
+          allowed: false,
+          retryAfter,
+          currentCount: entry.count,
+          limit: config.limit,
+          resetTime: entry.resetTime,
+        };
+      }
+
+      // Within or at the limit - increment and check
       entry.increment();
       await this.storage.set(key, entry);
 
       if (entry.count > config.limit) {
+        // Just exceeded the limit with this request
         const retryAfter = entry.getRemainingTime();
 
         this.logger.logRateLimitExceeded({
