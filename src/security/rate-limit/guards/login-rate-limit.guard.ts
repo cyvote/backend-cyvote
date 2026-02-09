@@ -7,6 +7,11 @@ import { RateLimitConfig } from '../domain/rate-limit-config';
 import { SecurityAuditLoggerService } from '../../utils/security-audit-logger.service';
 import { AllConfigType } from '../../../config/config.type';
 
+/**
+ * Rate limit guard for admin email login endpoint
+ * Limits to 5 attempts per 10 minutes per email (user-specific)
+ * Falls back to IP-based rate limiting for malformed requests
+ */
 @Injectable()
 export class LoginRateLimitGuard extends BaseRateLimitGuard {
   protected rateLimitConfig: RateLimitConfig;
@@ -30,7 +35,15 @@ export class LoginRateLimitGuard extends BaseRateLimitGuard {
   }
 
   protected getIdentifier(request: Request): string {
-    // Use IP only for login attempts
-    return (request as any).realIp || request.ip || '0.0.0.0';
+    // Use email from request body as the primary identifier (per-user bucket)
+    // Guards run after body-parser, so request.body is available
+    const email = request.body?.email;
+
+    if (email && typeof email === 'string' && email.trim().length > 0) {
+      return `email:${email.trim().toLowerCase()}`;
+    }
+
+    // Fallback to IP for requests without a valid email
+    return `ip:${(request as any).realIp || request.ip || '0.0.0.0'}`;
   }
 }

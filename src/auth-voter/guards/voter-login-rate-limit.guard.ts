@@ -5,10 +5,18 @@ import { BaseRateLimitGuard } from '../../security/rate-limit/guards/base-rate-l
 import { RateLimitService } from '../../security/rate-limit/services/rate-limit.service';
 import { RateLimitConfig } from '../../security/rate-limit/domain/rate-limit-config';
 import { SecurityAuditLoggerService } from '../../security/utils/security-audit-logger.service';
+import { IpExtractorUtil } from '../../security/utils/ip-extractor.util';
 
 /**
  * Rate limit guard for voter login endpoint
- * Limits to 5 attempts per 10 minutes per IP
+ * Limits to 5 attempts per 10 minutes per NIM (user-specific)
+ *
+ * Uses NIM (from request body) as the primary identifier to ensure
+ * rate limits are isolated per voter. This prevents Docker/proxy
+ * environments from sharing rate limit buckets across all users
+ * behind the same gateway IP.
+ *
+ * Falls back to normalized IP for requests without a valid NIM.
  */
 @Injectable()
 export class VoterLoginRateLimitGuard extends BaseRateLimitGuard {
@@ -35,7 +43,16 @@ export class VoterLoginRateLimitGuard extends BaseRateLimitGuard {
   }
 
   protected getIdentifier(request: Request): string {
-    // Use IP for voter login attempts
-    return (request as any).realIp || request.ip || '0.0.0.0';
+    // Use NIM from request body as the primary identifier (per-user bucket)
+    // Guards run after body-parser, so request.body is available
+    const nim = request.body?.nim;
+
+    if (nim && typeof nim === 'string' && nim.trim().length > 0) {
+      return `nim:${nim.trim()}`;
+    }
+
+    // Fallback to normalized IP for requests without a valid NIM
+    const rawIp = (request as any).realIp || request.ip || '0.0.0.0';
+    return `ip:${IpExtractorUtil.normalizeIp(rawIp)}`;
   }
 }

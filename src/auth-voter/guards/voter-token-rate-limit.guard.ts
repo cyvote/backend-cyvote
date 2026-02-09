@@ -8,7 +8,7 @@ import { SecurityAuditLoggerService } from '../../security/utils/security-audit-
 
 /**
  * Rate limit guard for voter token verification endpoint
- * Limits to 3 attempts per 5 minutes per session
+ * Limits to 3 attempts per 60 seconds (1 minute) per session
  */
 @Injectable()
 export class VoterTokenRateLimitGuard extends BaseRateLimitGuard {
@@ -27,9 +27,9 @@ export class VoterTokenRateLimitGuard extends BaseRateLimitGuard {
       limit?: number;
     }>('security.rateLimit.tokenVerify');
 
-    // 3 attempts per 300 seconds (5 minutes)
+    // 3 attempts per 60 seconds (1 minute)
     this.rateLimitConfig = new RateLimitConfig(
-      tokenConfig?.ttl || 300,
+      tokenConfig?.ttl || 60,
       tokenConfig?.limit || 3,
     );
   }

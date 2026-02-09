@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { ElectionConfigRepositoryInterface } from './interfaces/election-config.repository.interface';
 import { AuditLogService } from '../audit-log/audit-log.service';
@@ -26,6 +27,7 @@ import {
   ExtensionExceedsMaximumException,
 } from './errors';
 import { ElectionExtensionEmailService } from './election-extension-email.service';
+import { AllConfigType } from '../config/config.type';
 
 @Injectable()
 export class ElectionScheduleService {
@@ -35,6 +37,7 @@ export class ElectionScheduleService {
     private readonly auditLogService: AuditLogService,
     private readonly electionExtensionEmailService: ElectionExtensionEmailService,
     private readonly i18n: I18nService,
+    private readonly configService: ConfigService<AllConfigType>,
   ) {}
 
   /**
@@ -250,12 +253,16 @@ export class ElectionScheduleService {
       );
     }
 
-    // Check duration is between 6 hours and 7 days
+    // Check duration constraints
     const durationMs = endDate.getTime() - startDate.getTime();
-    const sixHoursMs = 6 * 60 * 60 * 1000;
-    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+    const nodeEnv = this.configService.get('app.nodeEnv', { infer: true });
+    const isProduction = nodeEnv === 'production';
+    const minDurationMs = isProduction
+      ? 6 * 60 * 60 * 1000 // 6 hours in production
+      : 1 * 60 * 1000; // 1 minute in non-production
+    const maxDurationMs = 7 * 24 * 60 * 60 * 1000; // 7 days
 
-    if (durationMs < sixHoursMs || durationMs > sevenDaysMs) {
+    if (durationMs < minDurationMs || durationMs > maxDurationMs) {
       throw new InvalidElectionDurationException(
         this.i18n.t('electionSchedule.invalidDuration', {
           lang: I18nContext.current()?.lang,

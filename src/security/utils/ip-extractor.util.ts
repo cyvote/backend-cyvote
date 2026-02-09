@@ -1,3 +1,5 @@
+import { isIP } from 'net';
+
 export interface IpExtractionConfig {
   trustProxy: boolean;
   proxyHeaders: string[];
@@ -9,14 +11,15 @@ export class IpExtractorUtil {
    * Handles proxy headers and direct connections
    */
   static extractRealIp(request: any, config: IpExtractionConfig): string {
-    // If not trusting proxy, return direct connection IP
+    // If not trusting proxy, return normalized direct connection IP
     if (!config.trustProxy) {
-      return (
+      const rawIp =
         request.ip ||
         request.connection?.remoteAddress ||
         request.socket?.remoteAddress ||
-        '0.0.0.0'
-      );
+        '0.0.0.0';
+
+      return this.normalizeIp(rawIp);
     }
 
     // Try to get IP from proxy headers
@@ -27,37 +30,51 @@ export class IpExtractorUtil {
         // Handle comma-separated list (e.g., X-Forwarded-For)
         const ips = headerValue.split(',').map((ip: string) => ip.trim());
 
-        // Return first valid IP
+        // Return first valid IP (normalized)
         for (const ip of ips) {
-          if (this.isValidIp(ip)) {
-            return ip;
+          const normalized = this.normalizeIp(ip);
+          if (this.isValidIp(normalized)) {
+            return normalized;
           }
         }
       }
     }
 
-    // Fallback to direct connection IP
-    return (
+    // Fallback to normalized direct connection IP
+    const rawIp =
       request.ip ||
       request.connection?.remoteAddress ||
       request.socket?.remoteAddress ||
-      '0.0.0.0'
-    );
+      '0.0.0.0';
+
+    return this.normalizeIp(rawIp);
+  }
+
+  /**
+   * Normalize IP address by stripping IPv4-mapped IPv6 prefix
+   * Converts ::ffff:192.168.1.1 to 192.168.1.1 for consistent identification
+   */
+  static normalizeIp(ip: string): string {
+    if (!ip) return '0.0.0.0';
+
+    // Strip IPv4-mapped IPv6 prefix (::ffff:x.x.x.x)
+    const ipv4MappedPrefix = '::ffff:';
+    if (ip.toLowerCase().startsWith(ipv4MappedPrefix)) {
+      return ip.substring(ipv4MappedPrefix.length);
+    }
+
+    return ip;
   }
 
   /**
    * Validate IP address format (IPv4 or IPv6)
+   * Uses Node.js built-in net.isIP() for reliable validation
+   * that handles all formats including compressed IPv6, loopback, etc.
    */
   private static isValidIp(ip: string): boolean {
     if (!ip) return false;
 
-    // IPv4 regex
-    const ipv4Regex =
-      /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-
-    // IPv6 regex (simplified)
-    const ipv6Regex = /^([0-9a-fA-F]{0,4}:){7}[0-9a-fA-F]{0,4}$/;
-
-    return ipv4Regex.test(ip) || ipv6Regex.test(ip);
+    // net.isIP returns 4 for IPv4, 6 for IPv6, 0 for invalid
+    return isIP(ip) !== 0;
   }
 }
