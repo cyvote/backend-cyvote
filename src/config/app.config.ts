@@ -31,9 +31,7 @@ class EnvironmentVariablesValidator {
 
   @IsOptional()
   @Transform(({ value }) =>
-    typeof value === 'string'
-      ? value.split(',').map(v => v.trim())
-      : value
+    typeof value === 'string' ? value.split(',').map((v) => v.trim()) : value,
   )
   @IsUrl({ require_tld: false }, { each: true })
   FRONTEND_DOMAIN: string[];
@@ -53,6 +51,10 @@ class EnvironmentVariablesValidator {
   @IsString()
   @IsOptional()
   APP_HEADER_LANGUAGE: string;
+
+  @IsUrl({ require_tld: false })
+  @IsOptional()
+  VOTING_URL: string;
 }
 
 export default registerAs<AppConfig>('app', () => {
@@ -72,5 +74,6 @@ export default registerAs<AppConfig>('app', () => {
     apiPrefix: process.env.API_PREFIX || 'api',
     fallbackLanguage: process.env.APP_FALLBACK_LANGUAGE || 'en',
     headerLanguage: process.env.APP_HEADER_LANGUAGE || 'x-custom-lang',
+    votingUrl: process.env.VOTING_URL || 'http://localhost:3000/vote',
   };
 });

@@ -180,10 +180,9 @@ export class MailService {
     mailData: VotingTokenMailData,
   ): Promise<SendEmailResult> {
     // Get voting URL from config
-    const votingUrl =
-      this.configService.getOrThrow('app.frontendDomain', {
-        infer: true,
-      }) + '/vote';
+    const votingUrl = this.configService.getOrThrow('app.votingUrl', {
+      infer: true,
+    });
 
     // Prepare template context
     const templateContext = {
@@ -234,10 +233,9 @@ export class MailService {
     };
   }): Promise<SendEmailResult> {
     // Get voting URL from config
-    const votingUrl =
-      this.configService.getOrThrow('app.frontendDomain', {
-        infer: true,
-      }) + '/vote';
+    const votingUrl = this.configService.getOrThrow('app.votingUrl', {
+      infer: true,
+    });
 
     // Prepare template context
     const templateContext = {
