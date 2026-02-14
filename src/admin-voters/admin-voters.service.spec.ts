@@ -2,7 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { I18nService, I18nContext } from 'nestjs-i18n';
 import { AdminVotersService } from './admin-voters.service';
 import { AuditLogService } from '../audit-log/audit-log.service';
-import { VoterRepositoryInterface } from './interfaces/voter.repository.interface';
+import {
+  VoterRepositoryInterface,
+  VoterWithTokenData,
+  TokenData,
+} from './interfaces/voter.repository.interface';
 import { Voter } from './domain/voter';
 import { CreateVoterDto } from './dto/create-voter.dto';
 import { UpdateVoterDto } from './dto/update-voter.dto';
@@ -41,6 +45,25 @@ describe('AdminVotersService', () => {
     voter.updatedAt = overrides.updatedAt || new Date('2024-01-01T00:00:00Z');
     voter.deletedAt = overrides.deletedAt || null;
     return voter;
+  };
+
+  const createMockTokenData = (
+    overrides: Partial<TokenData> = {},
+  ): TokenData => {
+    return {
+      resendCount: overrides.resendCount ?? 0,
+      emailSentAt: overrides.emailSentAt ?? null,
+    };
+  };
+
+  const createMockVoterWithTokenData = (
+    voterOverrides: Partial<Voter> = {},
+    tokenDataOverrides: Partial<TokenData> = {},
+  ): VoterWithTokenData => {
+    return {
+      voter: createMockVoter(voterOverrides),
+      tokenData: createMockTokenData(tokenDataOverrides),
+    };
   };
 
   beforeEach(async () => {
@@ -300,7 +323,7 @@ describe('AdminVotersService', () => {
 
     // Test 12
     it('should list voters with default pagination', async () => {
-      const mockVoters = [createMockVoter()];
+      const mockVoters = [createMockVoterWithTokenData()];
       voterRepository.findMany.mockResolvedValue({
         data: mockVoters,
         total: 1,
@@ -311,6 +334,9 @@ describe('AdminVotersService', () => {
       expect(result.data.length).toBe(1);
       expect(result.meta.page).toBe(1);
       expect(result.meta.limit).toBe(10);
+      expect(result.data[0].tokenHasSent).toBe(false);
+      expect(result.data[0].resendCount).toBe(0);
+      expect(result.data[0].remainingResends).toBe(3);
     });
 
     // Test 13
@@ -337,10 +363,13 @@ describe('AdminVotersService', () => {
     // Test 15
     it('should list voters filtered by voted status', async () => {
       const query: QueryVotersDto = { filter: VoterFilterStatus.VOTED };
-      const votedVoter = createMockVoter({
-        hasVoted: true,
-        votedAt: new Date(),
-      });
+      const votedVoter = createMockVoterWithTokenData(
+        {
+          hasVoted: true,
+          votedAt: new Date(),
+        },
+        { emailSentAt: new Date(), resendCount: 1 },
+      );
       voterRepository.findMany.mockResolvedValue({
         data: [votedVoter],
         total: 1,
@@ -349,12 +378,18 @@ describe('AdminVotersService', () => {
       const result = await service.findMany(query);
 
       expect(result.data[0].hasVoted).toBe(true);
+      expect(result.data[0].tokenHasSent).toBe(true);
+      expect(result.data[0].resendCount).toBe(1);
+      expect(result.data[0].remainingResends).toBe(2);
     });
 
     // Test 16
     it('should list voters filtered by not-voted status', async () => {
       const query: QueryVotersDto = { filter: VoterFilterStatus.NOT_VOTED };
-      const notVotedVoter = createMockVoter({ hasVoted: false });
+      const notVotedVoter = createMockVoterWithTokenData(
+        { hasVoted: false },
+        {},
+      );
       voterRepository.findMany.mockResolvedValue({
         data: [notVotedVoter],
         total: 1,
@@ -368,7 +403,10 @@ describe('AdminVotersService', () => {
     // Test 17
     it('should list voters search by NIM', async () => {
       const query: QueryVotersDto = { search: '211051' };
-      const matchingVoter = createMockVoter({ nim: '2110511001' });
+      const matchingVoter = createMockVoterWithTokenData(
+        { nim: '2110511001' },
+        {},
+      );
       voterRepository.findMany.mockResolvedValue({
         data: [matchingVoter],
         total: 1,
@@ -382,7 +420,10 @@ describe('AdminVotersService', () => {
     // Test 18
     it('should list voters search by name', async () => {
       const query: QueryVotersDto = { search: 'John' };
-      const matchingVoter = createMockVoter({ namaLengkap: 'John Doe' });
+      const matchingVoter = createMockVoterWithTokenData(
+        { namaLengkap: 'John Doe' },
+        {},
+      );
       voterRepository.findMany.mockResolvedValue({
         data: [matchingVoter],
         total: 1,
@@ -396,7 +437,7 @@ describe('AdminVotersService', () => {
     // Test 19
     it('should list voters search by email', async () => {
       const query: QueryVotersDto = { search: '@mahasiswa' };
-      const matchingVoter = createMockVoter();
+      const matchingVoter = createMockVoterWithTokenData();
       voterRepository.findMany.mockResolvedValue({
         data: [matchingVoter],
         total: 1,
@@ -410,7 +451,10 @@ describe('AdminVotersService', () => {
     // Test 20
     it('should list voters filter by single angkatan', async () => {
       const query: QueryVotersDto = { angkatan: '2021' };
-      const matchingVoter = createMockVoter({ angkatan: 2021 });
+      const matchingVoter = createMockVoterWithTokenData(
+        { angkatan: 2021 },
+        {},
+      );
       voterRepository.findMany.mockResolvedValue({
         data: [matchingVoter],
         total: 1,
@@ -425,9 +469,9 @@ describe('AdminVotersService', () => {
     it('should list voters filter by angkatan range', async () => {
       const query: QueryVotersDto = { angkatan: '2020-2022' };
       const matchingVoters = [
-        createMockVoter({ angkatan: 2020 }),
-        createMockVoter({ angkatan: 2021 }),
-        createMockVoter({ angkatan: 2022 }),
+        createMockVoterWithTokenData({ angkatan: 2020 }, {}),
+        createMockVoterWithTokenData({ angkatan: 2021 }, {}),
+        createMockVoterWithTokenData({ angkatan: 2022 }, {}),
       ];
       voterRepository.findMany.mockResolvedValue({
         data: matchingVoters,
@@ -443,8 +487,8 @@ describe('AdminVotersService', () => {
     it('should list voters filter by multiple angkatan', async () => {
       const query: QueryVotersDto = { angkatan: '2020,2022' };
       const matchingVoters = [
-        createMockVoter({ angkatan: 2020 }),
-        createMockVoter({ angkatan: 2022 }),
+        createMockVoterWithTokenData({ angkatan: 2020 }, {}),
+        createMockVoterWithTokenData({ angkatan: 2022 }, {}),
       ];
       voterRepository.findMany.mockResolvedValue({
         data: matchingVoters,
@@ -578,6 +622,91 @@ describe('AdminVotersService', () => {
           details: expect.objectContaining({ action: 'restore' }),
         }),
       );
+    });
+
+    // Tests for token-related fields
+    describe('Token Status Fields', () => {
+      it('should return tokenHasSent=false when no token data exists', async () => {
+        const voterWithoutToken = createMockVoterWithTokenData({}, {});
+        voterRepository.findMany.mockResolvedValue({
+          data: [voterWithoutToken],
+          total: 1,
+        });
+
+        const result = await service.findMany({});
+
+        expect(result.data[0].tokenHasSent).toBe(false);
+        expect(result.data[0].resendCount).toBe(0);
+        expect(result.data[0].remainingResends).toBe(3);
+      });
+
+      it('should return tokenHasSent=true when email has been sent', async () => {
+        const voterWithToken = createMockVoterWithTokenData(
+          {},
+          { emailSentAt: new Date(), resendCount: 0 },
+        );
+        voterRepository.findMany.mockResolvedValue({
+          data: [voterWithToken],
+          total: 1,
+        });
+
+        const result = await service.findMany({});
+
+        expect(result.data[0].tokenHasSent).toBe(true);
+        expect(result.data[0].resendCount).toBe(0);
+        expect(result.data[0].remainingResends).toBe(3);
+      });
+
+      it('should correctly calculate remainingResends based on resendCount', async () => {
+        const voterWithResends = createMockVoterWithTokenData(
+          {},
+          { emailSentAt: new Date(), resendCount: 2 },
+        );
+        voterRepository.findMany.mockResolvedValue({
+          data: [voterWithResends],
+          total: 1,
+        });
+
+        const result = await service.findMany({});
+
+        expect(result.data[0].tokenHasSent).toBe(true);
+        expect(result.data[0].resendCount).toBe(2);
+        expect(result.data[0].remainingResends).toBe(1);
+      });
+
+      it('should return remainingResends=0 when resend limit reached', async () => {
+        const voterAtLimit = createMockVoterWithTokenData(
+          {},
+          { emailSentAt: new Date(), resendCount: 3 },
+        );
+        voterRepository.findMany.mockResolvedValue({
+          data: [voterAtLimit],
+          total: 1,
+        });
+
+        const result = await service.findMany({});
+
+        expect(result.data[0].tokenHasSent).toBe(true);
+        expect(result.data[0].resendCount).toBe(3);
+        expect(result.data[0].remainingResends).toBe(0);
+      });
+
+      it('should handle null tokenData correctly', async () => {
+        const voterWithNullToken: VoterWithTokenData = {
+          voter: createMockVoter(),
+          tokenData: null,
+        };
+        voterRepository.findMany.mockResolvedValue({
+          data: [voterWithNullToken],
+          total: 1,
+        });
+
+        const result = await service.findMany({});
+
+        expect(result.data[0].tokenHasSent).toBe(false);
+        expect(result.data[0].resendCount).toBe(0);
+        expect(result.data[0].remainingResends).toBe(3);
+      });
     });
   });
 

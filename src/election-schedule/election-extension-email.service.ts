@@ -53,12 +53,12 @@ export class ElectionExtensionEmailService {
         for (let i = 0; i < voters.length; i += batchSize) {
           const batch = voters.slice(i, i + batchSize);
 
-          const emailPromises = batch.map(async (voter) => {
+          const emailPromises = batch.map(async (voterWithToken) => {
             try {
               await this.mailService.sendElectionExtended({
-                to: voter.email,
+                to: voterWithToken.voter.email,
                 data: {
-                  nama: voter.namaLengkap,
+                  nama: voterWithToken.voter.namaLengkap,
                   new_end_date: formattedEndDate,
                   new_end_time: formattedEndTime,
                   reason,
@@ -68,7 +68,7 @@ export class ElectionExtensionEmailService {
             } catch (error) {
               failCount++;
               this.logger.error(
-                `Failed to send extension email to ${voter.email}`,
+                `Failed to send extension email to ${voterWithToken.voter.email}`,
                 error instanceof Error ? error.message : String(error),
               );
             }

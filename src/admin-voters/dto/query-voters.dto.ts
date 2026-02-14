@@ -1,6 +1,14 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 export enum VoterFilterStatus {
   ALL = 'all',
@@ -24,6 +32,7 @@ export enum VoterSortField {
   ANGKATAN = 'angkatan',
   EMAIL = 'email',
   HAS_VOTED = 'hasVoted',
+  RESEND_COUNT = 'resendCount',
   CREATED_AT = 'createdAt',
   UPDATED_AT = 'updatedAt',
 }
@@ -110,4 +119,62 @@ export class QueryVotersDto {
   @IsOptional()
   @IsEnum(SortOrder)
   order?: SortOrder = SortOrder.DESC;
+
+  @ApiPropertyOptional({
+    description:
+      'Filter by whether token email has been sent (true: sent, false: not sent)',
+    example: true,
+    type: Boolean,
+  })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  @IsBoolean()
+  tokenSent?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Filter voters with minimum number of resend attempts',
+    example: 1,
+    minimum: 0,
+    maximum: 3,
+    type: Number,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(3)
+  minResends?: number;
+
+  @ApiPropertyOptional({
+    description: 'Filter voters with maximum number of resend attempts',
+    example: 2,
+    minimum: 0,
+    maximum: 3,
+    type: Number,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(3)
+  maxResends?: number;
+
+  @ApiPropertyOptional({
+    description:
+      'Filter voters who have/have not reached max resend limit (3 times)',
+    example: false,
+    type: Boolean,
+  })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  @IsBoolean()
+  resendLimitReached?: boolean;
 }

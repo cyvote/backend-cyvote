@@ -37,6 +37,31 @@ export class VoterResponseDto {
   })
   hasVoted: boolean;
 
+  @ApiProperty({
+    description: 'Whether voting token email has been sent to this voter',
+    example: true,
+    type: Boolean,
+  })
+  tokenHasSent: boolean;
+
+  @ApiProperty({
+    description: 'Number of times token has been resent (0-3)',
+    example: 1,
+    minimum: 0,
+    maximum: 3,
+    type: Number,
+  })
+  resendCount: number;
+
+  @ApiProperty({
+    description: 'Number of remaining resend attempts (0-3)',
+    example: 2,
+    minimum: 0,
+    maximum: 3,
+    type: Number,
+  })
+  remainingResends: number;
+
   @ApiPropertyOptional({
     description: 'Timestamp when the voter voted',
     example: '2024-01-15T10:30:00.000Z',
