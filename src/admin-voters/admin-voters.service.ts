@@ -1,6 +1,9 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
-import { VoterRepositoryInterface } from './interfaces/voter.repository.interface';
+import {
+  VoterRepositoryInterface,
+  VoterWithTokenData,
+} from './interfaces/voter.repository.interface';
 import { AuditLogService } from '../audit-log/audit-log.service';
 import { AuditAction } from '../audit-log/enums/audit-action.enum';
 import { AuditActorType } from '../audit-log/enums/audit-actor-type.enum';
@@ -38,6 +41,7 @@ import { TokenGenerationOrchestratorService } from '../voting-token/token-genera
 @Injectable()
 export class AdminVotersService {
   private readonly logger = new Logger(AdminVotersService.name);
+  private readonly MAX_RESEND_COUNT = 3;
 
   constructor(
     @Inject('VoterRepositoryInterface')
@@ -100,7 +104,7 @@ export class AdminVotersService {
     this.triggerTokenGenerationIfElectionActive(createdVoter.id);
 
     return {
-      data: this.mapToResponseDto(createdVoter),
+      data: this.mapToResponseDto({ voter: createdVoter, tokenData: null }),
       message: this.i18n.t('adminVoters.voterCreated', {
         lang: I18nContext.current()?.lang,
       }),
@@ -140,7 +144,7 @@ export class AdminVotersService {
         });
 
     return {
-      data: data.map((voter) => this.mapToResponseDto(voter)),
+      data: data.map((voterWithToken) => this.mapToResponseDto(voterWithToken)),
       meta,
       message,
     };
@@ -158,7 +162,7 @@ export class AdminVotersService {
     }
 
     return {
-      data: this.mapToResponseDto(voter),
+      data: this.mapToResponseDto({ voter, tokenData: null }),
       message: this.i18n.t('adminVoters.voterRetrieved', {
         lang: I18nContext.current()?.lang,
       }),
@@ -241,7 +245,7 @@ export class AdminVotersService {
     });
 
     return {
-      data: this.mapToResponseDto(updatedVoter),
+      data: this.mapToResponseDto({ voter: updatedVoter, tokenData: null }),
       message: this.i18n.t('adminVoters.voterUpdated', {
         lang: I18nContext.current()?.lang,
       }),
@@ -341,7 +345,7 @@ export class AdminVotersService {
     this.triggerTokenGenerationIfElectionActive(restoredVoter.id);
 
     return {
-      data: this.mapToResponseDto(restoredVoter),
+      data: this.mapToResponseDto({ voter: restoredVoter, tokenData: null }),
       message: this.i18n.t('adminVoters.voterRestored', {
         lang: I18nContext.current()?.lang,
       }),
@@ -648,7 +652,11 @@ export class AdminVotersService {
       });
   }
 
-  private mapToResponseDto(voter: Voter): VoterResponseDto {
+  private mapToResponseDto(
+    voterWithToken: VoterWithTokenData,
+  ): VoterResponseDto {
+    const { voter, tokenData } = voterWithToken;
+
     return {
       id: voter.id,
       nim: voter.nim,
@@ -656,6 +664,10 @@ export class AdminVotersService {
       angkatan: voter.angkatan,
       email: voter.email,
       hasVoted: voter.hasVoted,
+      tokenHasSent:
+        tokenData?.emailSentAt !== null && tokenData?.emailSentAt !== undefined,
+      resendCount: tokenData?.resendCount ?? 0,
+      remainingResends: this.MAX_RESEND_COUNT - (tokenData?.resendCount ?? 0),
       votedAt: voter.votedAt,
       createdAt: voter.createdAt,
       updatedAt: voter.updatedAt,
