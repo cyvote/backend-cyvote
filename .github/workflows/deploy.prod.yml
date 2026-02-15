@@ -26,7 +26,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./
-          file: ./Dockerfile
+          file: ./Dockerfile.production
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}:production
           no-cache: true
@@ -99,7 +99,7 @@ jobs:
             # Stop existing containers (use --env-file to avoid variable errors)
             docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-production \
               --env-file .env.production \
-              -f docker-compose.dev.yaml down || true
+              -f docker-compose.prod.yaml down || true
 
       - name: Start containers
         uses: appleboy/ssh-action@v1.0.0
@@ -118,18 +118,18 @@ jobs:
             grep "^DATABASE_PORT=" .env.production
 
             # Validate docker-compose config
-            docker-compose --env-file .env.production -f docker-compose.dev.yaml config --quiet && echo "Docker Compose config is valid"
+            docker-compose --env-file .env.production -f docker-compose.prod.yaml config --quiet && echo "Docker Compose config is valid"
 
             # Pull latest redis image
             docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-production \
               --env-file .env.production \
-              -f docker-compose.dev.yaml \
+              -f docker-compose.prod.yaml \
               pull redis
 
             # Build and start containers (--build to rebuild with updated startup script)
             docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-production \
               --env-file .env.production \
-              -f docker-compose.dev.yaml \
+              -f docker-compose.prod.yaml \
               up -d --force-recreate --build
 
             # Show running containers
@@ -141,4 +141,4 @@ jobs:
             # Show logs for debugging
             docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-production \
               --env-file .env.production \
-              -f docker-compose.dev.yaml logs --tail=100
+              -f docker-compose.prod.yaml logs --tail=100
