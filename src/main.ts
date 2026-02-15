@@ -35,7 +35,9 @@ async function bootstrap() {
 
   // Configure CORS
   const allowedOrigins = process.env.FRONTEND_DOMAIN
-    ? process.env.FRONTEND_DOMAIN.split(',').map((origin) => origin.trim())
+    ? process.env.FRONTEND_DOMAIN.split(',').map((origin) =>
+        origin.trim().replace(/\/$/, ''),
+      )
     : ['http://localhost:3000'];
 
   app.enableCors({
@@ -122,7 +124,9 @@ export default async function handler(req: any, res: any) {
 
   // Configure CORS
   const allowedOrigins = process.env.FRONTEND_DOMAIN
-    ? process.env.FRONTEND_DOMAIN.split(',').map((origin) => origin.trim())
+    ? process.env.FRONTEND_DOMAIN.split(',').map((origin) =>
+        origin.trim().replace(/\/$/, ''),
+      )
     : ['http://localhost:3000'];
 
   app.enableCors({
