@@ -26,7 +26,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./
-          file: ./Dockerfile
+          file: ./Dockerfile.production
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}:production
           no-cache: true
@@ -49,6 +49,22 @@ jobs:
             end
           ' > .env.production
 
+          # Add sensitive secrets
+          echo "DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}" >> .env.production
+          echo "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}" >> .env.production
+          echo "AUTH_JWT_SECRET=${{ secrets.AUTH_JWT_SECRET }}" >> .env.production
+          echo "AUTH_REFRESH_SECRET=${{ secrets.AUTH_REFRESH_SECRET }}" >> .env.production
+          echo "AUTH_FORGOT_SECRET=${{ secrets.AUTH_FORGOT_SECRET }}" >> .env.production
+          echo "AUTH_CONFIRM_EMAIL_SECRET=${{ secrets.AUTH_CONFIRM_EMAIL_SECRET }}" >> .env.production
+          echo "AUTH_ADMIN_JWT_SECRET=${{ secrets.AUTH_ADMIN_JWT_SECRET }}" >> .env.production
+          echo "FACEBOOK_APP_SECRET=${{ secrets.FACEBOOK_APP_SECRET }}" >> .env.production
+          echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env.production
+          echo "SECURITY_CSRF_SECRET=${{ secrets.SECURITY_CSRF_SECRET }}" >> .env.production
+          echo "SUPABASE_SECRET_KEY=${{ secrets.SUPABASE_SECRET_KEY }}" >> .env.production
+          echo "VOTE_HASH_SALT=${{ secrets.VOTE_HASH_SALT }}" >> .env.production
+          echo "SECRET_ACCESS_KEY=${{ secrets.SECRET_ACCESS_KEY }}" >> .env.production
+
+
           # Debug: Show the generated env file content
           echo "Generated .env.production:"
           cat .env.production | head -20
@@ -67,23 +83,36 @@ jobs:
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           host: ${{ secrets.DEPLOYMENT_HOST }}
           port: ${{ secrets.DEPLOYMENT_PORT }}
           username: ${{ secrets.DEPLOYMENT_USER }}
           key: ${{ secrets.DEPLOYMENT_SSH_KEY }}
+          envs: GITHUB_TOKEN
           script: |
             cd /opt/${{ secrets.DOCKERHUB_APP_ID }}/production
 
+            # Check if git is initialized
+            if [ ! -d ".git" ]; then
+              echo "Initializing git repository..."
+              git init
+            fi
+
+            # Always update remote to use the current GITHUB_TOKEN
+            git remote remove origin || true
+            git remote add origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+
             # Fetch and reset git state
             git fetch origin
-            git reset --hard origin/production
+            git reset --hard origin/deployment
             git clean -fd
 
             # Stop existing containers (use --env-file to avoid variable errors)
             docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-production \
               --env-file .env.production \
-              -f docker-compose.dev.yaml down || true
+              -f docker-compose.prod.yaml down || true
 
       - name: Start containers
         uses: appleboy/ssh-action@v1.0.0
@@ -102,18 +131,18 @@ jobs:
             grep "^DATABASE_PORT=" .env.production
 
             # Validate docker-compose config
-            docker-compose --env-file .env.production -f docker-compose.dev.yaml config --quiet && echo "Docker Compose config is valid"
+            docker-compose --env-file .env.production -f docker-compose.prod.yaml config --quiet && echo "Docker Compose config is valid"
 
             # Pull latest redis image
             docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-production \
               --env-file .env.production \
-              -f docker-compose.dev.yaml \
+              -f docker-compose.prod.yaml \
               pull redis
 
             # Build and start containers (--build to rebuild with updated startup script)
             docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-production \
               --env-file .env.production \
-              -f docker-compose.dev.yaml \
+              -f docker-compose.prod.yaml \
               up -d --force-recreate --build
 
             # Show running containers
@@ -125,4 +154,4 @@ jobs:
             # Show logs for debugging
             docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-production \
               --env-file .env.production \
-              -f docker-compose.dev.yaml logs --tail=100
+              -f docker-compose.prod.yaml logs --tail=100

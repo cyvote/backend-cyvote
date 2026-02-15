@@ -35,7 +35,9 @@ async function bootstrap() {
 
   // Configure CORS
   const allowedOrigins = process.env.FRONTEND_DOMAIN
-    ? process.env.FRONTEND_DOMAIN.split(',').map((origin) => origin.trim())
+    ? process.env.FRONTEND_DOMAIN.split(',').map((origin) =>
+        origin.trim().replace(/\/$/, ''),
+      )
     : ['http://localhost:3000'];
 
   app.enableCors({
@@ -96,8 +98,11 @@ async function bootstrap() {
   await app.listen(configService.getOrThrow('app.port', { infer: true }));
 }
 
-// For local development
-if (process.env.NODE_ENV !== 'production') {
+// For local development or standalone production (Docker/VPS)
+if (
+  process.env.NODE_ENV !== 'production' ||
+  process.env.RUN_STANDALONE === 'true'
+) {
   void bootstrap();
 }
 
@@ -119,7 +124,9 @@ export default async function handler(req: any, res: any) {
 
   // Configure CORS
   const allowedOrigins = process.env.FRONTEND_DOMAIN
-    ? process.env.FRONTEND_DOMAIN.split(',').map((origin) => origin.trim())
+    ? process.env.FRONTEND_DOMAIN.split(',').map((origin) =>
+        origin.trim().replace(/\/$/, ''),
+      )
     : ['http://localhost:3000'];
 
   app.enableCors({
