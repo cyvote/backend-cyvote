@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
 import { VoterEntity } from '../../../../auth-voter/infrastructure/persistence/relational/entities/voter.entity';
 
 @Injectable()
@@ -8,9 +9,13 @@ export class VoterSeedService {
   constructor(
     @InjectRepository(VoterEntity)
     private readonly repository: Repository<VoterEntity>,
+    private readonly configService: ConfigService,
   ) {}
 
   async run(): Promise<void> {
+    if (this.configService.get('app.nodeEnv') === 'production') {
+      return;
+    }
     // Voter test data (same as test-email-send.ts)
     const voterData = [
       {

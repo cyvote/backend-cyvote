@@ -10,7 +10,6 @@ import { AuditActorType } from '../audit-log/enums/audit-actor-type.enum';
 import { AuditStatus } from '../audit-log/enums/audit-status.enum';
 import { AuditResourceType } from '../audit-log/enums/audit-resource-type.enum';
 import { ElectionConfigRepositoryInterface } from '../election-schedule/interfaces/election-config.repository.interface';
-import { ElectionConfig } from '../election-schedule/domain/election-config.model';
 
 /**
  * Service for distributing voting tokens via email
@@ -48,8 +47,11 @@ export class TokenEmailDistributionService {
       return { sent: 0, failed: 0, total: 0, batches: 0 };
     }
 
-    // Get all tokens not yet sent
-    const tokensNotSent = await this.tokenRepository.findTokensNotSent();
+    // Get all tokens not yet sent, excluding those generated in the last 5 minutes
+    // This prevents race conditions with Admin Resend or immediate generation
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const tokensNotSent =
+      await this.tokenRepository.findTokensNotSent(fiveMinutesAgo);
 
     if (tokensNotSent.length === 0) {
       this.logger.log('No tokens pending email delivery');

@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import crypto from 'node:crypto';
+import { DataSource } from 'typeorm';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { TokenGenerationRepositoryInterface } from './interfaces/token-generation.repository.interface';
 import { ElectionConfigRepositoryInterface } from '../election-schedule/interfaces/election-config.repository.interface';
@@ -37,6 +38,7 @@ export class AdminResendTokenService {
     private readonly tokenEmailDistributionService: TokenEmailDistributionService,
     private readonly auditLogService: AuditLogService,
     private readonly i18n: I18nService,
+    private readonly dataSource: DataSource,
   ) {}
 
   /**
@@ -55,119 +57,138 @@ export class AdminResendTokenService {
   ): Promise<ResendTokenResponseDto> {
     this.logger.log(`Admin ${adminId} resending token to voter ${voterId}`);
 
-    // 1. Find voter
-    const voter = await this.tokenRepository.findVoterById(voterId);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    if (!voter) {
-      throw new VoterNotFoundException(
-        this.i18n.t('votingToken.voterNotFound', {
-          lang: I18nContext.current()?.lang,
-        }),
-      );
-    }
+    try {
+      // 1. Find voter
+      const voter = await this.tokenRepository.findVoterById(voterId);
 
-    // 2. Check election status
-    const electionConfig =
-      await this.electionConfigRepository.findCurrentConfig();
+      if (!voter) {
+        throw new VoterNotFoundException(
+          this.i18n.t('votingToken.voterNotFound', {
+            lang: I18nContext.current()?.lang,
+          }),
+        );
+      }
 
-    if (!electionConfig || electionConfig.status !== ElectionStatus.ACTIVE) {
-      throw new ElectionNotActiveException(
-        this.i18n.t('votingToken.electionNotActive', {
-          lang: I18nContext.current()?.lang,
-        }),
-      );
-    }
+      // 2. Check election status
+      const electionConfig =
+        await this.electionConfigRepository.findCurrentConfig();
 
-    // 3. Get current token
-    const currentToken =
-      await this.tokenRepository.findActiveTokenByVoterId(voterId);
+      if (!electionConfig || electionConfig.status !== ElectionStatus.ACTIVE) {
+        throw new ElectionNotActiveException(
+          this.i18n.t('votingToken.electionNotActive', {
+            lang: I18nContext.current()?.lang,
+          }),
+        );
+      }
 
-    if (!currentToken) {
-      throw new TokenNotFoundException(
-        this.i18n.t('votingToken.tokenNotFound', {
-          lang: I18nContext.current()?.lang,
-        }),
-      );
-    }
-
-    // 4. Check if token is already used
-    if (currentToken.isUsed) {
-      throw new TokenAlreadyUsedException(
-        this.i18n.t('votingToken.tokenAlreadyUsed', {
-          lang: I18nContext.current()?.lang,
-        }),
-      );
-    }
-
-    // 5. Check resend count
-    if (currentToken.resendCount >= this.MAX_RESEND_COUNT) {
-      throw new ResendLimitReachedException(
-        this.i18n.t('votingToken.resendLimitReached', {
-          lang: I18nContext.current()?.lang,
-        }),
-      );
-    }
-
-    // 6. Generate new token
-    const plaintextToken = this.generateRandomToken();
-    const tokenHash = this.hashToken(plaintextToken);
-
-    // 7. Replace old token with new one
-    const newToken = await this.tokenRepository.replaceToken(
-      voterId,
-      tokenHash,
-      currentToken.resendCount,
-    );
-
-    // 8. Increment resend count
-    await this.tokenRepository.incrementResendCount(newToken.id);
-
-    // 9. Send email directly
-    const emailSent =
-      await this.tokenEmailDistributionService.sendSingleTokenEmail(
+      // 3. Get current token
+      const currentToken = await this.tokenRepository.findActiveTokenByVoterId(
         voterId,
-        plaintextToken,
-        voter.email,
-        voter.namaLengkap,
-        voter.nim,
+        queryRunner,
+        true, // withLock
       );
 
-    if (emailSent) {
-      await this.tokenRepository.markEmailSent(newToken.id);
-    }
+      if (!currentToken) {
+        throw new TokenNotFoundException(
+          this.i18n.t('votingToken.tokenNotFound', {
+            lang: I18nContext.current()?.lang,
+          }),
+        );
+      }
 
-    // 10. Log audit
-    this.auditLogService.log({
-      actorId: adminId,
-      actorType: AuditActorType.ADMIN,
-      action: AuditAction.TOKEN_RESENT,
-      resourceType: AuditResourceType.TOKEN,
-      resourceId: newToken.id,
-      status: AuditStatus.SUCCESS,
-      details: {
+      // 4. Check if token is already used
+      if (currentToken.isUsed) {
+        throw new TokenAlreadyUsedException(
+          this.i18n.t('votingToken.tokenAlreadyUsed', {
+            lang: I18nContext.current()?.lang,
+          }),
+        );
+      }
+
+      // 5. Check resend count
+      if (currentToken.resendCount >= this.MAX_RESEND_COUNT) {
+        throw new ResendLimitReachedException(
+          this.i18n.t('votingToken.resendLimitReached', {
+            lang: I18nContext.current()?.lang,
+          }),
+        );
+      }
+
+      // 6. Generate new token
+      const plaintextToken = this.generateRandomToken();
+      const tokenHash = this.hashToken(plaintextToken);
+
+      // 7. Replace old token with new one
+      // This internally increments resend count by 1 (previous + 1)
+      const newToken = await this.tokenRepository.replaceToken(
         voterId,
-        voterNim: voter.nim,
-        voterEmail: voter.email,
-        previousResendCount: currentToken.resendCount,
-        newResendCount: currentToken.resendCount + 1,
-        emailSent,
-      },
-    });
+        tokenHash,
+        currentToken.resendCount,
+        queryRunner,
+      );
 
-    const newResendCount = currentToken.resendCount + 1;
+      // REMOVED: Redundant increment call
+      // await this.tokenRepository.incrementResendCount(newToken.id);
 
-    this.logger.log(
-      `Token resent to voter ${voterId} (resend count: ${newResendCount})`,
-    );
+      // 8. Send email directly
+      // Note: We cannot easily rollback email sending, so we do it last before commit
+      const emailSent =
+        await this.tokenEmailDistributionService.sendSingleTokenEmail(
+          voterId,
+          plaintextToken,
+          voter.email,
+          voter.namaLengkap,
+          voter.nim,
+        );
 
-    return {
-      success: true,
-      message: this.i18n.t('votingToken.tokenResent', {
-        lang: I18nContext.current()?.lang,
-      }),
-      resendCount: newResendCount,
-      remainingResends: this.MAX_RESEND_COUNT - newResendCount,
-    };
+      if (emailSent) {
+        await this.tokenRepository.markEmailSent(newToken.id, queryRunner);
+      }
+
+      // 9. Log audit
+      this.auditLogService.log({
+        actorId: adminId,
+        actorType: AuditActorType.ADMIN,
+        action: AuditAction.TOKEN_RESENT,
+        resourceType: AuditResourceType.TOKEN,
+        resourceId: newToken.id,
+        status: AuditStatus.SUCCESS,
+        details: {
+          voterId,
+          voterNim: voter.nim,
+          voterEmail: voter.email,
+          previousResendCount: currentToken.resendCount,
+          newResendCount: currentToken.resendCount + 1,
+          emailSent,
+        },
+      });
+
+      const newResendCount = newToken.resendCount;
+
+      this.logger.log(
+        `Token resent to voter ${voterId} (resend count: ${newResendCount})`,
+      );
+
+      await queryRunner.commitTransaction();
+
+      return {
+        success: true,
+        message: this.i18n.t('votingToken.tokenResent', {
+          lang: I18nContext.current()?.lang,
+        }),
+        resendCount: newResendCount,
+        remainingResends: this.MAX_RESEND_COUNT - newResendCount,
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   /**

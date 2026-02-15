@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Brackets, IsNull, Not, In } from 'typeorm';
-import { VoterRepositoryInterface } from '../../../../interfaces/voter.repository.interface';
+import {
+  VoterRepositoryInterface,
+  VoterWithTokenData,
+  TokenData,
+} from '../../../../interfaces/voter.repository.interface';
 import { Voter } from '../../../../domain/voter';
 import { VoterEntity } from '../entities/voter.entity';
 import { VoterMapper } from '../mappers/voter.mapper';
@@ -65,7 +69,7 @@ export class VoterRepository implements VoterRepositoryInterface {
 
   async findMany(
     query: QueryVotersDto,
-  ): Promise<{ data: Voter[]; total: number }> {
+  ): Promise<{ data: VoterWithTokenData[]; total: number }> {
     const {
       page = 1,
       limit = 10,
@@ -75,6 +79,10 @@ export class VoterRepository implements VoterRepositoryInterface {
       sort = VoterSortField.CREATED_AT,
       order = SortOrder.DESC,
       status = VoterStatusFilter.ACTIVE,
+      tokenSent,
+      minResends,
+      maxResends,
+      resendLimitReached,
     } = query;
 
     const queryBuilder = this.voterRepository.createQueryBuilder('voter');
@@ -113,19 +121,107 @@ export class VoterRepository implements VoterRepositoryInterface {
       this.applyAngkatanFilter(queryBuilder, angkatan);
     }
 
-    // Apply sorting
+    // Apply token-related filters using subqueries (raw leftJoin breaks TypeORM metadata)
+    if (tokenSent !== undefined) {
+      if (tokenSent) {
+        queryBuilder.andWhere(
+          `EXISTS (SELECT 1 FROM tokens t WHERE t.voter_id = voter.id AND t.is_used = false AND t.email_sent_at IS NOT NULL)`,
+        );
+      } else {
+        queryBuilder.andWhere(
+          `NOT EXISTS (SELECT 1 FROM tokens t WHERE t.voter_id = voter.id AND t.is_used = false AND t.email_sent_at IS NOT NULL)`,
+        );
+      }
+    }
+
+    if (minResends !== undefined) {
+      queryBuilder.andWhere(
+        `COALESCE((SELECT MAX(t.resend_count) FROM tokens t WHERE t.voter_id = voter.id AND t.is_used = false), 0) >= :minResends`,
+        { minResends },
+      );
+    }
+
+    if (maxResends !== undefined) {
+      queryBuilder.andWhere(
+        `COALESCE((SELECT MAX(t.resend_count) FROM tokens t WHERE t.voter_id = voter.id AND t.is_used = false), 0) <= :maxResends`,
+        { maxResends },
+      );
+    }
+
+    if (resendLimitReached !== undefined) {
+      if (resendLimitReached) {
+        queryBuilder.andWhere(
+          `EXISTS (SELECT 1 FROM tokens t WHERE t.voter_id = voter.id AND t.is_used = false AND t.resend_count >= 3)`,
+        );
+      } else {
+        queryBuilder.andWhere(
+          `COALESCE((SELECT MAX(t.resend_count) FROM tokens t WHERE t.voter_id = voter.id AND t.is_used = false), 0) < 3`,
+        );
+      }
+    }
+
+    // Apply sorting - for token fields, use a subquery expression
     const sortColumn = this.getSortColumn(sort);
     queryBuilder.orderBy(sortColumn, order.toUpperCase() as 'ASC' | 'DESC');
+
+    // Get total count before pagination
+    const total = await queryBuilder.getCount();
 
     // Apply pagination
     const skip = (page - 1) * limit;
     queryBuilder.skip(skip).take(limit);
 
-    // Execute query
-    const [entities, total] = await queryBuilder.getManyAndCount();
+    // Execute query to get entities
+    const entities = await queryBuilder.getMany();
+
+    // Fetch token data separately for the retrieved voter IDs
+    let tokenDataMap = new Map<
+      string,
+      { resendCount: number | null; emailSentAt: Date | null }
+    >();
+
+    if (entities.length > 0) {
+      const voterIds = entities.map((e) => e.id);
+      const tokenRawResults = await this.voterRepository.manager.query(
+        `SELECT t.voter_id, t.resend_count, t.email_sent_at
+         FROM tokens t
+         WHERE t.voter_id = ANY($1)
+           AND t.is_used = false
+           AND t.generated_at = (
+             SELECT MAX(t2.generated_at)
+             FROM tokens t2
+             WHERE t2.voter_id = t.voter_id
+               AND t2.is_used = false
+           )`,
+        [voterIds],
+      );
+
+      for (const row of tokenRawResults) {
+        tokenDataMap.set(row.voter_id, {
+          resendCount: row.resend_count ?? null,
+          emailSentAt: row.email_sent_at ? new Date(row.email_sent_at) : null,
+        });
+      }
+    }
+
+    // Map results to VoterWithTokenData structure
+    const data: VoterWithTokenData[] = entities.map((entity) => {
+      const token = tokenDataMap.get(entity.id) ?? null;
+      const tokenData: TokenData | null = token
+        ? {
+            resendCount: token.resendCount,
+            emailSentAt: token.emailSentAt,
+          }
+        : null;
+
+      return {
+        voter: VoterMapper.toDomain(entity),
+        tokenData,
+      };
+    });
 
     return {
-      data: entities.map((entity) => VoterMapper.toDomain(entity)),
+      data,
       total,
     };
   }
@@ -271,6 +367,8 @@ export class VoterRepository implements VoterRepositoryInterface {
       [VoterSortField.ANGKATAN]: 'voter.angkatan',
       [VoterSortField.EMAIL]: 'voter.email',
       [VoterSortField.HAS_VOTED]: 'voter.has_voted',
+      [VoterSortField.RESEND_COUNT]:
+        'COALESCE((SELECT MAX(t.resend_count) FROM tokens t WHERE t.voter_id = voter.id AND t.is_used = false), 0)',
       [VoterSortField.CREATED_AT]: 'voter.created_at',
       [VoterSortField.UPDATED_AT]: 'voter.updated_at',
     };

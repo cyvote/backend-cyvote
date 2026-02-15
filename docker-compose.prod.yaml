@@ -1,0 +1,28 @@
+services:
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    ports:
+      - ${APP_PORT}:${APP_PORT}
+    depends_on:
+      - redis
+    restart: unless-stopped
+    volumes:
+      # Only mount files and logs, NOT src (to preserve built dist folder)
+      - ./files:/usr/src/app/files
+      - ./logs:/usr/src/app/logs
+    env_file:
+      - .env.production
+    environment:
+      - RUN_STANDALONE=true
+
+volumes:
+  redis-data:
