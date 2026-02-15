@@ -83,17 +83,30 @@ jobs:
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           host: ${{ secrets.DEPLOYMENT_HOST }}
           port: ${{ secrets.DEPLOYMENT_PORT }}
           username: ${{ secrets.DEPLOYMENT_USER }}
           key: ${{ secrets.DEPLOYMENT_SSH_KEY }}
+          envs: GITHUB_TOKEN
           script: |
             cd /opt/${{ secrets.DOCKERHUB_APP_ID }}/production
 
+            # Check if git is initialized
+            if [ ! -d ".git" ]; then
+              echo "Initializing git repository..."
+              git init
+            fi
+
+            # Always update remote to use the current GITHUB_TOKEN
+            git remote remove origin || true
+            git remote add origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+
             # Fetch and reset git state
             git fetch origin
-            git reset --hard origin/production
+            git reset --hard origin/deployment
             git clean -fd
 
             # Stop existing containers (use --env-file to avoid variable errors)
