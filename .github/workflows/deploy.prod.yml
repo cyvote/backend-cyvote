@@ -49,6 +49,22 @@ jobs:
             end
           ' > .env.production
 
+          # Add sensitive secrets
+          echo "DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}" >> .env.production
+          echo "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}" >> .env.production
+          echo "AUTH_JWT_SECRET=${{ secrets.AUTH_JWT_SECRET }}" >> .env.production
+          echo "AUTH_REFRESH_SECRET=${{ secrets.AUTH_REFRESH_SECRET }}" >> .env.production
+          echo "AUTH_FORGOT_SECRET=${{ secrets.AUTH_FORGOT_SECRET }}" >> .env.production
+          echo "AUTH_CONFIRM_EMAIL_SECRET=${{ secrets.AUTH_CONFIRM_EMAIL_SECRET }}" >> .env.production
+          echo "AUTH_ADMIN_JWT_SECRET=${{ secrets.AUTH_ADMIN_JWT_SECRET }}" >> .env.production
+          echo "FACEBOOK_APP_SECRET=${{ secrets.FACEBOOK_APP_SECRET }}" >> .env.production
+          echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env.production
+          echo "SECURITY_CSRF_SECRET=${{ secrets.SECURITY_CSRF_SECRET }}" >> .env.production
+          echo "SUPABASE_SECRET_KEY=${{ secrets.SUPABASE_SECRET_KEY }}" >> .env.production
+          echo "VOTE_HASH_SALT=${{ secrets.VOTE_HASH_SALT }}" >> .env.production
+          echo "SECRET_ACCESS_KEY=${{ secrets.SECRET_ACCESS_KEY }}" >> .env.production
+
+
           # Debug: Show the generated env file content
           echo "Generated .env.production:"
           cat .env.production | head -20
