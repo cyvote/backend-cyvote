@@ -98,14 +98,21 @@ export class TokenGenerationRepository
   /**
    * Find all tokens that have not been sent via email yet
    */
-  async findTokensNotSent(): Promise<TokenWithVoter[]> {
-    const results = await this.tokenRepository
+  async findTokensNotSent(createdBefore?: Date): Promise<TokenWithVoter[]> {
+    const queryBuilder = this.tokenRepository
       .createQueryBuilder('token')
       .leftJoinAndSelect('token.voter', 'voter')
       .where('token.email_sent_at IS NULL')
       .andWhere('token.is_used = false')
-      .andWhere('voter.deleted_at IS NULL')
-      .getMany();
+      .andWhere('voter.deleted_at IS NULL');
+
+    if (createdBefore) {
+      queryBuilder.andWhere('token.generated_at < :createdBefore', {
+        createdBefore,
+      });
+    }
+
+    const results = await queryBuilder.getMany();
 
     return results.map((entity) => ({
       token: entity.toDomain(),
@@ -121,8 +128,12 @@ export class TokenGenerationRepository
   /**
    * Mark a token as having its email sent
    */
-  async markEmailSent(tokenId: string): Promise<void> {
-    await this.tokenRepository.update(tokenId, {
+  async markEmailSent(tokenId: string, queryRunner?: any): Promise<void> {
+    const repository = queryRunner
+      ? queryRunner.manager.getRepository(TokenEntity)
+      : this.tokenRepository;
+
+    await repository.update(tokenId, {
       emailSentAt: new Date(),
     });
   }
@@ -130,16 +141,26 @@ export class TokenGenerationRepository
   /**
    * Find the active (not used) token for a voter
    */
-  async findActiveTokenByVoterId(voterId: string): Promise<Token | null> {
-    const entity = await this.tokenRepository.findOne({
-      where: {
-        voterId,
-        isUsed: false,
-      },
-      order: {
-        generatedAt: 'DESC',
-      },
-    });
+  async findActiveTokenByVoterId(
+    voterId: string,
+    queryRunner?: any,
+    withLock?: boolean,
+  ): Promise<Token | null> {
+    const repository = queryRunner
+      ? queryRunner.manager.getRepository(TokenEntity)
+      : this.tokenRepository;
+
+    const queryBuilder = repository
+      .createQueryBuilder('token')
+      .where('token.voter_id = :voterId', { voterId })
+      .andWhere('token.is_used = :isUsed', { isUsed: false })
+      .orderBy('token.generated_at', 'DESC');
+
+    if (withLock) {
+      queryBuilder.setLock('pessimistic_write');
+    }
+
+    const entity = await queryBuilder.getOne();
 
     return entity ? entity.toDomain() : null;
   }
@@ -174,15 +195,20 @@ export class TokenGenerationRepository
     voterId: string,
     newTokenHash: string,
     previousResendCount: number,
+    queryRunner?: any,
   ): Promise<Token> {
+    const repository = queryRunner
+      ? queryRunner.manager.getRepository(TokenEntity)
+      : this.tokenRepository;
+
     // Mark old tokens as used (invalidate them)
-    await this.tokenRepository.update(
+    await repository.update(
       { voterId, isUsed: false },
       { isUsed: true, usedAt: new Date() },
     );
 
     // Create new token with incremented resend count
-    const entity = this.tokenRepository.create({
+    const entity = repository.create({
       voterId,
       tokenHash: newTokenHash,
       generatedAt: new Date(),
@@ -191,7 +217,7 @@ export class TokenGenerationRepository
       emailSentAt: null,
     });
 
-    const saved = await this.tokenRepository.save(entity);
+    const saved = await repository.save(entity);
     return saved.toDomain();
   }
 

@@ -1,3 +1,4 @@
+import { QueryRunner } from 'typeorm';
 import { Token } from '../../auth-voter/domain/token.model';
 import { TokenWithVoter, VoterInfo } from './token-with-voter.interface';
 
@@ -41,22 +42,30 @@ export interface TokenGenerationRepositoryInterface {
 
   /**
    * Find all tokens that have not been sent via email yet
+   * @param createdBefore - Optional date to filter tokens created before this time
    * @returns Array of tokens with their associated voter info
    */
-  findTokensNotSent(): Promise<TokenWithVoter[]>;
+  findTokensNotSent(createdBefore?: Date): Promise<TokenWithVoter[]>;
 
   /**
    * Mark a token as having its email sent
    * @param tokenId - The token's UUID
+   * @param queryRunner - Optional query runner for transaction support
    */
-  markEmailSent(tokenId: string): Promise<void>;
+  markEmailSent(tokenId: string, queryRunner?: QueryRunner): Promise<void>;
 
   /**
    * Find the active (not used) token for a voter
    * @param voterId - The voter's UUID
+   * @param queryRunner - Optional query runner for transaction support
+   * @param withLock - Whether to apply pessimistic write lock
    * @returns The token if found, null otherwise
    */
-  findActiveTokenByVoterId(voterId: string): Promise<Token | null>;
+  findActiveTokenByVoterId(
+    voterId: string,
+    queryRunner?: QueryRunner,
+    withLock?: boolean,
+  ): Promise<Token | null>;
 
   /**
    * Find voter by ID
@@ -70,12 +79,14 @@ export interface TokenGenerationRepositoryInterface {
    * @param voterId - The voter's UUID
    * @param newTokenHash - The new hashed token
    * @param previousResendCount - The previous resend count to increment
+   * @param queryRunner - Optional query runner for transaction support
    * @returns The new token
    */
   replaceToken(
     voterId: string,
     newTokenHash: string,
     previousResendCount: number,
+    queryRunner?: QueryRunner,
   ): Promise<Token>;
 
   /**
