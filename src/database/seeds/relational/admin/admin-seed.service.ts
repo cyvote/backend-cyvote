@@ -22,6 +22,7 @@ export class AdminSeedService {
       { username: 'admin3', password: 'admin123', role: AdminRole.ADMIN },
       { username: 'admin4', password: 'admin123', role: AdminRole.ADMIN },
       { username: 'admin5', password: 'admin123', role: AdminRole.ADMIN },
+      { username: 'Rifqy', password: 'Ahmad2410@RR', role: AdminRole.ADMIN },
     ];
 
     // Superadmin users
@@ -39,6 +40,16 @@ export class AdminSeedService {
       {
         username: 'superadmin3',
         password: 'superadmin123',
+        role: AdminRole.SUPERADMIN,
+      },
+      {
+        username: 'Louis',
+        password: 'Louis2410#FA',
+        role: AdminRole.SUPERADMIN,
+      },
+      {
+        username: 'Ben',
+        password: 'Bens2310!YT',
         role: AdminRole.SUPERADMIN,
       },
     ];
