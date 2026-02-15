@@ -1,28 +1,14 @@
 <context>
-We will execute the task below
+Teradapat sebuah bug ketika aku sedang melakukan testing untuk resend token. Bug ini terjadi ketika aku sedang melakukan scenario testing di bawah ini.
 
-At the POST endpoint `/api/v1/admin/voters/{id}/resend-token`, when the request is successful, it will return a response as shown below
+1. Aku login sebagai superadmin dan kemudian pengatur pemilihan (election config) dimulai pada tanggal 15 Februari pukul 11.36 WIB.
+2. Pada tanggal 15 Februari pukul 11.36 WIB, statu pemilihan berubah menjadi ACTIVE dan semua token dikirim ke email voters.
+3. Aku sebagai voters dengan NIM 2210512109@mahasiswa.upnvj.ac.id. Sengaja menghapus email tersebut untuk melaksanakan skenario testing.
+4. Kemudian, aku sebagai superadmin mengirim ulang token ke email voters. Di admin panel.
+5. Token tersebut berhasil terkirim. Namun, di sini bugnya terjadi, ketika email tersebut berhasil terkirim, seharusnya aku sebagai admin melihat bahwa aku baru saja mengirimkan token ulang ke voters tersebut sebanyak 1 kali. Namun, ternyata yang tercatat adalah aku mengirimkan token ulang ke voters tersebut sebanyak 2 kali. Tapi, token yang terkirim hanya satu kali. Hal ini menyebabkan batas pengiriman token yang seharusnya 1/3 menjadi 2/3.
+6. Ketika aku ingin mengirimkan token ulang lagi ke user yang sama. Itu malah menjadi 4/3. Bug nya terjadi seolah-olah 2 kali mengirimkan token ulang (bukan token awal ketika pemilihan dimulai).
 
-```json
-{
-  ‘success’: true,
-  ‘message’: ‘Token successfully resent’,
-  ‘resendCount’: 2,
-  ‘remainingResends’: 1
-}
-```
-
-The frontend team created another endpoint to find out how many times a voter has resent tokens (done by the admin). So, we will create a GET endpoint `/api/v1/admin/voters/{id}/resend-status`. The conditions are as follows
-
-- [ ] Validation:
-  - Voter must exist
-  - Token has not been used
-- [ ] Response:
-  - Display the voter's UUID, remaining resends, and resend count
-- [ ] Log action with admin_id
-- [ ] Protected: ADMIN only
-
-Put it in src/{kamu tentukan nama modulenya}/. In this project we use pnpm not npm. Also, follow the existing architecture (DDD). Analyze the code first. Follow the code quality standard that exist.
+Let's fix this bug. Kita hanya akan fokus memperbaiki bug ini dan tidak akan menyentuh hal-hal lainnya.
 </context>
 
 <role>
