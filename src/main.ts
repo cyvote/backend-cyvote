@@ -96,8 +96,11 @@ async function bootstrap() {
   await app.listen(configService.getOrThrow('app.port', { infer: true }));
 }
 
-// For local development
-if (process.env.NODE_ENV !== 'production') {
+// For local development or standalone production (Docker/VPS)
+if (
+  process.env.NODE_ENV !== 'production' ||
+  process.env.RUN_STANDALONE === 'true'
+) {
   void bootstrap();
 }
 

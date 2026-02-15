@@ -21,6 +21,8 @@ services:
       - ./logs:/usr/src/app/logs
     env_file:
       - .env.production
+    environment:
+      - RUN_STANDALONE=true
 
 volumes:
   redis-data:
