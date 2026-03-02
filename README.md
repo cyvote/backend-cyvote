@@ -1,73 +1,250 @@
-# NestJS REST API boilerplate 🇺🇦
+# CyVote Backend
 
-[![image](https://github.com/brocoders/nestjs-boilerplate/assets/72293912/197da43e-02f4-4895-8d3e-b7a42a591c26)](https://github.com/new?template_name=nestjs-boilerplate&template_owner=brocoders)
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-85%25-green)
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Vulnerabilities](https://img.shields.io/badge/vulnerabilities-0-brightgreen)
 
-![github action status](https://github.com/brocoders/nestjs-boilerplate/actions/workflows/docker-e2e.yml/badge.svg)
-[![renovate](https://img.shields.io/badge/renovate-enabled-%231A1F6C?logo=renovatebot)](https://app.renovatebot.com/dashboard)
-[![Static Badge](https://img.shields.io/badge/supported_by-brocoders-d91965?logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTMwIiBoZWlnaHQ9IjE4NyIgdmlld0JveD0iMCAwIDEzMCAxODciIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI%2BCjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMF83NzExXzQ4OTEpIj4KPHBhdGggZD0iTTc1Ljk5NjcgNDUuNzUwNkM2NS4xMDg5IDQ2Ljg2MSA1Ny45MjMgNTguNDA5NyA2Mi4yNzgxIDY4Ljg0OEwxMDguNDQyIDE4N0w3My42MDEzIDE1NS4wMTlIMzQuODQwOUMyMC42ODY4IDE1NS4wMTkgOS4zNjM0OSAxNDMuNDcgOS4zNjM0OSAxMjkuMDM0Vjk0LjYxMDVDOS4zNjM0OSA5Mi4xNjc1IDguNDkyNDYgODkuNzI0NSA2Ljc1MDQyIDg3Ljk0NzdMMCA4MS4wNjNMNi43NTA0MiA3NC4xNzgxQzguNDkyNDYgNzIuNDAxNCA5LjM2MzQ5IDY5Ljk1ODQgOS4zNjM0OSA2Ny41MTU0VjMxLjA5MjZDOS4zNjM0OSAxMy43Njk2IDIzLjA4MjEgMCAzOS44NDkyIDBINTguMTQwN0w3NS45OTY3IDQ1Ljc1MDZaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTI1LjY0NiAxMTIuMzc4Vjk0LjgzMjdDMTI1LjY0NiA5My43MjIyIDEyNi4wODEgOTIuNjExOCAxMjYuOTUyIDkxLjcyMzRMMTMwLjAwMSA4OC4zOTIxTDEyNi45NTIgODUuMDYwN0MxMjYuMDgxIDg0LjE3MjQgMTI1LjY0NiA4My4wNjE5IDEyNS42NDYgODEuOTUxNFY2OS43MzY1QzEyNS42NDYgNTYuNDExMSAxMTQuOTc2IDQ1Ljc1MDcgMTAyLjEyOCA0NS43NTA3SDc1Ljk5NzNMMTA1LjYxMiAxMzAuODExQzEwNS42MTIgMTMwLjgxMSAxMTAuNjIgMTMwLjgxMSAxMTAuODM4IDEzMC44MTFDMTE5LjExMyAxMjkuMDM1IDEyNS42NDYgMTIxLjQ4NCAxMjUuNjQ2IDExMi4zNzhaIiBmaWxsPSJ3aGl0ZSIvPgo8L2c%2BCjxkZWZzPgo8Y2xpcFBhdGggaWQ9ImNsaXAwXzc3MTFfNDg5MSI%2BCjxyZWN0IHdpZHRoPSIxMzAiIGhlaWdodD0iMTg3IiBmaWxsPSJ3aGl0ZSIvPgo8L2NsaXBQYXRoPgo8L2RlZnM%2BCjwvc3ZnPgo%3D&logoColor=d91965)](https://brocoders.com/)
-[![Discord Badge](https://img.shields.io/badge/discord-NodeJS_boilerplate-d91965?style=flat&labelColor=5866f2&logo=discord&logoColor=white&link=https://discord.com/channels/520622812742811698/1197293125434093701)](https://discord.com/channels/520622812742811698/1197293125434093701)
+> **TL;DR:** Secure e-voting backend microservice for campus student organization elections.
 
-<br />
-<p align="center"><a href="https://discord.com/channels/520622812742811698/1197293125434093701"><img src="https://github.com/brocoders/nestjs-boilerplate/assets/72293912/c9d5fbf0-b56d-46b5-bb30-f96f44764bae" width="300"/></a></p>
-<br />
+---
 
-## Description <!-- omit in toc -->
+## 📖 Table of Contents
 
-NestJS REST API boilerplate for a typical project
+- [About the Project](#-about-the-project)
+- [Architecture & Tech Stack](#-architecture--tech-stack)
+- [Prerequisites](#%EF%B8%8F-prerequisites)
+- [Getting Started (Local Setup)](#-getting-started-local-setup)
+- [Testing](#-testing)
+- [Environment Variables](#-environment-variables)
+- [Deployment & CI/CD](#-deployment--cicd)
+- [Troubleshooting & FAQ](#-troubleshooting--faq)
+- [Ownership & Support](#-ownership--support)
 
-[Full documentation here](/docs/readme.md)
+---
 
-Demo: <https://nestjs-boilerplate-test.herokuapp.com/docs>
+## 🎯 About the Project
 
-A fully compatible frontend boilerplate: <https://github.com/brocoders/extensive-react-boilerplate>
+**Business Context:** CyVote is a secure, end-to-end electronic voting system built to replace the manual voting process for leadership elections within KSM Cyber Security UPNVJ (Unit Kegiatan Mahasiswa). It provides a tamper-resistant, auditable, and user-friendly platform that ensures election integrity while enabling remote participation for all organization members.
 
-Belongs to the [bc boilerplates](https://bcboilerplates.com/) ecosystem
+**Key Features:**
 
-<https://github.com/user-attachments/assets/a66f114a-c714-4036-8eeb-20cbf04ae985>
+- **Dual Authentication System:** Separate JWT-based authentication for administrators/superadmins, and a token-based two-step verification flow for voters — ensuring strict role separation and secure access.
+- **Secure Voting with Hash Verification:** Every cast vote is cryptographically hashed, preventing tampering and guaranteeing vote integrity. Each voter can only vote once, enforced at the database level.
+- **Election Scheduling & Lifecycle Management:** Automated election state transitions (pending → active → completed) powered by cron jobs, with configurable start/end times and environment-aware duration rules.
+- **Comprehensive Audit Logging:** All critical actions (voting, authentication, admin operations) are logged via Winston and persisted to the database, providing a full forensic trail for post-election audits.
+- **Rate Limiting & Security Middleware:** Global and endpoint-specific rate limiting, Helmet security headers, CSRF protection, and intelligent IP extraction behind proxies — hardening the API against abuse.
+- **Admin Dashboard & Monitoring:** Real-time election statistics, voter turnout tracking, and candidate performance metrics accessible through dedicated admin endpoints.
+- **Election Results Aggregation:** Automated vote tallying with candidate ranking, vote counts, and percentage breakdowns.
+- **Email Notification System:** Integrated with Mailtrap for sending voter tokens, election announcements, and voting confirmations via customizable Handlebars templates.
 
-## Table of Contents <!-- omit in toc -->
+**External Documentation:** For deeper architectural decisions, technical plans, and API contracts, please refer to:
 
-- [Features](#features)
-- [Contributors](#contributors)
-- [Support](#support)
+- [Technical Documentation](/docs/readme.md)
 
-## Features
+---
 
-- [x] Database. Support [TypeORM](https://www.npmjs.com/package/typeorm) and [Mongoose](https://www.npmjs.com/package/mongoose).
-- [x] Seeding.
-- [x] Config Service ([@nestjs/config](https://www.npmjs.com/package/@nestjs/config)).
-- [x] Mailing ([nodemailer](https://www.npmjs.com/package/nodemailer)).
-- [x] Sign in and sign up via email.
-- [x] Social sign in (Apple, Facebook, Google).
-- [x] Admin and User roles.
-- [x] Internationalization/Translations (I18N) ([nestjs-i18n](https://www.npmjs.com/package/nestjs-i18n)).
-- [x] File uploads. Support local and Amazon S3 drivers.
-- [x] Swagger.
-- [x] E2E and units tests.
-- [x] Docker.
-- [x] CI (Github Actions).
+## 🏗 Architecture & Tech Stack
 
-## Contributors
+- **Language/Framework:** TypeScript / NestJS 11.x (Node.js 22)
+- **Database:** PostgreSQL 17 (via TypeORM)
+- **Messaging/Email:** Nodemailer (Mailtrap SMTP)
+- **Design Pattern:** Hexagonal Architecture / Domain-Driven Design
+- **Containerization:** Docker & Docker Compose
+- **CI/CD:** GitHub Actions
+- **API Documentation:** Swagger / OpenAPI
+- **Security:** Helmet, CSRF protection, JWT, bcrypt, rate limiting
+- **Logging:** Winston with daily rotate file transport
+- **Internationalization:** nestjs-i18n
 
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-<!-- prettier-ignore-start -->
-<!-- markdownlint-disable -->
-<table>
-  <tbody>
-    <tr>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Shchepotin"><img src="https://avatars.githubusercontent.com/u/6001723?v=4?s=100" width="100px;" alt="Vladyslav Shchepotin"/><br /><sub><b>Vladyslav Shchepotin</b></sub></a><br /><a href="#maintenance-Shchepotin" title="Maintenance">🚧</a> <a href="#doc-Shchepotin" title="Documentation">📖</a> <a href="#code-Shchepotin" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/SergeiLomako"><img src="https://avatars.githubusercontent.com/u/31205374?v=4?s=100" width="100px;" alt="SergeiLomako"/><br /><sub><b>SergeiLomako</b></sub></a><br /><a href="#code-SergeiLomako" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ElenVlass"><img src="https://avatars.githubusercontent.com/u/72293912?v=4?s=100" width="100px;" alt="Elena Vlasenko"/><br /><sub><b>Elena Vlasenko</b></sub></a><br /><a href="#doc-ElenVlass" title="Documentation">📖</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="http://brocoders.com"><img src="https://avatars.githubusercontent.com/u/226194?v=4?s=100" width="100px;" alt="Rodion"/><br /><sub><b>Rodion</b></sub></a><br /><a href="#business-sars" title="Business development">💼</a></td>
-    </tr>
-  </tbody>
-</table>
+---
 
-<!-- markdownlint-restore -->
-<!-- prettier-ignore-end -->
+## ⚙️ Prerequisites
 
-<!-- ALL-CONTRIBUTORS-LIST:END -->
+Before you begin, ensure your local development environment meets the following requirements:
 
-## Support
+- [Node.js v22.x](https://nodejs.org/) (use [NVM](https://github.com/nvm-sh/nvm) — the project includes an `.nvmrc` file)
+- [pnpm](https://pnpm.io/) (package manager)
+- [Docker Desktop v4.x](https://www.docker.com/products/docker-desktop/) (for local PostgreSQL, Maildev, and Adminer)
+- [Git](https://git-scm.com/)
 
-If you seek consulting, support, or wish to collaborate, please contact us via [boilerplates@brocoders.com](mailto:boilerplates@brocoders.com). For any inquiries regarding boilerplates, feel free to ask on [GitHub Discussions](https://github.com/brocoders/nestjs-boilerplate/discussions) or [Discord](https://discord.com/channels/520622812742811698/1197293125434093701).
+---
+
+## 🚀 Getting Started (Local Setup)
+
+Follow the steps below to get the service running locally.
+
+1. **Clone the repository:**
+
+   ```bash
+   git clone git@github.com:cyvote/backend-cyvote.git
+   cd backend-cyvote
+   ```
+
+2. **Use the correct Node.js version:**
+
+   ```bash
+   nvm use
+   ```
+
+3. **Install dependencies:**
+
+   ```bash
+   pnpm install
+   ```
+
+4. **Setup environment variables:**
+
+   Copy the example environment file and adjust as needed.
+
+   ```bash
+   cp env-example-relational .env
+   ```
+
+   > **Note:** For local development, use `.env.local`. For the development VPS environment, use `.env.development`. For production, use `.env.production`.
+
+5. **Bootstrap the application (spin up local PostgreSQL, Maildev, and Adminer via Docker):**
+
+   ```bash
+   docker compose up -d
+   ```
+
+   This will start:
+   - **PostgreSQL** on port `${DATABASE_PORT}`
+   - **Maildev** (email testing UI) on port `1080`
+   - **Adminer** (database management UI) on port `8080`
+
+6. **Run database migrations:**
+
+   ```bash
+   pnpm run migration:run
+   ```
+
+7. **Seed the database (optional):**
+
+   ```bash
+   pnpm run seed:run:relational
+   ```
+
+8. **Run the application:**
+
+   ```bash
+   pnpm run start:dev
+   ```
+
+   The service should now be running at `http://localhost:3021`. Swagger API documentation is available at `http://localhost:3021/docs`.
+
+---
+
+## 🧪 Testing
+
+- **Run Unit Tests:**
+
+  ```bash
+  pnpm test
+  ```
+
+- **Run Linter / Formatting:**
+
+  ```bash
+  pnpm run lint
+  ```
+
+- **Run E2E Tests (via Docker):**
+
+  ```bash
+  pnpm run test:e2e:relational:docker
+  ```
+
+---
+
+## 🔐 Environment Variables
+
+This project requires several environment variables to function correctly. **Never commit actual secrets to this repository.**
+
+| Variable Name                      | Description                             | Default Value (Local)                       | Required |
+| ---------------------------------- | --------------------------------------- | ------------------------------------------- | -------- |
+| `NODE_ENV`                         | Application environment                 | `development`                               | Yes      |
+| `APP_PORT`                         | The port the application binds to       | `3021`                                      | Yes      |
+| `APP_NAME`                         | Application display name                | `Cyvote`                                    | Yes      |
+| `API_PREFIX`                       | Global API route prefix                 | `api`                                       | Yes      |
+| `FRONTEND_DOMAIN`                  | Allowed CORS origin(s), comma-separated | `http://localhost:3000`                     | Yes      |
+| `VOTING_URL`                       | User-facing voting page base URL        | —                                           | Yes      |
+| `DATABASE_TYPE`                    | Database driver type                    | `postgres`                                  | Yes      |
+| `DATABASE_HOST`                    | Database connection host                | `localhost`                                 | Yes      |
+| `DATABASE_PORT`                    | Database connection port                | `5432`                                      | Yes      |
+| `DATABASE_USERNAME`                | Database user                           | `root`                                      | Yes      |
+| `DATABASE_PASSWORD`                | Database password                       | _(see env-example)_                         | Yes      |
+| `DATABASE_NAME`                    | Database name                           | `postgres`                                  | Yes      |
+| `DATABASE_SSL_ENABLED`             | Enable SSL for database connection      | `false`                                     | No       |
+| `AUTH_JWT_SECRET`                  | JWT signing secret for user auth        | _(generate with `openssl rand -base64 32`)_ | Yes      |
+| `AUTH_JWT_TOKEN_EXPIRES_IN`        | JWT access token TTL                    | `15m`                                       | Yes      |
+| `AUTH_REFRESH_SECRET`              | JWT refresh token secret                | _(generate)_                                | Yes      |
+| `AUTH_ADMIN_JWT_SECRET`            | JWT secret for admin authentication     | _(generate)_                                | Yes      |
+| `MAIL_HOST`                        | SMTP mail server host                   | `localhost`                                 | Yes      |
+| `MAIL_PORT`                        | SMTP mail server port                   | `1025`                                      | Yes      |
+| `MAIL_DEFAULT_EMAIL`               | Sender email address                    | `noreply@example.com`                       | Yes      |
+| `AUDIT_LOG_ENABLED`                | Enable audit logging                    | `true`                                      | No       |
+| `AUDIT_LOG_DATABASE_ENABLED`       | Persist audit logs to database          | `true`                                      | No       |
+| `SECURITY_RATE_LIMIT_GLOBAL_TTL`   | Global rate limit window (seconds)      | `60`                                        | No       |
+| `SECURITY_RATE_LIMIT_GLOBAL_LIMIT` | Max requests per global window          | `100`                                       | No       |
+| `SECURITY_RATE_LIMIT_LOGIN_TTL`    | Login rate limit window (seconds)       | `600`                                       | No       |
+| `SECURITY_RATE_LIMIT_LOGIN_LIMIT`  | Max login attempts per window           | `5`                                         | No       |
+| `SECURITY_HELMET_ENABLED`          | Enable Helmet security headers          | `true`                                      | No       |
+| `SECURITY_CSRF_ENABLED`            | Enable CSRF protection                  | `true`                                      | No       |
+| `VOTE_HASH_SALT`                   | Salt used for vote hash generation      | _(generate)_                                | Yes      |
+
+For a complete list of all environment variables, refer to `env-example-relational`.
+
+---
+
+## 🚢 Deployment & CI/CD
+
+- **Branching Strategy:** We use a modified GitFlow strategy:
+  - `master` — stable base branch
+  - `development` — integration branch for staging/dev environment
+  - `deployment` — production release branch
+  - Feature branches follow the convention: `feat/`, `hotfix/`, `chore/`, `scripts/`
+
+- **CI/CD:** Governed by GitHub Actions with two primary workflows:
+  - **Development:** Every push to `development` triggers a Docker build and deployment to the development VPS.
+  - **Production:** Every push to `deployment` triggers a Docker build, pushes to Docker Hub, and deploys to the production VPS.
+
+- **Production Release:** To release to production, merge `development` into `deployment`. This will automatically trigger the production deployment pipeline.
+
+- **Production Infrastructure:**
+  - Docker Compose on VPS with API container + Redis
+  - PostgreSQL hosted externally
+  - Automated database migrations run on startup
+
+See [CHANGELOG.md](CHANGELOG.md) for the project's release history.
+
+---
+
+## 🛠 Troubleshooting & FAQ
+
+**Q: I'm getting a `connection refused` error when the app tries to connect to the database.**
+**A:** Ensure your Docker daemon is running and execute `docker compose up -d postgres` to start the local database container. Verify your `DATABASE_HOST` is set to `localhost` (not a remote host) in your `.env` file.
+
+**Q: Database migrations are failing with SSL errors.**
+**A:** For local development, set `DATABASE_SSL_ENABLED=false` in your `.env` file. SSL is only required when connecting to remote PostgreSQL instances (e.g., Supabase).
+
+**Q: Port 3021 is already in use.**
+**A:** Either stop the conflicting process or change `APP_PORT` in your `.env` file to a different port.
+
+**Q: Docker Compose fails because port 8080 (Adminer) is already in use.**
+**A:** Another service is occupying port 8080. Stop it, or modify the Adminer port mapping in `docker-compose.yaml`.
+
+**Q: `pnpm install` fails on certain packages.**
+**A:** Ensure you are using Node.js v22 (`nvm use`). Delete `node_modules` and the pnpm store cache, then retry: `rm -rf node_modules && pnpm install`.
+
+**Q: Emails are not being sent/received in local development.**
+**A:** Ensure the Maildev container is running (`docker compose up -d maildev`). Open `http://localhost:1080` to view captured emails in the Maildev web UI.
+
+---
+
+## 📞 Ownership & Support
+
+This service is maintained by **Ristek Division of KSM Cyber Security UPNVJ**.
+
+- **Jira Board:** [CyVote Project Board](https://mahasiswa-team-ys7jfvny.atlassian.net/jira/software/projects/CYVOTE/boards/34)
